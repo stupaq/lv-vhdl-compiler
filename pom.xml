@@ -21,8 +21,7 @@
                             <goal>jjtree-javacc</goal>
                         </goals>
                         <configuration>
-                            <nodePackage>stupaq.vhdl.ast</nodePackage>
-                            <trackTokens>true</trackTokens>
+                            <nodePackage>stupaq.vhdl93</nodePackage>
                             <visitor>true</visitor>
                         </configuration>
                     </execution>
