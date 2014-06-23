@@ -1,6 +1,6 @@
 package stupaq.vhdl2lv;
 
-import stupaq.vhdl93.ErrorHandler;
+import stupaq.parser.ErrorFailure;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
 
@@ -9,11 +9,11 @@ public class Compiler {
     if (args.length == 1) {
       java.io.FileInputStream file = new java.io.FileInputStream(args[0]);
       VHDL93Parser parser = new VHDL93Parser(file);
-      parser.setupErrorHandler();
+      parser.errorHandler = new ErrorFailure();
       try {
         System.out.println("reading from file: " + args[0]);
         parser.design_file();
-        parser.errorManager.Summary();
+        parser.errorHandler.summary();
       } catch (ParseException p) {
         System.out.println("syntax error: ");
         p.printStackTrace();

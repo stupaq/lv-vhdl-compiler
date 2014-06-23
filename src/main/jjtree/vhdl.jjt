@@ -40,13 +40,11 @@ PARSER_BEGIN(VHDL93Parser)
 
 package stupaq.vhdl93;
 
+import stupaq.parser.*;
+
 public class VHDL93Parser
 {
-  public ErrorHandler errorManager;
-
-  public void setupErrorHandler() {
-    errorManager = new ErrorHandler(this);
-  }
+  public ErrorHandler errorHandler;
 }
 
 PARSER_END(VHDL93Parser)
@@ -3302,11 +3300,7 @@ void shared_variable_declaration() :
  */
 JAVACODE void error_skipto(int kind, String message) 
 {
-  if (errorManager != null) {
-    errorManager.Error(message);
-  } else {
-    throw generateParseException();
-  }
+  errorHandler.error(getToken(0), message);
   Token t;
   do 
   {

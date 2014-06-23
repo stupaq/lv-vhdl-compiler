@@ -1,4 +1,6 @@
-package stupaq.vhdl93;
+package stupaq.parser;
+
+import stupaq.vhdl93.VHDL93ParserConstants;
 
 public class Symbol implements VHDL93ParserConstants {
   public String identifier;

@@ -2,6 +2,9 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package stupaq.vhdl93;
 
+import stupaq.parser.Symbol;
+import stupaq.parser.SymbolTable;
+
 public
 class SimpleNode implements Node {
 
