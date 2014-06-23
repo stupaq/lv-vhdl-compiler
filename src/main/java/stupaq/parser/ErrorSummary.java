@@ -7,7 +7,7 @@ public class ErrorSummary implements ErrorHandler {
 
   @Override
   public void error(Token token, String message) {
-    System.err.println("linet\t" + token.beginLine + ":\t" + message);
+    System.err.println("line\t" + token.beginLine + ":\t" + message);
     Errors++;
   }
 
