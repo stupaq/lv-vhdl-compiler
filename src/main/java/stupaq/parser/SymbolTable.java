@@ -1,4 +1,4 @@
-package stupaq.vhdl93;
+package stupaq.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class SymbolTable {
   }
 
   public void endBlock(String identifier) {
-    if (block_name != identifier) {
+    if (!block_name.equals(identifier)) {
       System.out.println("ERROR: identifiers at start and end don't match");
     }
   }

@@ -1,4 +1,7 @@
-package stupaq.vhdl93;
+package stupaq.parser;
+
+import stupaq.vhdl93.ASTrelation;
+import stupaq.vhdl93.VHDL93ParserConstants;
 
 public class SignalSymbol extends Symbol {
   public Symbol type;
