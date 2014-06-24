@@ -63,8 +63,8 @@ class SimpleNode implements Node {
   public <Argument, Failure extends Exception> Argument childrenAccept(VHDL93ParserVisitor<Argument, Argument, Failure> visitor, Argument data) throws Failure
   {
     if (children != null) {
-      for (int i = 0; i < children.length; ++i) {
-        children[i].jjtAccept(visitor, data);
+      for (Node aChildren : children) {
+        aChildren.jjtAccept(visitor, data);
       }
     }
     return data;
@@ -85,8 +85,8 @@ class SimpleNode implements Node {
   public void dump(String prefix) {
     System.out.println(toString(prefix));
     if (children != null) {
-      for (int i = 0; i < children.length; ++i) {
-        SimpleNode n = (SimpleNode)children[i];
+      for (Node aChildren : children) {
+        SimpleNode n = (SimpleNode) aChildren;
         if (n != null) {
           n.dump(prefix + " ");
         }
