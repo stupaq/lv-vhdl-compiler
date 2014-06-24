@@ -2,6 +2,7 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=true,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package stupaq.vhdl93;
 
+import stupaq.parser.ContextSensitiveCheckVisitor;
 import stupaq.parser.SymbolTable;
 
 public
@@ -102,21 +103,14 @@ class SimpleNode implements Node {
   }
 
   /** Customizations for {@link VHDL93Parser} compatibility. */
-
-  // FIXME
-  public static SymbolTable symtab;
-
   public void newBlock() {
     SymbolTable newSymtab = new SymbolTable();
-    newSymtab.upperSymtab = symtab;
-    symtab = newSymtab;
+    newSymtab.upperSymtab = parser.symtab;
+    parser.symtab = newSymtab;
   }
 
   public void endBlock() {
-    symtab = symtab.upperSymtab;
-  }
-
-  public void checkSemantics() {
+    parser.symtab = parser.symtab.upperSymtab;
   }
 
   public int getId() {
