@@ -10,11 +10,11 @@ public class Compiler {
     if (args.length == 1) {
       FileInputStream file = new FileInputStream(args[0]);
       VHDL93Parser parser = new VHDL93Parser(file);
-      parser.errorHandler = new ErrorSummary();
+      parser.setErrorHandler(new ErrorSummary());
       try {
         System.out.println("reading from file: " + args[0]);
         parser.design_file();
-        System.err.println(parser.errorHandler.summary());
+        System.err.println(parser.getErrorHandler().summary());
       } catch (Exception e) {
         e.printStackTrace();
         throw e;

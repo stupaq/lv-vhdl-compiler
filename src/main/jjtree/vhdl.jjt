@@ -47,8 +47,15 @@ import stupaq.parser.*;
 
 public class VHDL93Parser
 {
-  public ErrorHandler errorHandler;
-  public SymbolTable symtab;
+  private ErrorHandler errorHandler;
+
+  public void setErrorHandler(ErrorHandler handler) {
+    errorHandler = handler;
+  }
+
+  public ErrorHandler getErrorHandler() {
+    return errorHandler;
+  }
 }
 
 PARSER_END(VHDL93Parser)
@@ -337,14 +344,12 @@ void allocator() :
 void architecture_body() :
 {}
 {
-  <ARCHITECTURE> identifier() <OF> entity_name() <IS> { jjtThis.newBlock(); }
+  <ARCHITECTURE> identifier() <OF> entity_name() <IS>
     architecture_declarative_part()
   <BEGIN>
     architecture_statement_part()
   <END> [ <ARCHITECTURE> ] [ architecture_simple_name() ] ";"
-
   {
-    jjtThis.endBlock();
     jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
   }
 }
@@ -1030,15 +1035,11 @@ void entity_class_entry_list() :
 void entity_declaration() :
 {}
 {
-  <ENTITY> identifier() <IS>                       { jjtThis.newBlock(); }
-          entity_header()
-          entity_declarative_part()
-  [ <BEGIN>
-    entity_statement_part() ]
+  <ENTITY> identifier() <IS> entity_header()
+    entity_declarative_part()
+  [ <BEGIN> entity_statement_part() ]
   <END> [ <ENTITY> ] [ entity_simple_name() ] ";"
-
   {
-    jjtThis.endBlock();
     jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
   }
 }
@@ -2025,16 +2026,12 @@ void process_declarative_part() :
 void process_statement() :
 {}
 {
-  [ process_label() ":" ]
-  [ <POSTPONED> ] <PROCESS>                    { jjtThis.newBlock(); }
-  [ "(" sensitivity_list() ")" ] [ <IS> ]
+  [ process_label() ":" ] [ <POSTPONED> ] <PROCESS> [ "(" sensitivity_list() ")" ] [ <IS> ]
     process_declarative_part()
   <BEGIN>
     process_statement_part()
   <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] ";"
-
   {
-    jjtThis.endBlock();
     jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
   }
 }

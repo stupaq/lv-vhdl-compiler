@@ -32,8 +32,8 @@ public class ContextSensitiveCheckVisitor extends NoOpVisitor<Void, VHDL93Parser
       String s1 = id1.name;
       String s2 = id2.name;
       if (!s1.equals(s2)) {
-        parser.errorHandler.error(id2.jjtGetFirstToken(),
-            "identifiers don't match: " + s1 + "/=" + s2);
+        parser.getErrorHandler()
+            .error(id2.jjtGetFirstToken(), "identifiers don't match: " + s1 + "/=" + s2);
       }
     }
     return null;
