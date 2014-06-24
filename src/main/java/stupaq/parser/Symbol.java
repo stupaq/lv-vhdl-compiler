@@ -4,7 +4,6 @@ import stupaq.vhdl93.VHDL93ParserConstants;
 
 public class Symbol implements VHDL93ParserConstants {
   public String identifier;
-  public String last_alias;
   public int kind;
 
   public Symbol(String id, int k) {

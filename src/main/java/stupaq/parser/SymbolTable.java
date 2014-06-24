@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class SymbolTable {
-  public SymbolTable upper_symtab;
+  public SymbolTable upperSymtab;
   List<Symbol> symbols = Collections.synchronizedList(new ArrayList<Symbol>());
-  String block_name;
+  String blockName;
 
   public void addSymbol(Symbol s) {
     symbols.add(s);
@@ -20,18 +20,18 @@ public class SymbolTable {
       }
     }
     try {
-      return upper_symtab.getSymbol(identifier);
+      return upperSymtab.getSymbol(identifier);
     } catch (Exception e) {
       return new Symbol("ERROR", 0);
     }
   }
 
   public void newBlock(String identifier) {
-    block_name = identifier;
+    blockName = identifier;
   }
 
   public void endBlock(String identifier) {
-    if (!block_name.equals(identifier)) {
+    if (!blockName.equals(identifier)) {
       System.out.println("ERROR: identifiers at start and end don't match");
     }
   }

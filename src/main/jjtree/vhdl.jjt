@@ -233,8 +233,6 @@ TOKEN :
 }
 
 
-
-
 void abstract_literal() #void :
 {}
 {
@@ -243,13 +241,11 @@ void abstract_literal() #void :
 }
 
 
-
 void access_type_definition() #void :
 {}
 {
   <ACCESS> subtype_indication()
 }
-
 
 
 void actual_designator() #void :
@@ -270,7 +266,6 @@ void actual_designator() #void :
     terminal_name()
   | quantity_name()
 }
-
 
 
 void actual_parameter_part() #void :
@@ -346,7 +341,7 @@ void architecture_body() :
 
   {
     jjtThis.endBlock();
-    jjtThis.Check();
+    jjtThis.checkSemantics();
   }
 }
 
@@ -364,18 +359,11 @@ void architecture_statement_part() :
   ( architecture_statement() )*
 }
 
-/**
- *  This rule also contains the concurrent statements.
- */
+/** Lookahead would be annoying here. Therefore I moved the concurrent statements into this rule. */
 void architecture_statement() #void :
 {}
 {
-  // 
-  // lookahead would really be annoying here. Therefore I have
-  // moved the concurrent statement into this rule.
-  // concurrent_statements:
-  //
-
+  /** Concurrent_statements */
   try {
 
     LOOKAHEAD([block_label() ":"] <BLOCK>)
@@ -401,7 +389,7 @@ void architecture_statement() #void :
 
   }
 
-  /** Error handling: Skip until next semicolon */
+  /** Error handling: skip until next semicolon. */
   catch(ParseException e)
   {
     error_skipto(SEMICOLON, "syntax error in statement");
@@ -1049,7 +1037,7 @@ void entity_declaration() :
   <END> [ <ENTITY> ] [ entity_simple_name() ] ";"
 
   {
-    jjtThis.Check();
+    jjtThis.checkSemantics();
     jjtThis.endBlock();
   }
 }
@@ -2045,7 +2033,7 @@ void process_statement() :
    <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] ";"
 
    {
-     jjtThis.Check();
+     jjtThis.checkSemantics();
      jjtThis.endBlock();
    }
 }
@@ -3302,8 +3290,7 @@ JAVACODE void error_skipto(int kind, String message)
 {
   errorHandler.error(getToken(0), message);
   Token t;
-  do 
-  {
+  do {
     t = getNextToken();
   } while ((t.kind != kind));
 }

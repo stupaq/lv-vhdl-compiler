@@ -2,7 +2,6 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package stupaq.vhdl93;
 
-import stupaq.parser.Symbol;
 import stupaq.parser.SymbolTable;
 
 public
@@ -97,62 +96,23 @@ class SimpleNode implements Node {
 
   /** Customizations for {@link VHDL93Parser} compatibility. */
 
-  /**
-   * A static reference to the symbol table
-   */
+  // FIXME
   public static SymbolTable symtab;
 
-
-  /**
-   * Start a new block with a new symbol table. The current table
-   * is saved in the variable upper_symtab.
-   */
-  public void newBlock()
-  {
-    SymbolTable new_symtab = new SymbolTable();
-    new_symtab.upper_symtab = symtab;
-    symtab = new_symtab;
+  public void newBlock() {
+    SymbolTable newSymtab = new SymbolTable();
+    newSymtab.upperSymtab = symtab;
+    symtab = newSymtab;
   }
 
-  /**
-   * Start a new block wit a new symbol table. The current table
-   * is saved in the variable upper_symtab. Furthermore, a first
-   * symbol of type type and id id is added.
-   */
-  public void newBlock(String type, String id)
-  {
-    SymbolTable new_symtab = new SymbolTable();
-    new_symtab.upper_symtab = symtab;
-    symtab = new_symtab;
-    symtab.addSymbol(new Symbol(id, Symbol.DEFAULT));
+  public void endBlock() {
+    symtab = symtab.upperSymtab;
   }
 
-  /**
-   * End a block: the current symbol table becomes the upper symbol
-   * table.
-   */
-  public void endBlock()
-  {
-    symtab = symtab.upper_symtab;
+  public void checkSemantics() {
   }
 
-
-  /**
-   * Perform all semantic actions and checks, which are necessary
-   */
-  public void Check()
-  {
-  }
-
-  /**
-   * Report warnings, when SIWG Level 1 is violated
-   */
-  public void CheckSIWGLevel1()
-  {
-  }
-
-  public int getId()
-  {
+  public int getId() {
     return id;
   }
 }
