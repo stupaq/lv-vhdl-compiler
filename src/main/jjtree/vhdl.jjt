@@ -34,6 +34,7 @@ options
 {
   STATIC=false;
   MULTI=true;
+  NODE_USES_PARSER=true;
   TRACK_TOKENS=true;
   VISITOR_EXCEPTION="java.lang.Exception";
 }
@@ -190,14 +191,14 @@ TOKEN :
     <#upper_case_letter:               ["A"-"Z"]>
   | <#lower_case_letter:               ["a"-"z"]>
   | <#digit:                           ["0"-"9"]>
-  | <#extended_digit:                  ["0"-"9","A"-"F"]>
+  | <#extended_digit:                  ["0"-"9","A"-"F","a"-"f"]>
   | <#special_character:               ["#","&","'","(",")","*","+",",","-",
                                         ".","/",":",";","<","=",">","[","]",
                                         "_","|"]>
   | <#other_special_character:         ["!","$","%","@","?","^","`","{","}","~",
                                         "\\"]>
   | <#format_effector:                 ["\n","\t"]>
-  | <#base_specifier:                  ["B","O","X"]>
+  | <#base_specifier:                  ["B","O","X","b","o","x"]>
   | <#underline:                       "_">
   | <#letter:                          ["a"-"z","A"-"Z"]>
   | <#letter_or_digit:                 ["a"-"z","A"-"Z","0"-"9"]>
@@ -319,6 +320,7 @@ void alias_designator() :
   | operator_symbol()
 }
 
+
 void allocator() :
 {}
 {
@@ -329,7 +331,6 @@ void allocator() :
     | subtype_indication()
   )
 }
-
 
 
 void architecture_body() :
@@ -346,7 +347,6 @@ void architecture_body() :
     jjtThis.checkSemantics();
   }
 }
-
 
 
 void architecture_declarative_part() :
@@ -454,7 +454,6 @@ void assertion_statement() :
 }
 
 
-
 void association_element() :
 {}
 {
@@ -502,7 +501,6 @@ void base_unit_declaration() #void :
 {
   identifier() ";"
 }
-
 
 
 void binding_indication() :
@@ -556,7 +554,7 @@ void block_declarative_item() #void :
 
   }
 
-  // Error handling: skip until next semicolon
+  /** Error handling: skip until next semicolon. */
   catch (ParseException e)
   {
     error_skipto(SEMICOLON, "syntax error in declarative item");
@@ -1039,8 +1037,8 @@ void entity_declaration() :
   <END> [ <ENTITY> ] [ entity_simple_name() ] ";"
 
   {
-    jjtThis.checkSemantics();
     jjtThis.endBlock();
+    jjtThis.checkSemantics();
   }
 }
 
@@ -2035,8 +2033,8 @@ void process_statement() :
    <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] ";"
 
    {
-     jjtThis.checkSemantics();
      jjtThis.endBlock();
+     jjtThis.checkSemantics();
    }
 }
 
@@ -3294,5 +3292,5 @@ JAVACODE void error_skipto(int kind, String message)
   Token t;
   do {
     t = getNextToken();
-  } while ((t.kind != kind));
+  } while (t.kind != kind && t.next != null);
 }

@@ -1,12 +1,11 @@
 package stupaq.parser;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SymbolTable {
   public SymbolTable upperSymtab;
-  List<Symbol> symbols = Collections.synchronizedList(new ArrayList<Symbol>());
+  List<Symbol> symbols = new ArrayList<>();
   String blockName;
 
   public void addSymbol(Symbol s) {
