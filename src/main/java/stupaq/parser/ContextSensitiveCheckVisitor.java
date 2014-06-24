@@ -1,5 +1,6 @@
 package stupaq.parser;
 
+import stupaq.ast.NoOpVisitor;
 import stupaq.vhdl93.ASTarchitecture_body;
 import stupaq.vhdl93.ASTentity_declaration;
 import stupaq.vhdl93.ASTidentifier;

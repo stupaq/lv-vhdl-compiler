@@ -1,12 +1,14 @@
-package stupaq.vhdl2lv;
+package stupaq.lv2vhdl;
 
 import java.io.FileInputStream;
+import java.io.PrintWriter;
 
 import stupaq.parser.ErrorSummary;
 import stupaq.vhdl93.VHDL93Parser;
 
-public class Compiler {
+public class LV2VHDL {
   public static void main(String args[]) throws Exception {
+    // FIXME this should got in opposite direction
     if (args.length == 1) {
       FileInputStream file = new FileInputStream(args[0]);
       VHDL93Parser parser = new VHDL93Parser(file);
@@ -15,6 +17,9 @@ public class Compiler {
         System.out.println("reading from file: " + args[0]);
         parser.design_file();
         System.err.println(parser.getErrorHandler().summary());
+        parser.rootNode()
+            .jjtAccept(new VHDLEmitterVisitor(),
+                new IndentingPrinter(new PrintWriter(System.out), "  "));
       } catch (Exception e) {
         e.printStackTrace();
         throw e;

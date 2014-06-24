@@ -56,6 +56,10 @@ public class VHDL93Parser
   public ErrorHandler getErrorHandler() {
     return errorHandler;
   }
+
+  public SimpleNode rootNode() {
+    return (SimpleNode) jjtree.rootNode();
+  }
 }
 
 PARSER_END(VHDL93Parser)
