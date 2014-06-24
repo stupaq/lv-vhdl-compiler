@@ -54,8 +54,8 @@ class SimpleNode implements Node {
   public Object jjtGetValue() { return value; }
 
   /** Accept the visitor. **/
-  public Object jjtAccept(VHDL93ParserVisitor visitor, Object data)
-{
+  public <Result, Argument> Result jjtAccept(VHDL93ParserVisitor<Result, Argument> visitor, Argument data)
+  {
     return visitor.visit(this, data);
   }
 

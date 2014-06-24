@@ -19,7 +19,6 @@ class ASTidentifier extends SimpleNode {
   }
 
   /** Customizations for {@link VHDL93Parser} compatibility. */
-
   public String name;
 }
 /* JavaCC - OriginalChecksum=859976eccf1fda894d32b00e9b9db89c (do not edit this line) */
