@@ -34,6 +34,6 @@ interface Node {
   public int jjtGetNumChildren();
 
   /** Accept the visitor. **/
-  public <Result, Argument> Result jjtAccept(VHDL93ParserVisitor<Result, Argument> visitor, Argument data);
+  public <Result, Argument, Failure extends Exception> Result jjtAccept(VHDL93ParserVisitor<Result, Argument, Failure> visitor, Argument data) throws Failure;
 }
 /* JavaCC - OriginalChecksum=97a56a9f2765a09dbd3aab53701c3ec3 (do not edit this line) */

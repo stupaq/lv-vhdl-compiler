@@ -14,7 +14,7 @@ class ASTidentifier extends SimpleNode {
 
 
   /** Accept the visitor. **/
-  public Object jjtAccept(VHDL93ParserVisitor visitor, Object data) {
+  public Object jjtAccept(VHDL93ParserVisitor visitor, Object data) throws Exception{
     return visitor.visit(this, data);
   }
 

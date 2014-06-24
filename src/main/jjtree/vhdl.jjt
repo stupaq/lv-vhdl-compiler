@@ -34,6 +34,7 @@ options
 {
   STATIC=false;
   MULTI=true;
+  VISITOR_EXCEPTION="java.lang.Exception";
 }
 
 PARSER_BEGIN(VHDL93Parser)

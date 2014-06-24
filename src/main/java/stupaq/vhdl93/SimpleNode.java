@@ -54,14 +54,14 @@ class SimpleNode implements Node {
   public Object jjtGetValue() { return value; }
 
   /** Accept the visitor. **/
-  public <Result, Argument> Result jjtAccept(VHDL93ParserVisitor<Result, Argument> visitor, Argument data)
+  public <Result, Argument, Failure extends Exception> Result jjtAccept(VHDL93ParserVisitor<Result, Argument, Failure> visitor, Argument data) throws Failure
   {
     return visitor.visit(this, data);
   }
 
   /** Accept the visitor. **/
-  public Object childrenAccept(VHDL93ParserVisitor visitor, Object data)
-{
+  public <Argument, Failure extends Exception> Argument childrenAccept(VHDL93ParserVisitor<Argument, Argument, Failure> visitor, Argument data) throws Failure
+  {
     if (children != null) {
       for (int i = 0; i < children.length; ++i) {
         children[i].jjtAccept(visitor, data);
