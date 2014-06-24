@@ -50,16 +50,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTunconstrained_nature_definition node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTconstrained_nature_definition node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTassertion node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -130,21 +120,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTbreak_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTbreak_list node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTbreak_element node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTcase_statement node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -200,7 +175,8 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTconcurrent_signal_assignment_statement node, Argument data) throws Failure {
+  public Result visit(ASTconcurrent_signal_assignment_statement node, Argument data)
+      throws Failure {
     return visit((SimpleNode) node, data);
   }
 
@@ -241,16 +217,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
 
   @Override
   public Result visit(ASTcontext_clause node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTterminal_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTterminal_aspect node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
 
@@ -301,11 +267,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
 
   @Override
   public Result visit(ASTentity_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTnature_declaration node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
 
@@ -410,11 +371,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTconcurrent_break_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTgeneration_scheme node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -505,16 +461,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTinterface_terminal_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTinterface_quantity_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTinterface_file_declaration node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -561,11 +507,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
 
   @Override
   public Result visit(ASTname node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTnature_element_declaration node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
 
@@ -675,11 +616,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTrecord_nature_definition node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTrecord_type_definition node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -696,11 +632,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
 
   @Override
   public Result visit(ASTreturn_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTscalar_nature_definition node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
 
@@ -810,36 +741,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTfree_quantity_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTbranch_quantity_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsource_quantity_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTacross_aspect node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTthrough_aspect node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsource_aspect node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTtype_conversion node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
@@ -876,51 +777,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
 
   @Override
   public Result visit(ASTwaveform_element node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_statement_part node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimple_simultaneous_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_if_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_case_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_alternative node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_procedural_statement node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTprocedural_declarative_part node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTprocedural_statement_part node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsimultaneous_null_statement node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
 

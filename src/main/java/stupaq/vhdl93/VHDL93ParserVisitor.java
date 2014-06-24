@@ -12,8 +12,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTarchitecture_body node, Argument data) throws Failure;
   public Result visit(ASTarchitecture_declarative_part node, Argument data) throws Failure;
   public Result visit(ASTarchitecture_statement_part node, Argument data) throws Failure;
-  public Result visit(ASTunconstrained_nature_definition node, Argument data) throws Failure;
-  public Result visit(ASTconstrained_nature_definition node, Argument data) throws Failure;
   public Result visit(ASTassertion node, Argument data) throws Failure;
   public Result visit(ASTassertion_statement node, Argument data) throws Failure;
   public Result visit(ASTassociation_element node, Argument data) throws Failure;
@@ -28,9 +26,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTblock_specification node, Argument data) throws Failure;
   public Result visit(ASTblock_statement node, Argument data) throws Failure;
   public Result visit(ASTblock_statement_part node, Argument data) throws Failure;
-  public Result visit(ASTbreak_statement node, Argument data) throws Failure;
-  public Result visit(ASTbreak_list node, Argument data) throws Failure;
-  public Result visit(ASTbreak_element node, Argument data) throws Failure;
   public Result visit(ASTcase_statement node, Argument data) throws Failure;
   public Result visit(ASTcase_statement_alternative node, Argument data) throws Failure;
   public Result visit(ASTchoice node, Argument data) throws Failure;
@@ -51,8 +46,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTconstant_declaration node, Argument data) throws Failure;
   public Result visit(ASTconstrained_array_definition node, Argument data) throws Failure;
   public Result visit(ASTcontext_clause node, Argument data) throws Failure;
-  public Result visit(ASTterminal_declaration node, Argument data) throws Failure;
-  public Result visit(ASTterminal_aspect node, Argument data) throws Failure;
   public Result visit(ASTdelay_mechanism node, Argument data) throws Failure;
   public Result visit(ASTdesign_file node, Argument data) throws Failure;
   public Result visit(ASTdesign_unit node, Argument data) throws Failure;
@@ -63,7 +56,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTentity_class_entry node, Argument data) throws Failure;
   public Result visit(ASTentity_class_entry_list node, Argument data) throws Failure;
   public Result visit(ASTentity_declaration node, Argument data) throws Failure;
-  public Result visit(ASTnature_declaration node, Argument data) throws Failure;
   public Result visit(ASTsubnature_declaration node, Argument data) throws Failure;
   public Result visit(ASTsubnature_indication node, Argument data) throws Failure;
   public Result visit(ASTentity_declarative_part node, Argument data) throws Failure;
@@ -84,7 +76,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTfull_type_declaration node, Argument data) throws Failure;
   public Result visit(ASTfunction_call node, Argument data) throws Failure;
   public Result visit(ASTgenerate_statement node, Argument data) throws Failure;
-  public Result visit(ASTconcurrent_break_statement node, Argument data) throws Failure;
   public Result visit(ASTgeneration_scheme node, Argument data) throws Failure;
   public Result visit(ASTgeneric_clause node, Argument data) throws Failure;
   public Result visit(ASTgroup_constituent node, Argument data) throws Failure;
@@ -103,8 +94,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTinstantiated_unit node, Argument data) throws Failure;
   public Result visit(ASTinstantiation_list node, Argument data) throws Failure;
   public Result visit(ASTinterface_constant_declaration node, Argument data) throws Failure;
-  public Result visit(ASTinterface_terminal_declaration node, Argument data) throws Failure;
-  public Result visit(ASTinterface_quantity_declaration node, Argument data) throws Failure;
   public Result visit(ASTinterface_file_declaration node, Argument data) throws Failure;
   public Result visit(ASTinterface_list node, Argument data) throws Failure;
   public Result visit(ASTinterface_signal_declaration node, Argument data) throws Failure;
@@ -115,7 +104,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTloop_statement node, Argument data) throws Failure;
   public Result visit(ASTmode node, Argument data) throws Failure;
   public Result visit(ASTname node, Argument data) throws Failure;
-  public Result visit(ASTnature_element_declaration node, Argument data) throws Failure;
   public Result visit(ASTnext_statement node, Argument data) throws Failure;
   public Result visit(ASTnull_statement node, Argument data) throws Failure;
   public Result visit(ASToperator_symbol node, Argument data) throws Failure;
@@ -137,12 +125,10 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTprocess_statement_part node, Argument data) throws Failure;
   public Result visit(ASTqualified_expression node, Argument data) throws Failure;
   public Result visit(ASTrange node, Argument data) throws Failure;
-  public Result visit(ASTrecord_nature_definition node, Argument data) throws Failure;
   public Result visit(ASTrecord_type_definition node, Argument data) throws Failure;
   public Result visit(ASTshift_expression node, Argument data) throws Failure;
   public Result visit(ASTreport_statement node, Argument data) throws Failure;
   public Result visit(ASTreturn_statement node, Argument data) throws Failure;
-  public Result visit(ASTscalar_nature_definition node, Argument data) throws Failure;
   public Result visit(ASTsecondary_unit_declaration node, Argument data) throws Failure;
   public Result visit(ASTselected_name node, Argument data) throws Failure;
   public Result visit(ASTselected_signal_assignment node, Argument data) throws Failure;
@@ -164,12 +150,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTsubprogram_statement_part node, Argument data) throws Failure;
   public Result visit(ASTsubtype_declaration node, Argument data) throws Failure;
   public Result visit(ASTsubtype_indication node, Argument data) throws Failure;
-  public Result visit(ASTfree_quantity_declaration node, Argument data) throws Failure;
-  public Result visit(ASTbranch_quantity_declaration node, Argument data) throws Failure;
-  public Result visit(ASTsource_quantity_declaration node, Argument data) throws Failure;
-  public Result visit(ASTacross_aspect node, Argument data) throws Failure;
-  public Result visit(ASTthrough_aspect node, Argument data) throws Failure;
-  public Result visit(ASTsource_aspect node, Argument data) throws Failure;
   public Result visit(ASTtype_conversion node, Argument data) throws Failure;
   public Result visit(ASTunconstrained_array_definition node, Argument data) throws Failure;
   public Result visit(ASTuse_clause node, Argument data) throws Failure;
@@ -178,15 +158,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTwait_statement node, Argument data) throws Failure;
   public Result visit(ASTwaveform node, Argument data) throws Failure;
   public Result visit(ASTwaveform_element node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_statement_part node, Argument data) throws Failure;
-  public Result visit(ASTsimple_simultaneous_statement node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_if_statement node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_case_statement node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_alternative node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_procedural_statement node, Argument data) throws Failure;
-  public Result visit(ASTprocedural_declarative_part node, Argument data) throws Failure;
-  public Result visit(ASTprocedural_statement_part node, Argument data) throws Failure;
-  public Result visit(ASTsimultaneous_null_statement node, Argument data) throws Failure;
   public Result visit(ASTshared_variable_declaration node, Argument data) throws Failure;
   public Result visit(ASTerror_skipto node, Argument data) throws Failure;
 }

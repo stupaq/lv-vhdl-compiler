@@ -86,7 +86,6 @@ SPECIAL_TOKEN :
 
 /** 
  * Section 13: Lexical elements
- * with extensions from IEEE 1076.1
  */
 TOKEN [IGNORE_CASE] :
 {
@@ -279,11 +278,6 @@ void actual_designator()       :
   | LOOKAHEAD(file_name())
     file_name()
   | <OPEN>
-
-  // 1076.1 extensions:
-  | LOOKAHEAD(terminal_name())
-    terminal_name()
-  | quantity_name()
 }
 
 
@@ -627,12 +621,6 @@ void architecture_statement()       :
     component_instantiation_statement()
   | LOOKAHEAD(generate_statement())
     generate_statement()
-
-  /** 1076.1 extensions: */
-  | LOOKAHEAD(concurrent_break_statement())
-    concurrent_break_statement()
-  | simultaneous_statement()
-
   }
 
   /** Error handling: skip until next semicolon. */
@@ -640,93 +628,6 @@ void architecture_statement()       :
   {
     error_skipto(SEMICOLON, "syntax error in statement");
   }
-}
-
-
-/**
- * 1076.1 extension:
- */
-void array_nature_definition()        :
-{}
-{
-    LOOKAHEAD(<ARRAY> "(" index_subtype_definition() )
-    unconstrained_nature_definition()
-  | constrained_nature_definition()
-}
-
-/**
-  * 1076.1 extension:
-  */
-void unconstrained_nature_definition() :
-{/*@bgen(jjtree) unconstrained_nature_definition */
-  ASTunconstrained_nature_definition jjtn000 = new ASTunconstrained_nature_definition(this, JJTUNCONSTRAINED_NATURE_DEFINITION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) unconstrained_nature_definition */
-  try {
-/*@egen*/
-  <ARRAY> "(" index_subtype_definition() ("," index_subtype_definition())* ")" 
-  <OF> subnature_indication()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
-  * 1076.1 extension:
-  */
-void constrained_nature_definition() :
-{/*@bgen(jjtree) constrained_nature_definition */
-  ASTconstrained_nature_definition jjtn000 = new ASTconstrained_nature_definition(this, JJTCONSTRAINED_NATURE_DEFINITION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) constrained_nature_definition */
-  try {
-/*@egen*/
-  <ARRAY> index_constraint() <OF> subnature_indication()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
 }
 
 
@@ -1097,13 +998,6 @@ void block_declarative_item()       :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-
-  /** 1076.1 - Extensions: */
-  | nature_declaration()
-  | subnature_declaration()
-  | quantity_declaration()
-  | terminal_declaration()
-
   }
 
   /** Error handling: skip until next semicolon. */
@@ -1263,7 +1157,6 @@ void block_statement() :
 /*@egen*/
 }
 
-
 void block_statement_part() :
 {/*@bgen(jjtree) block_statement_part */
   ASTblock_statement_part jjtn000 = new ASTblock_statement_part(this, JJTBLOCK_STATEMENT_PART);
@@ -1298,126 +1191,6 @@ void block_statement_part() :
 /*@egen*/
 }
 
-/**
- * Section 8.14: Break statement
- * 1076.1 extension:
- */
-void break_statement() :
-{/*@bgen(jjtree) break_statement */
-  ASTbreak_statement jjtn000 = new ASTbreak_statement(this, JJTBREAK_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) break_statement */
-  try {
-/*@egen*/
-  [label()  ":"] <BREAK> [break_list()] [<WHEN> condition() ] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void break_list() :
-{/*@bgen(jjtree) break_list */
-  ASTbreak_list jjtn000 = new ASTbreak_list(this, JJTBREAK_LIST);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) break_list */
-  try {
-/*@egen*/
-  break_element() ("," break_element() )*/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void break_element() :
-{/*@bgen(jjtree) break_element */
-  ASTbreak_element jjtn000 = new ASTbreak_element(this, JJTBREAK_ELEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) break_element */
-  try {
-/*@egen*/
-  [selector_clause() ] quantity_name() "=>" expression()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void selector_clause()       :
-{}
-{
-  <FOR> quantity_name() <USE>
-}
 
 void case_statement() :
 {/*@bgen(jjtree) case_statement */
@@ -1457,7 +1230,6 @@ void case_statement() :
 /*@egen*/
 }
 
-
 void case_statement_alternative() :
 {/*@bgen(jjtree) case_statement_alternative */
   ASTcase_statement_alternative jjtn000 = new ASTcase_statement_alternative(this, JJTCASE_STATEMENT_ALTERNATIVE);
@@ -1468,8 +1240,7 @@ void case_statement_alternative() :
 {/*@bgen(jjtree) case_statement_alternative */
   try {
 /*@egen*/
-  <WHEN> choices() "=>"
-                sequence_of_statements()/*@bgen(jjtree)*/
+  <WHEN> choices() "=>" sequence_of_statements()/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -1680,14 +1451,6 @@ void component_instantiation_statement() :
 /*@egen*/
 }
 
-
-// 1076.1 - extension:
-void composite_nature_definition()       :
-{}
-{
-    array_nature_definition()
-  | record_nature_definition()
-}
 
 void component_specification() :
 {/*@bgen(jjtree) component_specification */
@@ -2215,80 +1978,6 @@ void context_item()       :
  * Section 4:
  * Declarations
  */
-
-
-/**
- * 1076.1 extension:
- */
-void terminal_declaration() :
-{/*@bgen(jjtree) terminal_declaration */
-  ASTterminal_declaration jjtn000 = new ASTterminal_declaration(this, JJTTERMINAL_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) terminal_declaration */
-  try {
-/*@egen*/
-  <TERMINAL> identifier_list() ":" subnature_indication() ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-void terminal_aspect() :
-{/*@bgen(jjtree) terminal_aspect */
-  ASTterminal_aspect jjtn000 = new ASTterminal_aspect(this, JJTTERMINAL_ASPECT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) terminal_aspect */
-  try {
-/*@egen*/
-  plus_terminal_name() [ <TO> minus_terminal_name() ]/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
 void delay_mechanism() :
 {/*@bgen(jjtree) delay_mechanism */
   ASTdelay_mechanism jjtn000 = new ASTdelay_mechanism(this, JJTDELAY_MECHANISM);
@@ -2357,7 +2046,6 @@ void design_file() :
   }
 /*@egen*/
 }
-
 
 void design_unit() :
 {/*@bgen(jjtree) design_unit */
@@ -2578,11 +2266,6 @@ int entity_class()       :
   | <UNITS>                     { return UNITS; }
   | <GROUP>                     { return GROUP; }
   | <FILE>                      { return FILE; }
-
-  /** 1076.1 extensions: */
-  | <SUBNATURE>                 { return SUBNATURE; }
-  | <NATURE>                    { return NATURE; }
-  | <TERMINAL>                  { return TERMINAL; }
 }
 
 
@@ -2726,10 +2409,6 @@ void entity_declarative_item()       :
     group_template_declaration()
   | group_declaration()
 
-  // 1076.1 - Extensions:
-  | nature_declaration()
-  | subnature_declaration()
-  | terminal_declaration()
   }
   catch( ParseException e )
   {
@@ -2737,54 +2416,7 @@ void entity_declarative_item()       :
   }
 }
 
-/**
- * 4.8: Nature Declaration
- * 1076.1 extension
- */
-void nature_declaration() :
-{/*@bgen(jjtree) nature_declaration */
-  ASTnature_declaration jjtn000 = new ASTnature_declaration(this, JJTNATURE_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) nature_declaration */
-  try {
-/*@egen*/
-  <NATURE> identifier() <IS> nature_definition() ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension
- */
-void nature_definition()       :
-{}
-{
-    scalar_nature_definition()
-  | composite_nature_definition()
-}
-
+// FIXME
 void subnature_declaration() :
 {/*@bgen(jjtree) subnature_declaration */
   ASTsubnature_declaration jjtn000 = new ASTsubnature_declaration(this, JJTSUBNATURE_DECLARATION);
@@ -2830,7 +2462,7 @@ void subnature_indication() :
 {/*@bgen(jjtree) subnature_indication */
   try {
 /*@egen*/
-  nature_mark() [index_constraint() ] 
+  nature_mark() [index_constraint() ]
   [ <TOLERANCE> string_expression() <ACROSS> string_expression() <THROUGH>]/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -2859,7 +2491,7 @@ void nature_mark()       :
 {}
 {
     LOOKAHEAD(nature_name())
-    nature_name() 
+    nature_name()
   | LOOKAHEAD(subnature_name())
     subnature_name()
 }
@@ -3573,42 +3205,6 @@ void generate_statement() :
 /*@egen*/
 }
 
-/** 1076.1 extension: */
-void concurrent_break_statement() :
-{/*@bgen(jjtree) concurrent_break_statement */
-  ASTconcurrent_break_statement jjtn000 = new ASTconcurrent_break_statement(this, JJTCONCURRENT_BREAK_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) concurrent_break_statement */
-  try {
-/*@egen*/
-  [label() ":"] <BREAK> [break_list()] [sensitivity_clause() ] [ <WHEN> condition()] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
 void generation_scheme() :
 {/*@bgen(jjtree) generation_scheme */
   ASTgeneration_scheme jjtn000 = new ASTgeneration_scheme(this, JJTGENERATION_SCHEME);
@@ -4287,87 +3883,6 @@ void interface_declaration()       :
     interface_variable_declaration()
   | LOOKAHEAD(interface_file_declaration() )
     interface_file_declaration()
-
-  /** 1076.1 extensions: */
-  | interface_terminal_declaration() 
-  | interface_quantity_declaration()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void interface_terminal_declaration()  :
-{/*@bgen(jjtree) interface_terminal_declaration */
-  ASTinterface_terminal_declaration jjtn000 = new ASTinterface_terminal_declaration(this, JJTINTERFACE_TERMINAL_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) interface_terminal_declaration */
-  try {
-/*@egen*/
-  <TERMINAL> identifier_list() ":" subnature_indication()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * 1076.1 extension:
- */
-void interface_quantity_declaration() :
-{/*@bgen(jjtree) interface_quantity_declaration */
-  ASTinterface_quantity_declaration jjtn000 = new ASTinterface_quantity_declaration(this, JJTINTERFACE_QUANTITY_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) interface_quantity_declaration */
-  try {
-/*@egen*/
-  <QUANTITY> identifier_list() ":" 
-  [ <IN> | <OUT> ] subtype_indication() [ ":=" static_expression() ]/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
 }
 
 
@@ -4821,53 +4336,6 @@ void name_extension()       :
   [  LOOKAHEAD(name_extension() ) name_extension() ]
 }
 
-/**
- * 1076.1 extension:
- */
-void nature_element_declaration() :
-{/*@bgen(jjtree) nature_element_declaration */
-  ASTnature_element_declaration jjtn000 = new ASTnature_element_declaration(this, JJTNATURE_ELEMENT_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) nature_element_declaration */
-  try {
-/*@egen*/
-  identifier_list() ":" element_subnature_definition()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void element_subnature_definition()       :
-{}
-{
-  subnature_indication()
-}
-
-
 void next_statement() :
 {/*@bgen(jjtree) next_statement */
   ASTnext_statement jjtn000 = new ASTnext_statement(this, JJTNEXT_STATEMENT);
@@ -4955,10 +4423,6 @@ void object_declaration()       :
   | signal_declaration()
   | variable_declaration()
   | file_declaration()
-  /** 1076.1 extensions: */
-  | terminal_declaration()
-  | quantity_declaration()
-
   }
   catch( ParseException e )
   {
@@ -5178,11 +4642,6 @@ void package_declarative_item()       :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-
-  // 1076.1 extensions:
-  | nature_declaration()
-  | subnature_declaration()
-  | terminal_declaration()
   }
   catch(ParseException e)
   {
@@ -5776,42 +5235,6 @@ void range_constraint()       :
   <RANGE> range()
 }
 
-void record_nature_definition() :
-{/*@bgen(jjtree) record_nature_definition */
-  ASTrecord_nature_definition jjtn000 = new ASTrecord_nature_definition(this, JJTRECORD_NATURE_DEFINITION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) record_nature_definition */
-  try {
-/*@egen*/
-  <RECORD>
-  ( nature_element_declaration() )+
-  <END> <RECORD> [ record_nature_simple_name() ]/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
 void record_type_definition() :
 {/*@bgen(jjtree) record_type_definition */
   ASTrecord_type_definition jjtn000 = new ASTrecord_type_definition(this, JJTRECORD_TYPE_DEFINITION);
@@ -5973,42 +5396,6 @@ void return_statement() :
 }
 
 
-// 1076.1 - extension:
-void scalar_nature_definition() :
-{/*@bgen(jjtree) scalar_nature_definition */
-  ASTscalar_nature_definition jjtn000 = new ASTscalar_nature_definition(this, JJTSCALAR_NATURE_DEFINITION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) scalar_nature_definition */
-  try {
-/*@egen*/
-  type_mark() <ACROSS> type_mark() <THROUGH>/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
 void scalar_type_definition()       :
 {}
 {
@@ -6017,13 +5404,7 @@ void scalar_type_definition()       :
   |
     LOOKAHEAD(enumeration_type_definition())
     enumeration_type_definition()
-/**  | integer_type_definition()
- *  | floating_type_definition()
- * integer- and floating_type_definition are both range_constraint,
- * thus:
- */
-  |
-    range_constraint()
+  | range_constraint()
 }
 
 void secondary_unit()       :
@@ -6295,9 +5676,6 @@ void sequential_statement()       :
       return_statement()
     | LOOKAHEAD(3)
       null_statement()
-
-    /** 1076.1 extensions: */
-    | break_statement()
     )
   }
 
@@ -6863,19 +6241,15 @@ void subtype_indication() :
    */ 
     LOOKAHEAD(resolution_function_name() type_mark() constraint())
     resolution_function_name() type_mark() constraint() 
-      [ LOOKAHEAD(tolerance_aspect())tolerance_aspect() ]
 
   | LOOKAHEAD( type_mark() constraint() )
     type_mark() constraint() 
-      [ LOOKAHEAD(tolerance_aspect()) tolerance_aspect() ]
 
   | LOOKAHEAD( resolution_function_name() type_mark() )
     resolution_function_name() type_mark() 
-      [ LOOKAHEAD(tolerance_aspect())tolerance_aspect() ]
 
   | LOOKAHEAD( type_mark() )
-    type_mark()  
-      [ LOOKAHEAD(tolerance_aspect()) tolerance_aspect() ]/*@bgen(jjtree)*/
+    type_mark()/*@bgen(jjtree)*/
     } catch (Throwable jjte000) {
       if (jjtc000) {
         jjtree.clearNodeScope(jjtn000);
@@ -6896,258 +6270,9 @@ void subtype_indication() :
         jjtn000.jjtSetLastToken(getToken(0));
       }
     }
-/*@egen*/
+/*@egen*/  
 }
 
-
-/**
- * 1076.1 extension:
- */
-void tolerance_aspect()       :
-{}
-{
-  <TOLERANCE> string_expression()
-}
-
-
-/**
- * Section 4.3.1.6: Quantity declaration
- * 1076.1 extension:
- */
-void quantity_declaration()       :
-{}
-{
-    LOOKAHEAD(free_quantity_declaration() )
-    free_quantity_declaration()
-  | LOOKAHEAD(branch_quantity_declaration() )
-    branch_quantity_declaration()
-  | source_quantity_declaration()
-}
-
-/**
- * 1076.1 extension:
- */
-void free_quantity_declaration() :
-{/*@bgen(jjtree) free_quantity_declaration */
-  ASTfree_quantity_declaration jjtn000 = new ASTfree_quantity_declaration(this, JJTFREE_QUANTITY_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) free_quantity_declaration */
-  try {
-/*@egen*/
-  <QUANTITY> identifier_list() ":" subtype_indication() [":=" expression()] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void branch_quantity_declaration() :
-{/*@bgen(jjtree) branch_quantity_declaration */
-  ASTbranch_quantity_declaration jjtn000 = new ASTbranch_quantity_declaration(this, JJTBRANCH_QUANTITY_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) branch_quantity_declaration */
-  try {
-/*@egen*/
-  <QUANTITY> [LOOKAHEAD(across_aspect()) across_aspect()] 
-	     [LOOKAHEAD(through_aspect()) through_aspect()] 
-	     terminal_aspect() ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void source_quantity_declaration() :
-{/*@bgen(jjtree) source_quantity_declaration */
-  ASTsource_quantity_declaration jjtn000 = new ASTsource_quantity_declaration(this, JJTSOURCE_QUANTITY_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) source_quantity_declaration */
-  try {
-/*@egen*/ 
-  <QUANTITY> identifier_list() ":" subtype_indication() source_aspect() ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void across_aspect() :
-{/*@bgen(jjtree) across_aspect */
-  ASTacross_aspect jjtn000 = new ASTacross_aspect(this, JJTACROSS_ASPECT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) across_aspect */
-  try {
-/*@egen*/
-  identifier_list() [ tolerance_aspect() ] [ ":=" expression() ] <ACROSS>/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void through_aspect() :
-{/*@bgen(jjtree) through_aspect */
-  ASTthrough_aspect jjtn000 = new ASTthrough_aspect(this, JJTTHROUGH_ASPECT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) through_aspect */
-  try {
-/*@egen*/
-  identifier_list() [ tolerance_aspect() ] [ ":=" expression() ] <THROUGH>/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-} 
-
-/**
- * 1076.1 extension:
- */
-void source_aspect() :
-{/*@bgen(jjtree) source_aspect */
-  ASTsource_aspect jjtn000 = new ASTsource_aspect(this, JJTSOURCE_ASPECT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) source_aspect */
-    try {
-/*@egen*/
-    <SPECTRUM> magnitude_simple_expression() "," phase_simple_expression() 
-  | <NOISE>    magnitude_simple_expression()/*@bgen(jjtree)*/
-    } catch (Throwable jjte000) {
-      if (jjtc000) {
-        jjtree.clearNodeScope(jjtn000);
-        jjtc000 = false;
-      } else {
-        jjtree.popNode();
-      }
-      if (jjte000 instanceof RuntimeException) {
-        throw (RuntimeException)jjte000;
-      }
-      if (jjte000 instanceof ParseException) {
-        throw (ParseException)jjte000;
-      }
-      throw (Error)jjte000;
-    } finally {
-      if (jjtc000) {
-        jjtree.closeNodeScope(jjtn000, true);
-        jjtn000.jjtSetLastToken(getToken(0));
-      }
-    }
-/*@egen*/ 
-}
 
 void suffix()       :
 {}
@@ -7205,7 +6330,7 @@ void term()       :
 void timeout_clause()       :
 {}
 {
-  <FOR> time_or_real_expression()
+  <FOR> expression()
 }
 
 
@@ -7526,407 +6651,7 @@ void waveform_element() :
 }
 
 
-/** 
- *Section 15: Simultaneous statements
- * 1076.1 extension
- */
-void simultaneous_statement_part()   :
-{/*@bgen(jjtree) simultaneous_statement_part */
-  ASTsimultaneous_statement_part jjtn000 = new ASTsimultaneous_statement_part(this, JJTSIMULTANEOUS_STATEMENT_PART);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_statement_part */
-  try {
-/*@egen*/
-  ( simultaneous_statement() )*/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_statement()       :
-{}
-{
-    LOOKAHEAD(simple_simultaneous_statement())
-    simple_simultaneous_statement()
-  | LOOKAHEAD( [if_label()] ":" <IF> condition() <USE> )
-    simultaneous_if_statement()
-  | LOOKAHEAD(simultaneous_case_statement())
-    simultaneous_case_statement()
-  | LOOKAHEAD(4) // procedural is at least as 4th position...
-    simultaneous_procedural_statement()
-  | simultaneous_null_statement()
-}
-
-/**
- * 1076.1 extension:
- */
-void simple_simultaneous_statement() :
-{/*@bgen(jjtree) simple_simultaneous_statement */
-  ASTsimple_simultaneous_statement jjtn000 = new ASTsimple_simultaneous_statement(this, JJTSIMPLE_SIMULTANEOUS_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simple_simultaneous_statement */
-  try {
-/*@egen*/
-  [ LOOKAHEAD( label() ":") label() ":"] 
-  [<PURE>|<IMPURE>] simple_expression() 
-  "==" simple_expression() [ tolerance_aspect() ] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_if_statement() :
-{/*@bgen(jjtree) simultaneous_if_statement */
-  ASTsimultaneous_if_statement jjtn000 = new ASTsimultaneous_if_statement(this, JJTSIMULTANEOUS_IF_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_if_statement */
-  try {
-/*@egen*/
-  [ if_label() ":"] <IF> condition() <USE>
-     simultaneous_statement_part()
-  ( <ELSIF> condition() <USE> simultaneous_statement_part() )*
-  [ <ELSE> simultaneous_statement_part() ]
-  <END> <USE> [ if_label()] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_case_statement() :
-{/*@bgen(jjtree) simultaneous_case_statement */
-  ASTsimultaneous_case_statement jjtn000 = new ASTsimultaneous_case_statement(this, JJTSIMULTANEOUS_CASE_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_case_statement */
-  try {
-/*@egen*/
-  [ case_label() ":"] <CASE> expression() <USE>
-    (simultaneous_alternative())*
-  <END> <CASE> [ case_label() ] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_alternative() :
-{/*@bgen(jjtree) simultaneous_alternative */
-  ASTsimultaneous_alternative jjtn000 = new ASTsimultaneous_alternative(this, JJTSIMULTANEOUS_ALTERNATIVE);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_alternative */
-  try {
-/*@egen*/
-  <WHEN> choices() <USE> simultaneous_statement_part()/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_procedural_statement() :
-{/*@bgen(jjtree) simultaneous_procedural_statement */
-  ASTsimultaneous_procedural_statement jjtn000 = new ASTsimultaneous_procedural_statement(this, JJTSIMULTANEOUS_PROCEDURAL_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_procedural_statement */
-  try {
-/*@egen*/
-  [procedural_label() ":"] [<PURE>|<IMPURE>] <PROCEDURAL> [<IS>]
-    procedural_declarative_part()
-   <BEGIN>
-     procedural_statement_part()
-   <END> <PROCEDURAL> [ procedural_label()] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-// 1076.1 extension:
-void procedural_label()       :
-{}
-{
-  label()
-}
-
-// 1076.1 extension:
-void procedural_declarative_part() :
-{/*@bgen(jjtree) procedural_declarative_part */
-  ASTprocedural_declarative_part jjtn000 = new ASTprocedural_declarative_part(this, JJTPROCEDURAL_DECLARATIVE_PART);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) procedural_declarative_part */
-  try {
-/*@egen*/
-  ( procedural_declarative_item() )*/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-/**
- * 1076.1 extension:
- */
-void procedural_declarative_item()       :
-{}
-{
-    LOOKAHEAD(subprogram_declaration())
-    subprogram_declaration()
-  | subprogram_body()
-  | type_declaration()
-  | subtype_declaration()
-  | constant_declaration()
-  | variable_declaration()
-  | alias_declaration()
-  | LOOKAHEAD(attribute_declaration())
-    attribute_declaration()
-  | attribute_specification()
-  | use_clause()
-  | LOOKAHEAD(group_template_declaration())
-    group_template_declaration()
-  | group_declaration()
-}
-
-/**
- * 1076.1 extension:
- */
-void procedural_statement_part() :
-{/*@bgen(jjtree) procedural_statement_part */
-  ASTprocedural_statement_part jjtn000 = new ASTprocedural_statement_part(this, JJTPROCEDURAL_STATEMENT_PART);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) procedural_statement_part */
-  try {
-/*@egen*/
-  ( sequential_statement() )*/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-
-// 1076.1 extension:
-void simultaneous_null_statement() :
-{/*@bgen(jjtree) simultaneous_null_statement */
-  ASTsimultaneous_null_statement jjtn000 = new ASTsimultaneous_null_statement(this, JJTSIMULTANEOUS_NULL_STATEMENT);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) simultaneous_null_statement */
-  try {
-/*@egen*/
-  [ label() ":"] <NULL> ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-//
-// parts of grammar, which have to be checked during semantic analysis
-// by semantic lookahead:
-//
+/** Parts of grammar, which have to be checked during semantic analysis by semantic lookahead. */
 void block_label()       :
 {}
 {
@@ -8116,13 +6841,6 @@ void type_name()      :
 }
 
 
-// 1076.1 extension:
-void record_nature_simple_name()       :
-{}
-{
-  simple_name()
-}
-
 void record_type_simple_name()       :
 {}
 {
@@ -8190,15 +6908,6 @@ void time_expression()       :
   expression() // unit_name()
   // unit_name can be derived by expression!!! 
 }
-
-// 1076.1 extension:
-void time_or_real_expression()       :
-{}
-{
-  expression() // unit_name()
-  // unit_name can be derived by expression!!!
-}
-
 
 void value_expression()       :
 {}
@@ -8343,44 +7052,6 @@ void subnature_name()       :
 {
   name()
 }
-
-/**
- * 1076.1 extension:
- */
-void terminal_name()       :
-{}
-{
-  name()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void quantity_name()       :
-{}
-{
-  name()
-}
-
-/**
- * 1076.1 extension:
- */
-void plus_terminal_name()       :
-{}
-{
-  name()
-}
-
-/**
- * 1076.1 extension:
- */
-void minus_terminal_name()       :
-{}
-{
-  name()
-}
-
 
 /**
  * still missing:

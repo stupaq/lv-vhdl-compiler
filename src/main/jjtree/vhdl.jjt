@@ -82,7 +82,6 @@ SPECIAL_TOKEN :
 
 /** 
  * Section 13: Lexical elements
- * with extensions from IEEE 1076.1
  */
 TOKEN [IGNORE_CASE] :
 {
@@ -275,11 +274,6 @@ void actual_designator() #void :
   | LOOKAHEAD(file_name())
     file_name()
   | <OPEN>
-
-  // 1076.1 extensions:
-  | LOOKAHEAD(terminal_name())
-    terminal_name()
-  | quantity_name()
 }
 
 
@@ -393,12 +387,6 @@ void architecture_statement() #void :
     component_instantiation_statement()
   | LOOKAHEAD(generate_statement())
     generate_statement()
-
-  /** 1076.1 extensions: */
-  | LOOKAHEAD(concurrent_break_statement())
-    concurrent_break_statement()
-  | simultaneous_statement()
-
   }
 
   /** Error handling: skip until next semicolon. */
@@ -406,37 +394,6 @@ void architecture_statement() #void :
   {
     error_skipto(SEMICOLON, "syntax error in statement");
   }
-}
-
-
-/**
- * 1076.1 extension:
- */
-void array_nature_definition() #void  :
-{}
-{
-    LOOKAHEAD(<ARRAY> "(" index_subtype_definition() )
-    unconstrained_nature_definition()
-  | constrained_nature_definition()
-}
-
-/**
-  * 1076.1 extension:
-  */
-void unconstrained_nature_definition() :
-{}
-{
-  <ARRAY> "(" index_subtype_definition() ("," index_subtype_definition())* ")" 
-  <OF> subnature_indication()
-}
-
-/**
-  * 1076.1 extension:
-  */
-void constrained_nature_definition() :
-{}
-{
-  <ARRAY> index_constraint() <OF> subnature_indication()
 }
 
 
@@ -555,13 +512,6 @@ void block_declarative_item() #void :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-
-  /** 1076.1 - Extensions: */
-  | nature_declaration()
-  | subnature_declaration()
-  | quantity_declaration()
-  | terminal_declaration()
-
   }
 
   /** Error handling: skip until next semicolon. */
@@ -609,49 +559,12 @@ void block_statement() :
                 <END> <BLOCK> [ block_label() ] ";"
 }
 
-
 void block_statement_part() :
 {}
 {
   (architecture_statement() )*
 }
 
-/**
- * Section 8.14: Break statement
- * 1076.1 extension:
- */
-void break_statement() :
-{}
-{
-  [label()  ":"] <BREAK> [break_list()] [<WHEN> condition() ] ";"
-}
-
-/**
- * 1076.1 extension:
- */
-void break_list() :
-{}
-{
-  break_element() ("," break_element() )*
-}
-
-/**
- * 1076.1 extension:
- */
-void break_element() :
-{}
-{
-  [selector_clause() ] quantity_name() "=>" expression()
-}
-
-/**
- * 1076.1 extension:
- */
-void selector_clause() #void :
-{}
-{
-  <FOR> quantity_name() <USE>
-}
 
 void case_statement() :
 {}
@@ -663,12 +576,10 @@ void case_statement() :
                 <END> <CASE> [ case_label() ] ";"
 }
 
-
 void case_statement_alternative() :
 {}
 {
-  <WHEN> choices() "=>"
-                sequence_of_statements()
+  <WHEN> choices() "=>" sequence_of_statements()
 }
 
 
@@ -718,14 +629,6 @@ void component_instantiation_statement() :
          [ port_map_aspect() ] ";"
 }
 
-
-// 1076.1 - extension:
-void composite_nature_definition() #void :
-{}
-{
-    array_nature_definition()
-  | record_nature_definition()
-}
 
 void component_specification() :
 {}
@@ -889,24 +792,6 @@ void context_item() #void :
  * Section 4:
  * Declarations
  */
-
-
-/**
- * 1076.1 extension:
- */
-void terminal_declaration() :
-{}
-{
-  <TERMINAL> identifier_list() ":" subnature_indication() ";"
-}
-
-void terminal_aspect() :
-{}
-{
-  plus_terminal_name() [ <TO> minus_terminal_name() ]
-}
-
-
 void delay_mechanism() :
 {}
 {
@@ -919,7 +804,6 @@ void design_file() :
 {
   ( design_unit() )+ <EOF>
 }
-
 
 void design_unit() :
 {}
@@ -1014,11 +898,6 @@ int entity_class() #void :
   | <UNITS>                     { return UNITS; }
   | <GROUP>                     { return GROUP; }
   | <FILE>                      { return FILE; }
-
-  /** 1076.1 extensions: */
-  | <SUBNATURE>                 { return SUBNATURE; }
-  | <NATURE>                    { return NATURE; }
-  | <TERMINAL>                  { return TERMINAL; }
 }
 
 
@@ -1072,10 +951,6 @@ void entity_declarative_item() #void :
     group_template_declaration()
   | group_declaration()
 
-  // 1076.1 - Extensions:
-  | nature_declaration()
-  | subnature_declaration()
-  | terminal_declaration()
   }
   catch( ParseException e )
   {
@@ -1083,26 +958,7 @@ void entity_declarative_item() #void :
   }
 }
 
-/**
- * 4.8: Nature Declaration
- * 1076.1 extension
- */
-void nature_declaration() :
-{}
-{
-  <NATURE> identifier() <IS> nature_definition() ";"
-}
-
-/**
- * 1076.1 extension
- */
-void nature_definition() #void :
-{}
-{
-    scalar_nature_definition()
-  | composite_nature_definition()
-}
-
+// FIXME
 void subnature_declaration() :
 {}
 {
@@ -1113,7 +969,7 @@ void subnature_declaration() :
 void subnature_indication() :
 {}
 {
-  nature_mark() [index_constraint() ] 
+  nature_mark() [index_constraint() ]
   [ <TOLERANCE> string_expression() <ACROSS> string_expression() <THROUGH>]
 }
 
@@ -1121,7 +977,7 @@ void nature_mark() #void :
 {}
 {
     LOOKAHEAD(nature_name())
-    nature_name() 
+    nature_name()
   | LOOKAHEAD(subnature_name())
     subnature_name()
 }
@@ -1329,14 +1185,6 @@ void generate_statement() :
   <END> <GENERATE> [ generate_label() ] ";"
 }
 
-/** 1076.1 extension: */
-void concurrent_break_statement() :
-{}
-{
-  [label() ":"] <BREAK> [break_list()] [sensitivity_clause() ] [ <WHEN> condition()] ";"
-}
-
-
 void generation_scheme() :
 {}
 {
@@ -1513,31 +1361,6 @@ void interface_declaration() #void :
     interface_variable_declaration()
   | LOOKAHEAD(interface_file_declaration() )
     interface_file_declaration()
-
-  /** 1076.1 extensions: */
-  | interface_terminal_declaration() 
-  | interface_quantity_declaration()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void interface_terminal_declaration()  :
-{}
-{
-  <TERMINAL> identifier_list() ":" subnature_indication()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void interface_quantity_declaration() :
-{}
-{
-  <QUANTITY> identifier_list() ":" 
-  [ <IN> | <OUT> ] subtype_indication() [ ":=" static_expression() ]
 }
 
 
@@ -1725,25 +1548,6 @@ void name_extension() #void :
   [  LOOKAHEAD(name_extension() ) name_extension() ]
 }
 
-/**
- * 1076.1 extension:
- */
-void nature_element_declaration() :
-{}
-{
-  identifier_list() ":" element_subnature_definition()
-}
-
-/**
- * 1076.1 extension:
- */
-void element_subnature_definition() #void :
-{}
-{
-  subnature_indication()
-}
-
-
 void next_statement() :
 {}
 {                                                               
@@ -1775,10 +1579,6 @@ void object_declaration() #void :
   | signal_declaration()
   | variable_declaration()
   | file_declaration()
-  /** 1076.1 extensions: */
-  | terminal_declaration()
-  | quantity_declaration()
-
   }
   catch( ParseException e )
   {
@@ -1872,11 +1672,6 @@ void package_declarative_item() #void :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-
-  // 1076.1 extensions:
-  | nature_declaration()
-  | subnature_declaration()
-  | terminal_declaration()
   }
   catch(ParseException e)
   {
@@ -2072,14 +1867,6 @@ void range_constraint() #void :
   <RANGE> range()
 }
 
-void record_nature_definition() :
-{}
-{
-  <RECORD>
-  ( nature_element_declaration() )+
-  <END> <RECORD> [ record_nature_simple_name() ]
-}
-
 void record_type_definition() :
 {}
 {
@@ -2128,14 +1915,6 @@ void return_statement() :
 }
 
 
-// 1076.1 - extension:
-void scalar_nature_definition() :
-{}
-{
-  type_mark() <ACROSS> type_mark() <THROUGH>
-}
-
-
 void scalar_type_definition() #void :
 {}
 {
@@ -2144,13 +1923,7 @@ void scalar_type_definition() #void :
   |
     LOOKAHEAD(enumeration_type_definition())
     enumeration_type_definition()
-/**  | integer_type_definition()
- *  | floating_type_definition()
- * integer- and floating_type_definition are both range_constraint,
- * thus:
- */
-  |
-    range_constraint()
+  | range_constraint()
 }
 
 void secondary_unit() #void :
@@ -2254,9 +2027,6 @@ void sequential_statement() #void :
       return_statement()
     | LOOKAHEAD(3)
       null_statement()
-
-    /** 1076.1 extensions: */
-    | break_statement()
     )
   }
 
@@ -2449,102 +2219,17 @@ void subtype_indication() :
    */ 
     LOOKAHEAD(resolution_function_name() type_mark() constraint())
     resolution_function_name() type_mark() constraint() 
-      [ LOOKAHEAD(tolerance_aspect())tolerance_aspect() ]
 
   | LOOKAHEAD( type_mark() constraint() )
     type_mark() constraint() 
-      [ LOOKAHEAD(tolerance_aspect()) tolerance_aspect() ]
 
   | LOOKAHEAD( resolution_function_name() type_mark() )
     resolution_function_name() type_mark() 
-      [ LOOKAHEAD(tolerance_aspect())tolerance_aspect() ]
 
   | LOOKAHEAD( type_mark() )
     type_mark()  
-      [ LOOKAHEAD(tolerance_aspect()) tolerance_aspect() ]
 }
 
-
-/**
- * 1076.1 extension:
- */
-void tolerance_aspect() #void :
-{}
-{
-  <TOLERANCE> string_expression()
-}
-
-
-/**
- * Section 4.3.1.6: Quantity declaration
- * 1076.1 extension:
- */
-void quantity_declaration() #void :
-{}
-{
-    LOOKAHEAD(free_quantity_declaration() )
-    free_quantity_declaration()
-  | LOOKAHEAD(branch_quantity_declaration() )
-    branch_quantity_declaration()
-  | source_quantity_declaration()
-}
-
-/**
- * 1076.1 extension:
- */
-void free_quantity_declaration() :
-{}
-{
-  <QUANTITY> identifier_list() ":" subtype_indication() [":=" expression()] ";"
-}
-
-/**
- * 1076.1 extension:
- */
-void branch_quantity_declaration() :
-{}
-{
-  <QUANTITY> [LOOKAHEAD(across_aspect()) across_aspect()] 
-	     [LOOKAHEAD(through_aspect()) through_aspect()] 
-	     terminal_aspect() ";"
-}
-
-/**
- * 1076.1 extension:
- */
-void source_quantity_declaration() :
-{}
-{ 
-  <QUANTITY> identifier_list() ":" subtype_indication() source_aspect() ";"
-}
-
-/**
- * 1076.1 extension:
- */
-void across_aspect() :
-{}
-{
-  identifier_list() [ tolerance_aspect() ] [ ":=" expression() ] <ACROSS>
-}
-
-/**
- * 1076.1 extension:
- */
-void through_aspect() :
-{}
-{
-  identifier_list() [ tolerance_aspect() ] [ ":=" expression() ] <THROUGH>
-} 
-
-/**
- * 1076.1 extension:
- */
-void source_aspect() :
-{}
-{
-    <SPECTRUM> magnitude_simple_expression() "," phase_simple_expression() 
-  | <NOISE>    magnitude_simple_expression() 
-}
 
 void suffix() #void :
 {}
@@ -2573,7 +2258,7 @@ void term() #void :
 void timeout_clause() #void :
 {}
 {
-  <FOR> time_or_real_expression()
+  <FOR> expression()
 }
 
 
@@ -2670,155 +2355,7 @@ void waveform_element() :
 }
 
 
-/** 
- *Section 15: Simultaneous statements
- * 1076.1 extension
- */
-void simultaneous_statement_part()   :
-{}
-{
-  ( simultaneous_statement() )*
-}
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_statement() #void :
-{}
-{
-    LOOKAHEAD(simple_simultaneous_statement())
-    simple_simultaneous_statement()
-  | LOOKAHEAD( [if_label()] ":" <IF> condition() <USE> )
-    simultaneous_if_statement()
-  | LOOKAHEAD(simultaneous_case_statement())
-    simultaneous_case_statement()
-  | LOOKAHEAD(4) // procedural is at least as 4th position...
-    simultaneous_procedural_statement()
-  | simultaneous_null_statement()
-}
-
-/**
- * 1076.1 extension:
- */
-void simple_simultaneous_statement() :
-{}
-{
-  [ LOOKAHEAD( label() ":") label() ":"] 
-  [<PURE>|<IMPURE>] simple_expression() 
-  "==" simple_expression() [ tolerance_aspect() ] ";"
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_if_statement() :
-{}
-{
-  [ if_label() ":"] <IF> condition() <USE>
-     simultaneous_statement_part()
-  ( <ELSIF> condition() <USE> simultaneous_statement_part() )*
-  [ <ELSE> simultaneous_statement_part() ]
-  <END> <USE> [ if_label()] ";"
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_case_statement() :
-{}
-{
-  [ case_label() ":"] <CASE> expression() <USE>
-    (simultaneous_alternative())*
-  <END> <CASE> [ case_label() ] ";"
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_alternative() :
-{}
-{
-  <WHEN> choices() <USE> simultaneous_statement_part()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void simultaneous_procedural_statement() :
-{}
-{
-  [procedural_label() ":"] [<PURE>|<IMPURE>] <PROCEDURAL> [<IS>]
-    procedural_declarative_part()
-   <BEGIN>
-     procedural_statement_part()
-   <END> <PROCEDURAL> [ procedural_label()] ";"
-}
-
-
-// 1076.1 extension:
-void procedural_label() #void :
-{}
-{
-  label()
-}
-
-// 1076.1 extension:
-void procedural_declarative_part() :
-{}
-{
-  ( procedural_declarative_item() )*
-}
-
-/**
- * 1076.1 extension:
- */
-void procedural_declarative_item() #void :
-{}
-{
-    LOOKAHEAD(subprogram_declaration())
-    subprogram_declaration()
-  | subprogram_body()
-  | type_declaration()
-  | subtype_declaration()
-  | constant_declaration()
-  | variable_declaration()
-  | alias_declaration()
-  | LOOKAHEAD(attribute_declaration())
-    attribute_declaration()
-  | attribute_specification()
-  | use_clause()
-  | LOOKAHEAD(group_template_declaration())
-    group_template_declaration()
-  | group_declaration()
-}
-
-/**
- * 1076.1 extension:
- */
-void procedural_statement_part() :
-{}
-{
-  ( sequential_statement() )*
-}
-
-
-
-// 1076.1 extension:
-void simultaneous_null_statement() :
-{}
-{
-  [ label() ":"] <NULL> ";"
-}
-
-
-//
-// parts of grammar, which have to be checked during semantic analysis
-// by semantic lookahead:
-//
+/** Parts of grammar, which have to be checked during semantic analysis by semantic lookahead. */
 void block_label() #void :
 {}
 {
@@ -3008,13 +2545,6 @@ void type_name() #void:
 }
 
 
-// 1076.1 extension:
-void record_nature_simple_name() #void :
-{}
-{
-  simple_name()
-}
-
 void record_type_simple_name() #void :
 {}
 {
@@ -3082,15 +2612,6 @@ void time_expression() #void :
   expression() // unit_name()
   // unit_name can be derived by expression!!! 
 }
-
-// 1076.1 extension:
-void time_or_real_expression() #void :
-{}
-{
-  expression() // unit_name()
-  // unit_name can be derived by expression!!!
-}
-
 
 void value_expression() #void :
 {}
@@ -3235,44 +2756,6 @@ void subnature_name() #void :
 {
   name()
 }
-
-/**
- * 1076.1 extension:
- */
-void terminal_name() #void :
-{}
-{
-  name()
-}
-
-
-/**
- * 1076.1 extension:
- */
-void quantity_name() #void :
-{}
-{
-  name()
-}
-
-/**
- * 1076.1 extension:
- */
-void plus_terminal_name() #void :
-{}
-{
-  name()
-}
-
-/**
- * 1076.1 extension:
- */
-void minus_terminal_name() #void :
-{}
-{
-  name()
-}
-
 
 /**
  * still missing:

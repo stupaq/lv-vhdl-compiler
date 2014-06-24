@@ -1,14 +1,12 @@
 package stupaq.lv2vhdl;
 
-import com.google.common.base.Preconditions;
-
 import java.io.PrintWriter;
 
 import stupaq.ast.NoOpVisitor;
 import stupaq.vhdl93.*;
 
 public class VHDLEmitterVisitor extends NoOpVisitor<Void, Void, RuntimeException>
-implements VHDL93ParserConstants {
+    implements VHDL93ParserConstants {
   private int indentLevel;
   private String indent;
   private PrintWriter out;
@@ -124,16 +122,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTunconstrained_nature_definition node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTconstrained_nature_definition node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTassertion node, Void data) {
     return super.visit(node, data);
   }
@@ -200,21 +188,6 @@ implements VHDL93ParserConstants {
 
   @Override
   public Void visit(ASTblock_statement_part node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTbreak_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTbreak_list node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTbreak_element node, Void data) {
     return super.visit(node, data);
   }
 
@@ -319,16 +292,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTterminal_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTterminal_aspect node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTdelay_mechanism node, Void data) {
     return super.visit(node, data);
   }
@@ -375,11 +338,6 @@ implements VHDL93ParserConstants {
 
   @Override
   public Void visit(ASTentity_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTnature_declaration node, Void data) {
     return super.visit(node, data);
   }
 
@@ -484,11 +442,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTconcurrent_break_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTgeneration_scheme node, Void data) {
     return super.visit(node, data);
   }
@@ -579,16 +532,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTinterface_terminal_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTinterface_quantity_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTinterface_file_declaration node, Void data) {
     return super.visit(node, data);
   }
@@ -635,11 +578,6 @@ implements VHDL93ParserConstants {
 
   @Override
   public Void visit(ASTname node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTnature_element_declaration node, Void data) {
     return super.visit(node, data);
   }
 
@@ -749,11 +687,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTrecord_nature_definition node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTrecord_type_definition node, Void data) {
     return super.visit(node, data);
   }
@@ -770,11 +703,6 @@ implements VHDL93ParserConstants {
 
   @Override
   public Void visit(ASTreturn_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTscalar_nature_definition node, Void data) {
     return super.visit(node, data);
   }
 
@@ -884,36 +812,6 @@ implements VHDL93ParserConstants {
   }
 
   @Override
-  public Void visit(ASTfree_quantity_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTbranch_quantity_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsource_quantity_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTacross_aspect node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTthrough_aspect node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsource_aspect node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTtype_conversion node, Void data) {
     return super.visit(node, data);
   }
@@ -950,51 +848,6 @@ implements VHDL93ParserConstants {
 
   @Override
   public Void visit(ASTwaveform_element node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_statement_part node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimple_simultaneous_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_if_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_case_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_alternative node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_procedural_statement node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTprocedural_declarative_part node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTprocedural_statement_part node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsimultaneous_null_statement node, Void data) {
     return super.visit(node, data);
   }
 
