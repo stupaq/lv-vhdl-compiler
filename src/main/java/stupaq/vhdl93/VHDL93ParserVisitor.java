@@ -190,4 +190,4 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTshared_variable_declaration node, Argument data) throws Failure;
   public Result visit(ASTerror_skipto node, Argument data) throws Failure;
 }
-/* JavaCC - OriginalChecksum=5cee3842c583619e1f71ec48a11b34b3 (do not edit this line) */
+/* JavaCC - OriginalChecksum=dfb4b7f809fedd4af4754f241f486d63 (do not edit this line) */
