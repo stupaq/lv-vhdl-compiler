@@ -56,8 +56,6 @@ public interface VHDL93ParserVisitor<Result, Argument, Failure extends Exception
   public Result visit(ASTentity_class_entry node, Argument data) throws Failure;
   public Result visit(ASTentity_class_entry_list node, Argument data) throws Failure;
   public Result visit(ASTentity_declaration node, Argument data) throws Failure;
-  public Result visit(ASTsubnature_declaration node, Argument data) throws Failure;
-  public Result visit(ASTsubnature_indication node, Argument data) throws Failure;
   public Result visit(ASTentity_declarative_part node, Argument data) throws Failure;
   public Result visit(ASTentity_designator node, Argument data) throws Failure;
   public Result visit(ASTentity_header node, Argument data) throws Failure;

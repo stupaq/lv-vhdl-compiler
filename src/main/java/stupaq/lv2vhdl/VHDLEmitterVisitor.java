@@ -342,16 +342,6 @@ public class VHDLEmitterVisitor extends NoOpVisitor<Void, Void, RuntimeException
   }
 
   @Override
-  public Void visit(ASTsubnature_declaration node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
-  public Void visit(ASTsubnature_indication node, Void data) {
-    return super.visit(node, data);
-  }
-
-  @Override
   public Void visit(ASTentity_declarative_part node, Void data) {
     return super.visit(node, data);
   }

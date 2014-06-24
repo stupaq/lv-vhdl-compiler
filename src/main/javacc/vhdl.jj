@@ -30,7 +30,6 @@
  *
  */
 
-
 options
 {
   STATIC=false;
@@ -68,7 +67,6 @@ public class VHDL93Parser/*@bgen(jjtree)*/implements VHDL93ParserTreeConstants/*
 
 PARSER_END(VHDL93Parser)
 
-
 SKIP :
 {
     " "
@@ -77,16 +75,12 @@ SKIP :
   | "\t"
 }
 
-
 SPECIAL_TOKEN :
 {
   <COMMENT: "--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
 }
 
-
-/** 
- * Section 13: Lexical elements
- */
+/** Section 13: Lexical elements */
 TOKEN [IGNORE_CASE] :
 {
     <ABS:          "abs">
@@ -138,7 +132,6 @@ TOKEN [IGNORE_CASE] :
   | <MAP:           "map">
   | <MOD:           "mod">
   | <NAND:          "nand">
-  | <NATURE:        "nature">
   | <NEW:           "new">
   | <NEXT:          "next">
   | <NOISE:         "noise">
@@ -177,7 +170,6 @@ TOKEN [IGNORE_CASE] :
   | <SPECTRUM:      "spectrum">
   | <SRA:           "sra">
   | <SRL:           "srl">
-  | <SUBNATURE:     "subnature">
   | <SUBTYPE:       "subtype">
   | <TERMINAL:      "terminal">
   | <THEN:          "then">
@@ -198,8 +190,6 @@ TOKEN [IGNORE_CASE] :
   | <XNOR:          "xnor">
   | <XOR:           "xor">
 }
-
-
 
 TOKEN :
 {
@@ -250,7 +240,6 @@ TOKEN :
   | <SEMICOLON: ";">
 }
 
-
 void abstract_literal()       :
 {}
 {
@@ -258,13 +247,11 @@ void abstract_literal()       :
   | <based_literal>
 }
 
-
 void access_type_definition()       :
 {}
 {
   <ACCESS> subtype_indication()
 }
-
 
 void actual_designator()       :
 {}
@@ -280,13 +267,11 @@ void actual_designator()       :
   | <OPEN>
 }
 
-
 void actual_parameter_part()       :
 {}
 {
   parameter_association_list()
 }
-
 
 void actual_part() :
 {/*@bgen(jjtree) actual_part */
@@ -326,7 +311,6 @@ void actual_part() :
 /*@egen*/
 }
 
-
 int adding_operator()       :
 {}
 {
@@ -334,7 +318,6 @@ int adding_operator()       :
   | <SUB>               { return SUB; }
   | <CONCAT>            { return CONCAT; }
 }
-
 
 void aggregate() :
 {/*@bgen(jjtree) aggregate */
@@ -405,7 +388,6 @@ void alias_declaration() :
 /*@egen*/
 }
 
-
 void alias_designator() :
 {/*@bgen(jjtree) alias_designator */
   ASTalias_designator jjtn000 = new ASTalias_designator(this, JJTALIAS_DESIGNATOR);
@@ -441,7 +423,6 @@ void alias_designator() :
     }
 /*@egen*/
 }
-
 
 void allocator() :
 {/*@bgen(jjtree) allocator */
@@ -481,7 +462,6 @@ void allocator() :
   }
 /*@egen*/
 }
-
 
 void architecture_body() :
 {/*@bgen(jjtree) architecture_body */
@@ -529,7 +509,6 @@ void architecture_body() :
   }
 /*@egen*/
 }
-
 
 void architecture_declarative_part() :
 {/*@bgen(jjtree) architecture_declarative_part */
@@ -630,7 +609,6 @@ void architecture_statement()       :
   }
 }
 
-
 void array_type_definition()      :
 {}
 {
@@ -675,7 +653,6 @@ void assertion() :
 /*@egen*/
 }
 
-
 void assertion_statement() :
 {/*@bgen(jjtree) assertion_statement */
   ASTassertion_statement jjtn000 = new ASTassertion_statement(this, JJTASSERTION_STATEMENT);
@@ -709,7 +686,6 @@ void assertion_statement() :
   }
 /*@egen*/
 }
-
 
 void association_element() :
 {/*@bgen(jjtree) association_element */
@@ -780,7 +756,6 @@ void association_list() :
 /*@egen*/
 }
 
-
 void attribute_declaration() :
 {/*@bgen(jjtree) attribute_declaration */
   ASTattribute_declaration jjtn000 = new ASTattribute_declaration(this, JJTATTRIBUTE_DECLARATION);
@@ -815,13 +790,11 @@ void attribute_declaration() :
 /*@egen*/
 }
 
-
 void attribute_designator()       :
 {}
 {
   attribute_simple_name()
 }
-
 
 void attribute_name() :
 {/*@bgen(jjtree) attribute_name */
@@ -856,7 +829,6 @@ void attribute_name() :
   }
 /*@egen*/
 }
-
 
 void attribute_specification() :
 {/*@bgen(jjtree) attribute_specification */
@@ -898,7 +870,6 @@ void base_unit_declaration()       :
 {
   identifier() ";"
 }
-
 
 void binding_indication() :
 {/*@bgen(jjtree) binding_indication */
@@ -1006,7 +977,6 @@ void block_declarative_item()       :
     error_skipto(SEMICOLON, "syntax error in declarative item");
   }
 }
-
 
 void block_declarative_part() :
 {/*@bgen(jjtree) block_declarative_part */
@@ -1116,7 +1086,6 @@ void block_specification() :
 /*@egen*/
 }
 
-
 void block_statement() :
 {/*@bgen(jjtree) block_statement */
   ASTblock_statement jjtn000 = new ASTblock_statement(this, JJTBLOCK_STATEMENT);
@@ -1191,7 +1160,6 @@ void block_statement_part() :
 /*@egen*/
 }
 
-
 void case_statement() :
 {/*@bgen(jjtree) case_statement */
   ASTcase_statement jjtn000 = new ASTcase_statement(this, JJTCASE_STATEMENT);
@@ -1264,7 +1232,6 @@ void case_statement_alternative() :
 /*@egen*/
 }
 
-
 void choice() :
 {/*@bgen(jjtree) choice */
   ASTchoice jjtn000 = new ASTchoice(this, JJTCHOICE);
@@ -1304,7 +1271,6 @@ void choice() :
 /*@egen*/
 }
 
-
 void choices() :
 {/*@bgen(jjtree) choices */
   ASTchoices jjtn000 = new ASTchoices(this, JJTCHOICES);
@@ -1338,7 +1304,6 @@ void choices() :
   }
 /*@egen*/
 }
-
 
 void component_configuration() :
 {/*@bgen(jjtree) component_configuration */
@@ -1451,7 +1416,6 @@ void component_instantiation_statement() :
 /*@egen*/
 }
 
-
 void component_specification() :
 {/*@bgen(jjtree) component_specification */
   ASTcomponent_specification jjtn000 = new ASTcomponent_specification(this, JJTCOMPONENT_SPECIFICATION);
@@ -1485,7 +1449,6 @@ void component_specification() :
   }
 /*@egen*/
 }
-
 
 void composite_type_definition() :
 {/*@bgen(jjtree) composite_type_definition */
@@ -1522,7 +1485,6 @@ void composite_type_definition() :
 /*@egen*/
 }
 
-
 void concurrent_assertion_statement() :
 {/*@bgen(jjtree) concurrent_assertion_statement */
   ASTconcurrent_assertion_statement jjtn000 = new ASTconcurrent_assertion_statement(this, JJTCONCURRENT_ASSERTION_STATEMENT);
@@ -1556,7 +1518,6 @@ void concurrent_assertion_statement() :
   }
 /*@egen*/
 }
-
 
 void concurrent_procedure_call_statement() :
 {/*@bgen(jjtree) concurrent_procedure_call_statement */
@@ -1631,20 +1592,17 @@ void concurrent_signal_assignment_statement() :
 /*@egen*/
 }
 
-
 void condition()       :
 {}
 {
   boolean_expression()
 }
 
-
 void condition_clause()       :
 {}
 {
   <UNTIL> condition()
 }
-
 
 void conditional_signal_assignment() :
 {/*@bgen(jjtree) conditional_signal_assignment */
@@ -1679,7 +1637,6 @@ void conditional_signal_assignment() :
   }
 /*@egen*/
 }
-
 
 void conditional_waveforms() :
 {/*@bgen(jjtree) conditional_waveforms */
@@ -1720,7 +1677,6 @@ void conditional_waveforms() :
 /*@egen*/
 }
 
-
 void configuration_declaration() :
 {/*@bgen(jjtree) configuration_declaration */
   ASTconfiguration_declaration jjtn000 = new ASTconfiguration_declaration(this, JJTCONFIGURATION_DECLARATION);
@@ -1758,7 +1714,6 @@ void configuration_declaration() :
 /*@egen*/
 }
 
-
 void configuration_declarative_item()       :
 {}
 {
@@ -1773,7 +1728,6 @@ void configuration_declarative_item()       :
     error_skipto(SEMICOLON, "syntax error in declarative item");
   }
 }
-
 
 void configuration_declarative_part() :
 {/*@bgen(jjtree) configuration_declarative_part */
@@ -1808,8 +1762,6 @@ void configuration_declarative_part() :
   }
 /*@egen*/
 }
-
-
 
 void configuration_item()       :
 {}
@@ -1888,8 +1840,6 @@ void constant_declaration() :
 /*@egen*/
 }
 
-
-
 void constrained_array_definition() :
 {/*@bgen(jjtree) constrained_array_definition */
   ASTconstrained_array_definition jjtn000 = new ASTconstrained_array_definition(this, JJTCONSTRAINED_ARRAY_DEFINITION);
@@ -1923,7 +1873,6 @@ void constrained_array_definition() :
   }
 /*@egen*/
 }
-
 
 void constraint()       :
 {}
@@ -1973,11 +1922,7 @@ void context_item()       :
   | use_clause()
 }
 
-
-/** 
- * Section 4:
- * Declarations
- */
+/** Section 4: Declarations */
 void delay_mechanism() :
 {/*@bgen(jjtree) delay_mechanism */
   ASTdelay_mechanism jjtn000 = new ASTdelay_mechanism(this, JJTDELAY_MECHANISM);
@@ -2108,7 +2053,6 @@ void direction() :
 /*@egen*/
 }
 
-
 void disconnection_specification() :
 {/*@bgen(jjtree) disconnection_specification */
   ASTdisconnection_specification jjtn000 = new ASTdisconnection_specification(this, JJTDISCONNECTION_SPECIFICATION);
@@ -2154,14 +2098,12 @@ void discrete_range()        :
   | range() 
 }
 
-
 void element_association()       :
 {}
 {
   [ LOOKAHEAD(choices() "=>") choices() "=>" ]
   expression()
 }
-
 
 void element_declaration() :
 {/*@bgen(jjtree) element_declaration */
@@ -2197,13 +2139,11 @@ void element_declaration() :
 /*@egen*/
 }
 
-
 void element_subtype_definition()       :
 {}
 {
   subtype_indication()
 }
-
 
 void entity_aspect() :
 {/*@bgen(jjtree) entity_aspect */
@@ -2243,9 +2183,42 @@ void entity_aspect() :
 /*@egen*/
 }
 
-/**
- * Section 5: Specifications
- */
+void shared_variable_declaration() :
+{/*@bgen(jjtree) shared_variable_declaration */
+  ASTshared_variable_declaration jjtn000 = new ASTshared_variable_declaration(this, JJTSHARED_VARIABLE_DECLARATION);
+  boolean jjtc000 = true;
+  jjtree.openNodeScope(jjtn000);
+  jjtn000.jjtSetFirstToken(getToken(1));
+/*@egen*/}
+{/*@bgen(jjtree) shared_variable_declaration */
+  try {
+/*@egen*/
+  [ <SHARED> ] <VARIABLE> identifier_list() ":"
+  subtype_indication() [ ":=" expression() ] ";"/*@bgen(jjtree)*/
+  } catch (Throwable jjte000) {
+    if (jjtc000) {
+      jjtree.clearNodeScope(jjtn000);
+      jjtc000 = false;
+    } else {
+      jjtree.popNode();
+    }
+    if (jjte000 instanceof RuntimeException) {
+      throw (RuntimeException)jjte000;
+    }
+    if (jjte000 instanceof ParseException) {
+      throw (ParseException)jjte000;
+    }
+    throw (Error)jjte000;
+  } finally {
+    if (jjtc000) {
+      jjtree.closeNodeScope(jjtn000, true);
+      jjtn000.jjtSetLastToken(getToken(0));
+    }
+  }
+/*@egen*/
+}
+
+/** Section 5: Specifications */
 int entity_class()       :
 {}
 {
@@ -2267,7 +2240,6 @@ int entity_class()       :
   | <GROUP>                     { return GROUP; }
   | <FILE>                      { return FILE; }
 }
-
 
 void entity_class_entry()  :
 {/*@bgen(jjtree) entity_class_entry */
@@ -2303,7 +2275,6 @@ void entity_class_entry()  :
 /*@egen*/
 }
 
-
 void entity_class_entry_list() :
 {/*@bgen(jjtree) entity_class_entry_list */
   ASTentity_class_entry_list jjtn000 = new ASTentity_class_entry_list(this, JJTENTITY_CLASS_ENTRY_LIST);
@@ -2337,7 +2308,6 @@ void entity_class_entry_list() :
   }
 /*@egen*/
 }
-
 
 void entity_declaration() :
 {/*@bgen(jjtree) entity_declaration */
@@ -2385,7 +2355,6 @@ void entity_declaration() :
 /*@egen*/
 }
 
-
 void entity_declarative_item()       :
 {}
 {
@@ -2414,86 +2383,6 @@ void entity_declarative_item()       :
   {
     error_skipto(SEMICOLON, "syntax error in declarative item");
   }
-}
-
-// FIXME
-void subnature_declaration() :
-{/*@bgen(jjtree) subnature_declaration */
-  ASTsubnature_declaration jjtn000 = new ASTsubnature_declaration(this, JJTSUBNATURE_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) subnature_declaration */
-  try {
-/*@egen*/
-  <SUBNATURE> identifier() <IS> subnature_indication() ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-void subnature_indication() :
-{/*@bgen(jjtree) subnature_indication */
-  ASTsubnature_indication jjtn000 = new ASTsubnature_indication(this, JJTSUBNATURE_INDICATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) subnature_indication */
-  try {
-/*@egen*/
-  nature_mark() [index_constraint() ]
-  [ <TOLERANCE> string_expression() <ACROSS> string_expression() <THROUGH>]/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-void nature_mark()       :
-{}
-{
-    LOOKAHEAD(nature_name())
-    nature_name()
-  | LOOKAHEAD(subnature_name())
-    subnature_name()
 }
 
 void entity_declarative_part() :
@@ -2564,8 +2453,6 @@ void entity_designator() :
 /*@egen*/
 }
 
-
-
 void entity_header() :
 {/*@bgen(jjtree) entity_header */
   ASTentity_header jjtn000 = new ASTentity_header(this, JJTENTITY_HEADER);
@@ -2600,7 +2487,6 @@ void entity_header() :
   }
 /*@egen*/
 }
-
 
 void entity_name_list() :
 {/*@bgen(jjtree) entity_name_list */
@@ -2638,7 +2524,6 @@ void entity_name_list() :
 /*@egen*/
 }
 
-
 void entity_specification() :
 {/*@bgen(jjtree) entity_specification */
   ASTentity_specification jjtn000 = new ASTentity_specification(this, JJTENTITY_SPECIFICATION);
@@ -2673,7 +2558,6 @@ void entity_specification() :
 /*@egen*/
 }
 
-
 void entity_statement()       :
 {}
 {   LOOKAHEAD( concurrent_assertion_statement() )
@@ -2682,7 +2566,6 @@ void entity_statement()       :
     passive_process_statement()
   | passive_concurrent_procedure_call_statement()
 }
-
 
 void entity_statement_part() :
 {/*@bgen(jjtree) entity_statement_part */
@@ -2754,7 +2637,6 @@ void entity_tag() :
 /*@egen*/
 }
 
-
 void enumeration_literal() :
 {/*@bgen(jjtree) enumeration_literal */
   ASTenumeration_literal jjtn000 = new ASTenumeration_literal(this, JJTENUMERATION_LITERAL);
@@ -2790,8 +2672,6 @@ void enumeration_literal() :
 /*@egen*/
 }
 
-
-
 void enumeration_type_definition() :
 {/*@bgen(jjtree) enumeration_type_definition */
   ASTenumeration_type_definition jjtn000 = new ASTenumeration_type_definition(this, JJTENUMERATION_TYPE_DEFINITION);
@@ -2825,7 +2705,6 @@ void enumeration_type_definition() :
   }
 /*@egen*/
 }
-
 
 void exit_statement() :
 {/*@bgen(jjtree) exit_statement */
@@ -2909,7 +2788,6 @@ void expression()       :
 
 }
 
-
 void factor()       :
 {}
 {
@@ -2947,7 +2825,6 @@ void factor()       :
 /*@egen*/            ]
 }
 
-
 void file_declaration() :
 {/*@bgen(jjtree) file_declaration */
   ASTfile_declaration jjtn000 = new ASTfile_declaration(this, JJTFILE_DECLARATION);
@@ -2983,13 +2860,11 @@ void file_declaration() :
 /*@egen*/
 }
 
-
 void file_logical_name()       :
 {}
 {
   string_expression()
 }
-
 
 void file_open_information() :
 {/*@bgen(jjtree) file_open_information */
@@ -3037,7 +2912,6 @@ void floating_type_definition()       :
   range_constraint()
 }
 
-
 void formal_designator()       :
 {}
 {
@@ -3081,7 +2955,6 @@ void formal_parameter_list() :
   }
 /*@egen*/
 }
-
 
 void formal_part()       :
 {}
@@ -3127,7 +3000,6 @@ void full_type_declaration() :
 /*@egen*/
 }
 
-
 void function_call() :
 {/*@bgen(jjtree) function_call */
   ASTfunction_call jjtn000 = new ASTfunction_call(this, JJTFUNCTION_CALL);
@@ -3163,10 +3035,7 @@ void function_call() :
 /*@egen*/
 }
 
-
-/**
- * Section 9.7
- */
+/** Section 9.7 */
 void generate_statement() :
 {/*@bgen(jjtree) generate_statement */
   ASTgenerate_statement jjtn000 = new ASTgenerate_statement(this, JJTGENERATE_STATEMENT);
@@ -3240,7 +3109,6 @@ void generation_scheme() :
 /*@egen*/
 }
 
-
 void generic_clause() :
 {/*@bgen(jjtree) generic_clause */
   ASTgeneric_clause jjtn000 = new ASTgeneric_clause(this, JJTGENERIC_CLAUSE);
@@ -3275,20 +3143,17 @@ void generic_clause() :
 /*@egen*/
 }
 
-
 void generic_list()       :
 {}
 {
   generic_interface_list()
 }
 
-
 void generic_map_aspect()       :
 {}
 {
   <GENERIC> <MAP> "(" generic_association_list() ")"
 }
-
 
 void group_constituent() :
 {/*@bgen(jjtree) group_constituent */
@@ -3325,7 +3190,6 @@ void group_constituent() :
 /*@egen*/
 }
 
-
 void group_constituent_list() :
 {/*@bgen(jjtree) group_constituent_list */
   ASTgroup_constituent_list jjtn000 = new ASTgroup_constituent_list(this, JJTGROUP_CONSTITUENT_LIST);
@@ -3359,7 +3223,6 @@ void group_constituent_list() :
   }
 /*@egen*/
 }
-
 
 void group_template_declaration() :
 {/*@bgen(jjtree) group_template_declaration */
@@ -3430,8 +3293,6 @@ void group_declaration() :
 /*@egen*/
 }
 
-
-
 void guarded_signal_specification() :
 {/*@bgen(jjtree) guarded_signal_specification */
   ASTguarded_signal_specification jjtn000 = new ASTguarded_signal_specification(this, JJTGUARDED_SIGNAL_SPECIFICATION);
@@ -3466,7 +3327,6 @@ void guarded_signal_specification() :
 /*@egen*/
 }
 
-
 void identifier() :
 {/*@bgen(jjtree) identifier */
   ASTidentifier jjtn000 = new ASTidentifier(this, JJTIDENTIFIER);
@@ -3499,7 +3359,6 @@ void identifier() :
      }
 /*@egen*/
 }
-
 
 void identifier_list() :
 {/*@bgen(jjtree) identifier_list */
@@ -3534,7 +3393,6 @@ void identifier_list() :
   }
 /*@egen*/
 }
-
 
 void if_statement() :
 {/*@bgen(jjtree) if_statement */
@@ -3611,7 +3469,6 @@ void incomplete_type_declaration() :
 /*@egen*/
 }
 
-
 void index_constraint() :
 {/*@bgen(jjtree) index_constraint */
   ASTindex_constraint jjtn000 = new ASTindex_constraint(this, JJTINDEX_CONSTRAINT);
@@ -3645,8 +3502,6 @@ void index_constraint() :
   }
 /*@egen*/
 }
-
-
 
 void index_specification() :
 {/*@bgen(jjtree) index_specification */
@@ -3683,7 +3538,6 @@ void index_specification() :
     }
 /*@egen*/
 }
-
 
 void index_subtype_definition() :
 {/*@bgen(jjtree) index_subtype_definition */
@@ -3789,7 +3643,6 @@ void instantiated_unit() :
 /*@egen*/
 }
 
-
 void instantiation_list() :
 {/*@bgen(jjtree) instantiation_list */
   ASTinstantiation_list jjtn000 = new ASTinstantiation_list(this, JJTINSTANTIATION_LIST);
@@ -3832,8 +3685,6 @@ void integer_type_definition()       :
   range_constraint()
 }
 
-
-
 void interface_constant_declaration() :
 {/*@bgen(jjtree) interface_constant_declaration */
   ASTinterface_constant_declaration jjtn000 = new ASTinterface_constant_declaration(this, JJTINTERFACE_CONSTANT_DECLARATION);
@@ -3869,9 +3720,7 @@ void interface_constant_declaration() :
 /*@egen*/
 }
 
-/**
- * Section 4.3.2:
- */
+/** Section 4.3.2: */
 void interface_declaration()       :
 {}
 {
@@ -3885,13 +3734,11 @@ void interface_declaration()       :
     interface_file_declaration()
 }
 
-
 void interface_element()       :
 {}
 {
   interface_declaration()
 }
-
 
 void interface_file_declaration() :
 {/*@bgen(jjtree) interface_file_declaration */
@@ -3926,7 +3773,6 @@ void interface_file_declaration() :
   }
 /*@egen*/
 }
-
 
 void interface_list() :
 {/*@bgen(jjtree) interface_list */
@@ -3997,7 +3843,6 @@ void interface_signal_declaration() :
 /*@egen*/
 }
 
-
 void interface_variable_declaration() :
 {/*@bgen(jjtree) interface_variable_declaration */
   ASTinterface_variable_declaration jjtn000 = new ASTinterface_variable_declaration(this, JJTINTERFACE_VARIABLE_DECLARATION);
@@ -4032,8 +3877,6 @@ void interface_variable_declaration() :
   }
 /*@egen*/
 }
-
-
 
 void iteration_scheme() :
 {/*@bgen(jjtree) iteration_scheme */
@@ -4070,14 +3913,11 @@ void iteration_scheme() :
 /*@egen*/
 }
 
-
 void label()       :
 {}
 {
   identifier()
 }
-
-
 
 void library_clause()       :
 {}
@@ -4085,15 +3925,12 @@ void library_clause()       :
   <LIBRARY> logical_name_list() ";"
 }
 
-
 void library_unit()       :
 {}
 {   LOOKAHEAD(<ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
     primary_unit()
   | secondary_unit()
 }
-
-
 
 void literal() :
 {/*@bgen(jjtree) literal */
@@ -4134,14 +3971,11 @@ void literal() :
 /*@egen*/
 }
 
-
 void logical_name()       :
 {}
 {
   identifier()
 }
-
-
 
 void logical_name_list() :
 {/*@bgen(jjtree) logical_name_list */
@@ -4177,7 +4011,6 @@ void logical_name_list() :
 /*@egen*/
 }
 
-
 int logical_operator()       :
 {}
 {
@@ -4188,7 +4021,6 @@ int logical_operator()       :
   | <XOR>             { return XOR; }
   | <XNOR>            { return XNOR; }
 }
-
 
 void loop_statement() :
 {/*@bgen(jjtree) loop_statement */
@@ -4227,7 +4059,6 @@ void loop_statement() :
 /*@egen*/
 }
 
-
 int miscellaneous_operator()       :
 {}
 {
@@ -4235,7 +4066,6 @@ int miscellaneous_operator()       :
   | <ABS>               { return ABS; }
   | <NOT>               { return NOT; }
 }
-
 
 void mode() :
 {/*@bgen(jjtree) mode */
@@ -4270,7 +4100,6 @@ int multiplying_operator()       :
   | <REM>               { return REM; }
 }
 
-
 void name() :
 {/*@bgen(jjtree) name */
   ASTname jjtn000 = new ASTname(this, JJTNAME);
@@ -4281,14 +4110,13 @@ void name() :
 {/*@bgen(jjtree) name */
   try {
 /*@egen*/
-/**  simple_name()
- * | operator_symbol()
+/**
+ *    simple_name()
+ *  | operator_symbol()
  *  | selected_name()
  *  | indexed_name()
  *  | slice_name()
  *  | attribute_name()
- *
- * Kann ohne Linksrekursion wie folgt geschrieben werden:
  */
   ( simple_name() | operator_symbol() )
   [ LOOKAHEAD(name_extension()) name_extension()   ]/*@bgen(jjtree)*/
@@ -4319,19 +4147,19 @@ void name_extension()       :
 {}
 {
   (
-        LOOKAHEAD( signature() "'"  )
-        signature() "'" attribute_designator()
-        [ LOOKAHEAD( "(" expression() ")") "(" expression() ")"]
-      | "." suffix()
-      | LOOKAHEAD( "(" discrete_range() ")" ) 
-        "(" discrete_range() ")"  
-      | LOOKAHEAD( "(" expression() ("," expression() )* ")" )
-        "(" expression() ("," expression() )* ")"
-      /**
-       * The following production is already in sign. "'" ... ,
-       * since signature can be empty!
-       * | "'" attribute_designator() [ "(" expression() ")"]
-       */
+      LOOKAHEAD( signature() "'"  )
+      signature() "'" attribute_designator()
+      [ LOOKAHEAD( "(" expression() ")") "(" expression() ")"]
+    | "." suffix()
+    | LOOKAHEAD( "(" discrete_range() ")" )
+      "(" discrete_range() ")"
+    | LOOKAHEAD( "(" expression() ("," expression() )* ")" )
+      "(" expression() ("," expression() )* ")"
+    /**
+     * The following production is already in sign. "'" ... ,
+     * since signature can be empty!
+     * | "'" attribute_designator() [ "(" expression() ")"]
+     */
   )
   [  LOOKAHEAD(name_extension() ) name_extension() ]
 }
@@ -4404,8 +4232,6 @@ void null_statement() :
 /*@egen*/
 }
 
-
-
 void numeric_literal()       :
 {}
 {
@@ -4414,22 +4240,18 @@ void numeric_literal()       :
   | abstract_literal()
 }
 
-
 void object_declaration()       :
 {}
 {
   try {
-    constant_declaration()
-  | signal_declaration()
-  | variable_declaration()
-  | file_declaration()
-  }
-  catch( ParseException e )
-  {
+      constant_declaration()
+    | signal_declaration()
+    | variable_declaration()
+    | file_declaration()
+  } catch(ParseException e) {
     error_skipto(SEMICOLON, "syntax error in declaration");
   }
 }
-
 
 void operator_symbol() :
 {/*@bgen(jjtree) operator_symbol */
@@ -4450,7 +4272,6 @@ void operator_symbol() :
   }
 /*@egen*/
 }
-
 
 void options_() :
 {/*@bgen(jjtree) options_ */
@@ -4485,7 +4306,6 @@ void options_() :
   }
 /*@egen*/
 }
-
 
 void package_body() :
 {/*@bgen(jjtree) package_body */
@@ -4547,7 +4367,6 @@ void package_body_declarative_item()       :
   }
 }
 
-
 void package_body_declarative_part() :
 {/*@bgen(jjtree) package_body_declarative_part */
   ASTpackage_body_declarative_part jjtn000 = new ASTpackage_body_declarative_part(this, JJTPACKAGE_BODY_DECLARATIVE_PART);
@@ -4582,8 +4401,6 @@ void package_body_declarative_part() :
 /*@egen*/
 }
 
-
-
 void package_declaration() :
 {/*@bgen(jjtree) package_declaration */
   ASTpackage_declaration jjtn000 = new ASTpackage_declaration(this, JJTPACKAGE_DECLARATION);
@@ -4595,7 +4412,7 @@ void package_declaration() :
   try {
 /*@egen*/
   <PACKAGE> identifier() <IS>
-     package_declarative_part()
+    package_declarative_part()
   <END> [ <PACKAGE> ] [ package_simple_name() ] ";"/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -4620,31 +4437,28 @@ void package_declaration() :
 /*@egen*/
 }
 
-
 void package_declarative_item()       :
 {}
 {
   try {
-    subprogram_declaration()
-  | type_declaration()
-  | subtype_declaration()
-  | constant_declaration()
-  | signal_declaration()
-  | shared_variable_declaration()
-  | file_declaration()
-  | alias_declaration()
-  | component_declaration()
-  | LOOKAHEAD( attribute_declaration() )
-    attribute_declaration()
-  | attribute_specification()
-  | disconnection_specification()
-  | use_clause()
-  | LOOKAHEAD(<GROUP> identifier() <IS>)
-    group_template_declaration()
-  | group_declaration()
-  }
-  catch(ParseException e)
-  {
+      subprogram_declaration()
+    | type_declaration()
+    | subtype_declaration()
+    | constant_declaration()
+    | signal_declaration()
+    | shared_variable_declaration()
+    | file_declaration()
+    | alias_declaration()
+    | component_declaration()
+    | LOOKAHEAD( attribute_declaration() )
+      attribute_declaration()
+    | attribute_specification()
+    | disconnection_specification()
+    | use_clause()
+    | LOOKAHEAD(<GROUP> identifier() <IS>)
+      group_template_declaration()
+    | group_declaration()
+  } catch(ParseException e) {
     error_skipto(SEMICOLON, "syntax error in declaration");
   }
 }
@@ -4682,7 +4496,6 @@ void package_declarative_part() :
   }
 /*@egen*/
 }
-
 
 void parameter_specification() :
 {/*@bgen(jjtree) parameter_specification */
@@ -4754,7 +4567,6 @@ void physical_literal() :
 /*@egen*/
 }
 
-
 void physical_type_definition() :
 {/*@bgen(jjtree) physical_type_definition */
   ASTphysical_type_definition jjtn000 = new ASTphysical_type_definition(this, JJTPHYSICAL_TYPE_DEFINITION);
@@ -4792,7 +4604,6 @@ void physical_type_definition() :
   }
 /*@egen*/
 }
-
 
 void port_clause() :
 {/*@bgen(jjtree) port_clause */
@@ -4834,7 +4645,6 @@ void port_list()       :
   port_interface_list()
 }
 
-
 void port_map_aspect() :
 {/*@bgen(jjtree) port_map_aspect */
   ASTport_map_aspect jjtn000 = new ASTport_map_aspect(this, JJTPORT_MAP_ASPECT);
@@ -4868,7 +4678,6 @@ void port_map_aspect() :
   }
 /*@egen*/
 }
-
 
 void prefix() :
 {/*@bgen(jjtree) prefix */
@@ -4906,35 +4715,25 @@ void prefix() :
 /*@egen*/
 }
 
-
 void primary()       :
 {}
 {
     LOOKAHEAD( qualified_expression() )
     qualified_expression()
-
   | LOOKAHEAD( function_call() )
     function_call()
-
   | LOOKAHEAD(name())
     name()
-
   | LOOKAHEAD(literal())
     literal()
-
   | LOOKAHEAD( aggregate() )
     aggregate()
-
   | LOOKAHEAD( "(" expression() ")")
     "(" expression() ")"
-
   | LOOKAHEAD( type_conversion() )
     type_conversion()
-
   | allocator()
-
 }
-
 
 void primary_unit()       :
 {}
@@ -4944,7 +4743,6 @@ void primary_unit()       :
   | LOOKAHEAD(<PACKAGE> identifier())
     package_declaration()
 }
-
 
 void procedure_call() :
 {/*@bgen(jjtree) procedure_call */
@@ -5015,7 +4813,6 @@ void procedure_call_statement() :
 /*@egen*/
 }
 
-
 void process_declarative_item()       :
 {}
 {
@@ -5071,7 +4868,6 @@ void process_declarative_part() :
 /*@egen*/
 }
 
-
 void process_statement() :
 {/*@bgen(jjtree) process_statement */
   ASTprocess_statement jjtn000 = new ASTprocess_statement(this, JJTPROCESS_STATEMENT);
@@ -5118,7 +4914,6 @@ void process_statement() :
   }
 /*@egen*/
 }
-
 
 void process_statement_part() :
 {/*@bgen(jjtree) process_statement_part */
@@ -5228,7 +5023,6 @@ void range() :
 /*@egen*/
 }
 
-
 void range_constraint()       :
 {}
 {
@@ -5271,8 +5065,6 @@ void record_type_definition() :
 /*@egen*/
 }
 
-
-
 void relation()       :
 { int op; }
 {
@@ -5312,7 +5104,6 @@ void relation()       :
                        ]
 }
 
-
 int relational_operator()       :
 {}
 {
@@ -5323,7 +5114,6 @@ int relational_operator()       :
   | <GT>                { return GT; }
   | <GE>                { return GE; }
 }
-
 
 void report_statement() :
 {/*@bgen(jjtree) report_statement */
@@ -5360,7 +5150,6 @@ void report_statement() :
 /*@egen*/
 }
 
-
 void return_statement() :
 {/*@bgen(jjtree) return_statement */
   ASTreturn_statement jjtn000 = new ASTreturn_statement(this, JJTRETURN_STATEMENT);
@@ -5395,14 +5184,12 @@ void return_statement() :
 /*@egen*/
 }
 
-
 void scalar_type_definition()       :
 {}
 {
     LOOKAHEAD(range_constraint() <UNITS> )
     physical_type_definition()
-  |
-    LOOKAHEAD(enumeration_type_definition())
+  | LOOKAHEAD(enumeration_type_definition())
     enumeration_type_definition()
   | range_constraint()
 }
@@ -5415,7 +5202,6 @@ void secondary_unit()       :
   | LOOKAHEAD( <PACKAGE> <BODY> )
     package_body()
 }
-
 
 void secondary_unit_declaration() :
 {/*@bgen(jjtree) secondary_unit_declaration */
@@ -5450,7 +5236,6 @@ void secondary_unit_declaration() :
   }
 /*@egen*/
 }
-
 
 void selected_name() :
 {/*@bgen(jjtree) selected_name */
@@ -5498,7 +5283,6 @@ void selected_name() :
    */
 }
 
-
 void selected_signal_assignment() :
 {/*@bgen(jjtree) selected_signal_assignment */
   ASTselected_signal_assignment jjtn000 = new ASTselected_signal_assignment(this, JJTSELECTED_SIGNAL_ASSIGNMENT);
@@ -5509,8 +5293,7 @@ void selected_signal_assignment() :
 {/*@bgen(jjtree) selected_signal_assignment */
   try {
 /*@egen*/
-  <WITH> expression() <SELECT>
-  target()  "<=" options_() selected_waveforms() ";"/*@bgen(jjtree)*/
+  <WITH> expression() <SELECT> target()  "<=" options_() selected_waveforms() ";"/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -5575,7 +5358,6 @@ void sensitivity_clause()       :
   <ON> sensitivity_list()
 }
 
-
 void sensitivity_list() :
 {/*@bgen(jjtree) sensitivity_list */
   ASTsensitivity_list jjtn000 = new ASTsensitivity_list(this, JJTSENSITIVITY_LIST);
@@ -5609,7 +5391,6 @@ void sensitivity_list() :
   }
 /*@egen*/
 }
-
 
 void sequence_of_statements() :
 {/*@bgen(jjtree) sequence_of_statements */
@@ -5677,15 +5458,10 @@ void sequential_statement()       :
     | LOOKAHEAD(3)
       null_statement()
     )
-  }
-
-  // Error handling: skip till next semicolon.
-  catch (ParseException e)
-  {
+  } catch (ParseException e) {
     error_skipto(SEMICOLON, "syntax error in sequential statement");
   } 
 }
-
 
 void shift_expression()       :
 { int op; }
@@ -5756,7 +5532,6 @@ void sign() :
 /*@egen*/
 }
 
-
 void signal_assignment_statement() :
 {/*@bgen(jjtree) signal_assignment_statement */
   ASTsignal_assignment_statement jjtn000 = new ASTsignal_assignment_statement(this, JJTSIGNAL_ASSIGNMENT_STATEMENT);
@@ -5767,8 +5542,7 @@ void signal_assignment_statement() :
 {/*@bgen(jjtree) signal_assignment_statement */
   try {
 /*@egen*/
-  [ LOOKAHEAD( label() ":") label() ":" ]
-  target() "<=" [ delay_mechanism() ] waveform() ";"/*@bgen(jjtree)*/
+  [ LOOKAHEAD( label() ":") label() ":" ] target() "<=" [ delay_mechanism() ] waveform() ";"/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
       jjtree.clearNodeScope(jjtn000);
@@ -5790,9 +5564,7 @@ void signal_assignment_statement() :
     }
   }
 /*@egen*/
-
 }
-
 
 void signal_declaration() :
 {/*@bgen(jjtree) signal_declaration */
@@ -5802,33 +5574,31 @@ void signal_declaration() :
   jjtn000.jjtSetFirstToken(getToken(1));
 /*@egen*/}
 {/*@bgen(jjtree) signal_declaration */
-    try {
+  try {
 /*@egen*/
-    <SIGNAL> identifier_list() ":"
-    subtype_indication() [ signal_kind() ] [ ":=" expression() ] ";"/*@bgen(jjtree)*/
-    } catch (Throwable jjte000) {
-      if (jjtc000) {
-        jjtree.clearNodeScope(jjtn000);
-        jjtc000 = false;
-      } else {
-        jjtree.popNode();
-      }
-      if (jjte000 instanceof RuntimeException) {
-        throw (RuntimeException)jjte000;
-      }
-      if (jjte000 instanceof ParseException) {
-        throw (ParseException)jjte000;
-      }
-      throw (Error)jjte000;
-    } finally {
-      if (jjtc000) {
-        jjtree.closeNodeScope(jjtn000, true);
-        jjtn000.jjtSetLastToken(getToken(0));
-      }
+  <SIGNAL> identifier_list() ":" subtype_indication() [ signal_kind() ] [ ":=" expression() ] ";"/*@bgen(jjtree)*/
+  } catch (Throwable jjte000) {
+    if (jjtc000) {
+      jjtree.clearNodeScope(jjtn000);
+      jjtc000 = false;
+    } else {
+      jjtree.popNode();
     }
+    if (jjte000 instanceof RuntimeException) {
+      throw (RuntimeException)jjte000;
+    }
+    if (jjte000 instanceof ParseException) {
+      throw (ParseException)jjte000;
+    }
+    throw (Error)jjte000;
+  } finally {
+    if (jjtc000) {
+      jjtree.closeNodeScope(jjtn000, true);
+      jjtn000.jjtSetLastToken(getToken(0));
+    }
+  }
 /*@egen*/
 }
-
 
 void signal_kind() :
 {/*@bgen(jjtree) signal_kind */
@@ -5887,7 +5657,6 @@ void signal_list() :
 /*@egen*/
 }
 
-
 void signature() :
 {/*@bgen(jjtree) signature */
   ASTsignature jjtn000 = new ASTsignature(this, JJTSIGNATURE);
@@ -5923,44 +5692,40 @@ void signature() :
 /*@egen*/
 }
 
-
 void simple_expression()       :
 { int op; }
 {
-   [ sign() ] term()
-   ( LOOKAHEAD(2) op=adding_operator()/*@bgen(jjtree) #term( 2) */
-                                       {
-                                         ASTterm jjtn001 = new ASTterm(this, JJTTERM);
-                                         boolean jjtc001 = true;
-                                         jjtree.openNodeScope(jjtn001);
-                                         jjtn001.jjtSetFirstToken(getToken(1));
-                                       }
-                                       try {
+ [ sign() ] term() ( LOOKAHEAD(2) op=adding_operator()/*@bgen(jjtree) #term( 2) */
+                                                       {
+                                                         ASTterm jjtn001 = new ASTterm(this, JJTTERM);
+                                                         boolean jjtc001 = true;
+                                                         jjtree.openNodeScope(jjtn001);
+                                                         jjtn001.jjtSetFirstToken(getToken(1));
+                                                       }
+                                                       try {
 /*@egen*/ term()/*@bgen(jjtree)*/
-                                       } catch (Throwable jjte001) {
-                                         if (jjtc001) {
-                                           jjtree.clearNodeScope(jjtn001);
-                                           jjtc001 = false;
-                                         } else {
-                                           jjtree.popNode();
-                                         }
-                                         if (jjte001 instanceof RuntimeException) {
-                                           throw (RuntimeException)jjte001;
-                                         }
-                                         if (jjte001 instanceof ParseException) {
-                                           throw (ParseException)jjte001;
-                                         }
-                                         throw (Error)jjte001;
-                                       } finally {
-                                         if (jjtc001) {
-                                           jjtree.closeNodeScope(jjtn001,  2);
-                                           jjtn001.jjtSetLastToken(getToken(0));
-                                         }
-                                       }
-/*@egen*/
-              )*
+                                                       } catch (Throwable jjte001) {
+                                                         if (jjtc001) {
+                                                           jjtree.clearNodeScope(jjtn001);
+                                                           jjtc001 = false;
+                                                         } else {
+                                                           jjtree.popNode();
+                                                         }
+                                                         if (jjte001 instanceof RuntimeException) {
+                                                           throw (RuntimeException)jjte001;
+                                                         }
+                                                         if (jjte001 instanceof ParseException) {
+                                                           throw (ParseException)jjte001;
+                                                         }
+                                                         throw (Error)jjte001;
+                                                       } finally {
+                                                         if (jjtc001) {
+                                                           jjtree.closeNodeScope(jjtn001,  2);
+                                                           jjtn001.jjtSetLastToken(getToken(0));
+                                                         }
+                                                       }
+/*@egen*/          )*
 }
-
 
 void simple_name()       :
 {}
@@ -6002,8 +5767,6 @@ void slice_name() :
 /*@egen*/
 }
 
-
-
 void subprogram_body() :
 {/*@bgen(jjtree) subprogram_body */
   ASTsubprogram_body jjtn000 = new ASTsubprogram_body(this, JJTSUBPROGRAM_BODY);
@@ -6015,9 +5778,9 @@ void subprogram_body() :
   try {
 /*@egen*/
   subprogram_specification() <IS>
-     subprogram_declarative_part()
+    subprogram_declarative_part()
   <BEGIN>
-         subprogram_statement_part()
+    subprogram_statement_part()
   <END> [ subprogram_kind() ] [ designator() ] ";"/*@bgen(jjtree)*/
   } catch (Throwable jjte000) {
     if (jjtc000) {
@@ -6042,13 +5805,11 @@ void subprogram_body() :
 /*@egen*/
 }
 
-
 void subprogram_declaration()       :
 {}
 {
   subprogram_specification() ";"
 }
-
 
 void subprogram_declarative_item()       :
 {}
@@ -6105,7 +5866,6 @@ void subprogram_declarative_part() :
 /*@egen*/
 }
 
-
 int subprogram_kind()       :
 {}
 {
@@ -6150,8 +5910,6 @@ void subprogram_specification() :
 /*@egen*/
 }
 
-
-
 void subprogram_statement_part() :
 {/*@bgen(jjtree) subprogram_statement_part */
   ASTsubprogram_statement_part jjtn000 = new ASTsubprogram_statement_part(this, JJTSUBPROGRAM_STATEMENT_PART);
@@ -6185,7 +5943,6 @@ void subprogram_statement_part() :
   }
 /*@egen*/
 }
-
 
 void subtype_declaration() :
 {/*@bgen(jjtree) subtype_declaration */
@@ -6221,10 +5978,7 @@ void subtype_declaration() :
 /*@egen*/
 }
 
-
-/**
- * Section 4.1:
- */
+/** Section 4.1: */
 void subtype_indication() :
 {/*@bgen(jjtree) subtype_indication */
   ASTsubtype_indication jjtn000 = new ASTsubtype_indication(this, JJTSUBTYPE_INDICATION);
@@ -6235,19 +5989,13 @@ void subtype_indication() :
 {/*@bgen(jjtree) subtype_indication */
     try {
 /*@egen*/
-  /*
-   * enumeration resolves conflict ! After implementation of symbol tables
-   * this can be replaced by semantic lookahead.
-   */ 
+  // After implementation of symbol tables this can be replaced by semantic lookahead.
     LOOKAHEAD(resolution_function_name() type_mark() constraint())
     resolution_function_name() type_mark() constraint() 
-
   | LOOKAHEAD( type_mark() constraint() )
     type_mark() constraint() 
-
   | LOOKAHEAD( resolution_function_name() type_mark() )
     resolution_function_name() type_mark() 
-
   | LOOKAHEAD( type_mark() )
     type_mark()/*@bgen(jjtree)*/
     } catch (Throwable jjte000) {
@@ -6273,7 +6021,6 @@ void subtype_indication() :
 /*@egen*/  
 }
 
-
 void suffix()       :
 {}
 {
@@ -6289,7 +6036,6 @@ void target()       :
     name()
   | aggregate()
 }
-
 
 void term()       :
 { int op; }
@@ -6333,7 +6079,6 @@ void timeout_clause()       :
   <FOR> expression()
 }
 
-
 void type_conversion() :
 {/*@bgen(jjtree) type_conversion */
   ASTtype_conversion jjtn000 = new ASTtype_conversion(this, JJTTYPE_CONVERSION);
@@ -6368,7 +6113,6 @@ void type_conversion() :
 /*@egen*/
 }
 
-
 void type_declaration()       :
 {}
 {
@@ -6376,7 +6120,6 @@ void type_declaration()       :
     full_type_declaration()
   | incomplete_type_declaration()
 }
-
 
 void type_definition()       :
 {}
@@ -6387,7 +6130,6 @@ void type_definition()       :
   | file_type_definition()
 }
 
-
 void type_mark()       :
 {}
 {
@@ -6396,7 +6138,6 @@ void type_mark()       :
   | LOOKAHEAD(subtype_name())
     subtype_name()
 }
-
 
 void unconstrained_array_definition() :
 {/*@bgen(jjtree) unconstrained_array_definition */
@@ -6434,7 +6175,6 @@ void unconstrained_array_definition() :
 /*@egen*/
 }
 
-
 void use_clause() :
 {/*@bgen(jjtree) use_clause */
   ASTuse_clause jjtn000 = new ASTuse_clause(this, JJTUSE_CLAUSE);
@@ -6468,7 +6208,6 @@ void use_clause() :
    }
 /*@egen*/
 }
-
 
 void variable_assignment_statement() :
 {/*@bgen(jjtree) variable_assignment_statement */
@@ -6505,7 +6244,6 @@ void variable_assignment_statement() :
 /*@egen*/
 }
 
-
 void variable_declaration() :
 {/*@bgen(jjtree) variable_declaration */
   ASTvariable_declaration jjtn000 = new ASTvariable_declaration(this, JJTVARIABLE_DECLARATION);
@@ -6540,7 +6278,6 @@ void variable_declaration() :
   }
 /*@egen*/
 }
-
 
 void wait_statement() :
 {/*@bgen(jjtree) wait_statement */
@@ -6577,7 +6314,6 @@ void wait_statement() :
    }
 /*@egen*/
 }
-
 
 void waveform() :
 {/*@bgen(jjtree) waveform */
@@ -6649,7 +6385,6 @@ void waveform_element() :
      }
 /*@egen*/
 }
-
 
 /** Parts of grammar, which have to be checked during semantic analysis by semantic lookahead. */
 void block_label()       :
@@ -6749,7 +6484,6 @@ void package_simple_name()       :
   simple_name()
 }
 
-
 void architecture_name()       :
 {}
 {
@@ -6840,7 +6574,6 @@ void type_name()      :
   name()
 }
 
-
 void record_type_simple_name()       :
 {}
 {
@@ -6883,7 +6616,6 @@ void static_expression()       :
   expression()
 }
 
-
 void boolean_expression()       :
 {}
 {
@@ -6920,7 +6652,6 @@ void string_expression()       :
 {
   expression()
 }
-
 
 void guarded_signal_list()       :
 {}
@@ -6964,9 +6695,7 @@ void port_interface_list()       :
   interface_list()
 }
 
-//
-// fraglich:
-//
+/** Controversial: */
 void formal_port_clause()       :
 {}
 {
@@ -7027,7 +6756,6 @@ void passive_process_statement()       :
   process_statement()
 }
 
-
 void magnitude_simple_expression()       :
 {}
 { 
@@ -7040,61 +6768,7 @@ void phase_simple_expression()       :
   simple_expression()
 }
 
-
-void nature_name()       :
-{}
-{
-  name() 
-}
-
-void subnature_name()       :
-{}
-{
-  name()
-}
-
-/**
- * still missing:
- */
-void shared_variable_declaration() :
-{/*@bgen(jjtree) shared_variable_declaration */
-  ASTshared_variable_declaration jjtn000 = new ASTshared_variable_declaration(this, JJTSHARED_VARIABLE_DECLARATION);
-  boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);
-  jjtn000.jjtSetFirstToken(getToken(1));
-/*@egen*/}
-{/*@bgen(jjtree) shared_variable_declaration */
-  try {
-/*@egen*/
-  [ <SHARED> ] <VARIABLE> identifier_list() ":"
-  subtype_indication() [ ":=" expression() ] ";"/*@bgen(jjtree)*/
-  } catch (Throwable jjte000) {
-    if (jjtc000) {
-      jjtree.clearNodeScope(jjtn000);
-      jjtc000 = false;
-    } else {
-      jjtree.popNode();
-    }
-    if (jjte000 instanceof RuntimeException) {
-      throw (RuntimeException)jjte000;
-    }
-    if (jjte000 instanceof ParseException) {
-      throw (ParseException)jjte000;
-    }
-    throw (Error)jjte000;
-  } finally {
-    if (jjtc000) {
-      jjtree.closeNodeScope(jjtn000, true);
-      jjtn000.jjtSetLastToken(getToken(0));
-    }
-  }
-/*@egen*/
-}
-
-
-/**
- * for error recovery:
- */
+/** Error recovery */
 JAVACODE void error_skipto(int kind, String message) 
 {/*@bgen(jjtree) error_skipto */
 ASTerror_skipto jjtn000 = new ASTerror_skipto(this, JJTERROR_SKIPTO);

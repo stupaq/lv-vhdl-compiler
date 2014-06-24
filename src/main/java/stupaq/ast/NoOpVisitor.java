@@ -271,16 +271,6 @@ public abstract class NoOpVisitor<Result, Argument, Failure extends Exception>
   }
 
   @Override
-  public Result visit(ASTsubnature_declaration node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
-  public Result visit(ASTsubnature_indication node, Argument data) throws Failure {
-    return visit((SimpleNode) node, data);
-  }
-
-  @Override
   public Result visit(ASTentity_declarative_part node, Argument data) throws Failure {
     return visit((SimpleNode) node, data);
   }
