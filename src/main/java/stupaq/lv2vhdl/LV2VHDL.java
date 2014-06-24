@@ -17,9 +17,9 @@ public class LV2VHDL {
         System.out.println("reading from file: " + args[0]);
         parser.design_file();
         System.err.println(parser.getErrorHandler().summary());
-        parser.rootNode()
-            .jjtAccept(new VHDLEmitterVisitor(),
-                new IndentingPrinter(new PrintWriter(System.out), "  "));
+        VHDLEmitterVisitor emitter = new VHDLEmitterVisitor(new PrintWriter(System.out));
+        parser.rootNode().jjtAccept(emitter, null);
+        emitter.flush();
       } catch (Exception e) {
         e.printStackTrace();
         throw e;
