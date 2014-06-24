@@ -36,9 +36,6 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javacc-maven-plugin</artifactId>
                 <version>2.6</version>
-                <configuration>
-                    <text>true</text>
-                </configuration>
             </plugin>
         </plugins>
     </reporting>
