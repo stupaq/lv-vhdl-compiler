@@ -2435,11 +2435,12 @@ void phase_simple_expression() :
 }
 
 /** Error recovery */
-JAVACODE void error_skipto(int kind, String message)
+JAVACODE error_skipto error_skipto(int kind, String message)
 {
   errorHandler.error(getToken(0), message);
   Token t;
   do {
     t = getNextToken();
   } while (t.kind != kind && t.next != null);
+  return new error_skipto();
 }
