@@ -1,6 +1,22 @@
 package stupaq.vhdl2vhdl;
 
-import stupaq.vhdl93.ast.*;
+import stupaq.vhdl93.ast.architecture_body;
+import stupaq.vhdl93.ast.architecture_declarative_part;
+import stupaq.vhdl93.ast.architecture_statement_part;
+import stupaq.vhdl93.ast.block_declarative_part;
+import stupaq.vhdl93.ast.component_instantiation_statement;
+import stupaq.vhdl93.ast.configuration_declarative_part;
+import stupaq.vhdl93.ast.context_clause;
+import stupaq.vhdl93.ast.design_file;
+import stupaq.vhdl93.ast.entity_declaration;
+import stupaq.vhdl93.ast.entity_declarative_part;
+import stupaq.vhdl93.ast.entity_header;
+import stupaq.vhdl93.ast.entity_statement_part;
+import stupaq.vhdl93.ast.interface_element;
+import stupaq.vhdl93.ast.package_body_declarative_part;
+import stupaq.vhdl93.ast.package_declarative_part;
+import stupaq.vhdl93.ast.port_clause;
+import stupaq.vhdl93.ast.subprogram_declarative_part;
 import stupaq.vhdl93.visitor.UserDefinedTreeFormatter;
 
 public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
@@ -76,17 +92,6 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(concurrent_signal_assignment_statement n) {
-    if (n.nodeOptional.present()) {
-      n.nodeOptional.accept(this);
-    }
-    if (n.nodeOptional1.present()) {
-      n.nodeOptional1.accept(this);
-    }
-    n.nodeChoice.accept(this);
-  }
-
-  @Override
   public void visit(configuration_declarative_part n) {
     processOptionalList(null, n.nodeListOptional, force());
   }
@@ -102,12 +107,6 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
     add(force());
     processList(n.nodeList, force());
     n.nodeToken.accept(this);
-  }
-
-  @Override
-  public void visit(design_unit n) {
-    n.context_clause.accept(this);
-    n.library_unit.accept(this);
   }
 
   @Override
@@ -156,51 +155,9 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(interface_constant_declaration n) {
-    if (n.nodeOptional.present()) {
-      n.nodeOptional.accept(this);
-    }
-    n.identifier_list.accept(this);
-    n.nodeToken.accept(this);
-    if (n.nodeOptional1.present()) {
-      n.nodeOptional1.accept(this);
-    }
-    n.subtype_indication.accept(this);
-    if (n.nodeOptional2.present()) {
-      n.nodeOptional2.accept(this);
-    }
-  }
-
-  @Override
   public void visit(interface_element n) {
     add(force());
     n.interface_declaration.accept(this);
-  }
-
-  @Override
-  public void visit(interface_signal_declaration n) {
-    if (n.nodeOptional.present()) {
-      n.nodeOptional.accept(this);
-    }
-    n.identifier_list.accept(this);
-    n.nodeToken.accept(this);
-    if (n.nodeOptional1.present()) {
-      n.nodeOptional1.accept(this);
-    }
-    n.subtype_indication.accept(this);
-    if (n.nodeOptional2.present()) {
-      n.nodeOptional2.accept(this);
-    }
-    if (n.nodeOptional3.present()) {
-      n.nodeOptional3.accept(this);
-    }
-  }
-
-  @Override
-  public void visit(library_clause n) {
-    n.nodeToken.accept(this);
-    n.logical_name_list.accept(this);
-    n.nodeToken1.accept(this);
   }
 
   @Override
@@ -226,37 +183,7 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(range_attribute_value n) {
-    n.simple_expression.accept(this);
-    n.direction.accept(this);
-    n.simple_expression1.accept(this);
-  }
-
-  @Override
-  public void visit(signal_declaration n) {
-    n.nodeToken.accept(this);
-    n.identifier_list.accept(this);
-    n.nodeToken1.accept(this);
-    n.subtype_indication.accept(this);
-    if (n.nodeOptional.present()) {
-      n.nodeOptional.accept(this);
-    }
-    if (n.nodeOptional1.present()) {
-      n.nodeOptional1.accept(this);
-    }
-    n.nodeToken2.accept(this);
-  }
-
-  @Override
   public void visit(subprogram_declarative_part n) {
     processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
-  public void visit(use_clause n) {
-    n.nodeToken.accept(this);
-    n.selected_name.accept(this);
-    processOptionalList(null, n.nodeListOptional, space());
-    n.nodeToken1.accept(this);
   }
 }
