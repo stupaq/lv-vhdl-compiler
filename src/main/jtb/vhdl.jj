@@ -32,10 +32,6 @@
 options
 {
   STATIC=false;
-  MULTI=true;
-  NODE_USES_PARSER=true;
-  TRACK_TOKENS=true;
-  VISITOR_EXCEPTION="Exception";
 }
 
 PARSER_BEGIN(VHDL93Parser)
@@ -236,20 +232,20 @@ TOKEN :
   | <SEMICOLON: ";">
 }
 
-void abstract_literal() #void :
+void abstract_literal() :
 {}
 {
     <decimal_literal>
   | <based_literal>
 }
 
-void access_type_definition() #void :
+void access_type_definition() :
 {}
 {
   <ACCESS> subtype_indication()
 }
 
-void actual_designator() #void :
+void actual_designator() :
 {}
 {
     LOOKAHEAD(expression()) 
@@ -263,7 +259,7 @@ void actual_designator() #void :
   | <OPEN>
 }
 
-void actual_parameter_part() #void :
+void actual_parameter_part() :
 {}
 {
   parameter_association_list()
@@ -272,19 +268,19 @@ void actual_parameter_part() #void :
 void actual_part() :
 {}
 {
-    LOOKAHEAD( function_name() "(" actual_designator() ")")
+    LOOKAHEAD(function_name() "(" actual_designator() ")")
     function_name() "(" actual_designator() ")"
-  | LOOKAHEAD( type_mark() "(" actual_designator() ")")
+  | LOOKAHEAD(type_mark() "(" actual_designator() ")")
     type_mark() "(" actual_designator() ")"
   | actual_designator()
 }
 
-int adding_operator() #void :
+void adding_operator() :
 {}
 {
-    <ADD>               { return ADD; }
-  | <SUB>               { return SUB; }
-  | <CONCAT>            { return CONCAT; }
+    <ADD>
+  | <SUB>
+  | <CONCAT>
 }
 
 void aggregate() :
@@ -296,8 +292,7 @@ void aggregate() :
 void alias_declaration() :
 {}
 {
-  <ALIAS> alias_designator()
-   [ ":" subtype_indication() ] <IS> name() signature() ";"
+  <ALIAS> alias_designator() [ ":" subtype_indication() ] <IS> name() signature() ";"
 }
 
 void alias_designator() :
@@ -344,13 +339,10 @@ void architecture_statement_part() :
   ( architecture_statement() )*
 }
 
-/** Lookahead would be annoying here. Therefore I moved the concurrent statements into this rule. */
-void architecture_statement() #void :
+void architecture_statement() :
 {}
 {
-  /** Concurrent_statements */
-  try {
-
+  // TODO error recovery to next SEMICOLON
     LOOKAHEAD([block_label() ":"] <BLOCK>)
     block_statement()
   | LOOKAHEAD([process_label() ":"] [<POSTPONED>] <PROCESS>)
@@ -366,16 +358,9 @@ void architecture_statement() #void :
     component_instantiation_statement()
   | LOOKAHEAD(generate_statement())
     generate_statement()
-  }
-
-  /** Error handling: skip until next semicolon. */
-  catch(ParseException e)
-  {
-    error_skipto(SEMICOLON, "syntax error in statement");
-  }
 }
 
-void array_type_definition() #void:
+void array_type_definition() :
 {}
 {
     LOOKAHEAD(unconstrained_array_definition())
@@ -416,7 +401,7 @@ void attribute_declaration() :
   <ATTRIBUTE> identifier() ":" type_mark() ";"
 }
 
-void attribute_designator() #void :
+void attribute_designator() :
 {}
 {
   attribute_simple_name()
@@ -435,7 +420,7 @@ void attribute_specification() :
   entity_specification() <IS> expression() ";"
 }
 
-void base_unit_declaration() #void :
+void base_unit_declaration() :
 {}
 {
   identifier() ";"
@@ -458,11 +443,10 @@ void block_configuration() :
   <END> <FOR> ";"
 }
 
-void block_declarative_item() #void :
+void block_declarative_item() :
 {}
 {
-  try {
-
+  // TODO error recovery to next SEMICOLON
     LOOKAHEAD(subprogram_declaration())
     subprogram_declaration()
   | subprogram_body()
@@ -483,13 +467,6 @@ void block_declarative_item() #void :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-  }
-
-  /** Error handling: skip until next semicolon. */
-  catch (ParseException e)
-  {
-    error_skipto(SEMICOLON, "syntax error in declarative item");
-  }
 }
 
 void block_declarative_part() :
@@ -630,13 +607,13 @@ void concurrent_signal_assignment_statement() :
       | selected_signal_assignment() )
 }
 
-void condition() #void :
+void condition() :
 {}
 {
   boolean_expression()
 }
 
-void condition_clause() #void :
+void condition_clause() :
 {}
 {
   <UNTIL> condition()
@@ -668,19 +645,13 @@ void configuration_declaration() :
   <END> [ <CONFIGURATION> ] [ configuration_simple_name() ] ";"
 }
 
-void configuration_declarative_item() #void :
+void configuration_declarative_item() :
 {}
 {
-  try {
+  // TODO error recovery to next SEMICOLON
     use_clause()
   | attribute_specification()
   | group_declaration()
-  }
-
-  catch(ParseException e)
-  {
-    error_skipto(SEMICOLON, "syntax error in declarative item");
-  }
 }
 
 void configuration_declarative_part() :
@@ -689,7 +660,7 @@ void configuration_declarative_part() :
   ( configuration_declarative_item() )*
 }
 
-void configuration_item() #void :
+void configuration_item() :
 {}
 {
     LOOKAHEAD(block_configuration())
@@ -716,7 +687,7 @@ void constrained_array_definition() :
   <ARRAY> index_constraint() <OF> element_subtype_indication()
 }
 
-void constraint() #void :
+void constraint() :
 {}
 {
     range_constraint()
@@ -729,7 +700,7 @@ void context_clause() :
   ( context_item() )*
 }
 
-void context_item() #void :
+void context_item() :
 {}
 {
     library_clause()
@@ -756,7 +727,7 @@ void design_unit() :
   context_clause() library_unit()
 }
 
-void designator() #void :
+void designator() :
 {}
 {
     identifier()
@@ -776,7 +747,7 @@ void disconnection_specification() :
     time_expression() ";"
 }
 
-void discrete_range() #void  :
+void discrete_range()  :
 {}
 {
     LOOKAHEAD(simple_expression() direction() )
@@ -786,7 +757,7 @@ void discrete_range() #void  :
   | range() 
 }
 
-void element_association() #void :
+void element_association() :
 {}
 {
   [ LOOKAHEAD(choices() "=>") choices() "=>" ]
@@ -799,7 +770,7 @@ void element_declaration() :
   identifier_list() ":" element_subtype_definition() ";"
 }
 
-void element_subtype_definition() #void :
+void element_subtype_definition() :
 {}
 {
   subtype_indication()
@@ -823,26 +794,26 @@ void shared_variable_declaration() :
 }
 
 /** Section 5: Specifications */
-int entity_class() #void :
+void entity_class() :
 {}
 {
-    <ENTITY>                    { return ENTITY; }
-  | <ARCHITECTURE>              { return ARCHITECTURE; }
-  | <CONFIGURATION>             { return CONFIGURATION; }
-  | <PROCEDURE>                 { return PROCEDURE; }
-  | <FUNCTION>                  { return FUNCTION; }
-  | <PACKAGE>                   { return PACKAGE; }
-  | <TYPE>                      { return TYPE; }
-  | <SUBTYPE>                   { return SUBTYPE; }
-  | <CONSTANT>                  { return CONSTANT; }
-  | <SIGNAL>                    { return SIGNAL; }
-  | <VARIABLE>                  { return VARIABLE; }
-  | <COMPONENT>                 { return COMPONENT; }
-  | <LABEL>                     { return LABEL; }
-  | <LITERAL>                   { return LITERAL; }
-  | <UNITS>                     { return UNITS; }
-  | <GROUP>                     { return GROUP; }
-  | <FILE>                      { return FILE; }
+    <ENTITY>
+  | <ARCHITECTURE>
+  | <CONFIGURATION>
+  | <PROCEDURE>
+  | <FUNCTION>
+  | <PACKAGE>
+  | <TYPE>
+  | <SUBTYPE>
+  | <CONSTANT>
+  | <SIGNAL>
+  | <VARIABLE>
+  | <COMPONENT>
+  | <LABEL>
+  | <LITERAL>
+  | <UNITS>
+  | <GROUP>
+  | <FILE>
 }
 
 void entity_class_entry()  :
@@ -869,10 +840,10 @@ void entity_declaration() :
   }
 }
 
-void entity_declarative_item() #void :
+void entity_declarative_item() :
 {}
 {
-  try {
+  // TODO error recovery to next SEMICOLON
     LOOKAHEAD(subprogram_declaration())
     subprogram_declaration()
   | subprogram_body()
@@ -891,12 +862,6 @@ void entity_declarative_item() #void :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-
-  }
-  catch( ParseException e )
-  {
-    error_skipto(SEMICOLON, "syntax error in declarative item");
-  }
 }
 
 void entity_declarative_part() :
@@ -932,7 +897,7 @@ void entity_specification() :
         entity_name_list() ":" entity_class()
 }
 
-void entity_statement() #void :
+void entity_statement() :
 {}
 {   LOOKAHEAD( concurrent_assertion_statement() )
     concurrent_assertion_statement()
@@ -975,8 +940,8 @@ void exit_statement() :
     [ <WHEN> condition() ] ";"
 }
 
-void expression() #void :
-{ int op; }
+void expression() :
+{}
 {
 /**  relation() (
  *   ( <AND> relation() )* |
@@ -987,18 +952,15 @@ void expression() #void :
  *    ( <XNOR> relation() )*
  *  )
  */
-  relation() 
-  ( LOOKAHEAD(1) op=logical_operator() relation()
-  #relation(2) )*
-
+  relation() ( LOOKAHEAD(1) logical_operator() relation() )*
 }
 
-void factor() #void :
+void factor() :
 {}
 {
     <ABS> primary()
   | <NOT> primary()
-  | primary() [ LOOKAHEAD("**" primary() ) <EXP> primary() #factor(2) ]
+  | primary() [ LOOKAHEAD("**" primary() ) <EXP> primary() ]
 }
 
 void file_declaration() :
@@ -1008,7 +970,7 @@ void file_declaration() :
      [ file_open_information() ] ";"
 }
 
-void file_logical_name() #void :
+void file_logical_name() :
 {}
 {
   string_expression()
@@ -1020,19 +982,19 @@ void file_open_information() :
   [ <OPEN> file_open_kind_expression() ] <IS> file_logical_name()
 }
 
-void file_type_definition() #void :
+void file_type_definition() :
 {}
 {
   <FILE> <OF> type_mark()
 }
 
-void floating_type_definition() #void :
+void floating_type_definition() :
 {}
 {
   range_constraint()
 }
 
-void formal_designator() #void :
+void formal_designator() :
 {}
 {
     LOOKAHEAD( generic_name() )
@@ -1048,7 +1010,7 @@ void formal_parameter_list() :
   parameter_interface_list()
 }
 
-void formal_part() #void :
+void formal_part() :
 {}
 {
     LOOKAHEAD( function_name() "(" formal_designator() ")")
@@ -1095,13 +1057,13 @@ void generic_clause() :
   <GENERIC> "(" generic_list() ")" ";"
 }
 
-void generic_list() #void :
+void generic_list() :
 {}
 {
   generic_interface_list()
 }
 
-void generic_map_aspect() #void :
+void generic_map_aspect() :
 {}
 {
   <GENERIC> <MAP> "(" generic_association_list() ")"
@@ -1140,10 +1102,10 @@ void guarded_signal_specification() :
 }
 
 void identifier() :
-{ Token t; }
+{}
 {  
-     t=<basic_identifier>    { jjtThis.name = t.image; }
-  |  t=<extended_identifier> { jjtThis.name = t.image; }
+    <basic_identifier>    { jjtThis.name = t.image; }
+  | <extended_identifier> { jjtThis.name = t.image; }
 }
 
 void identifier_list() :
@@ -1213,7 +1175,7 @@ void instantiation_list() :
   | <ALL>
 }
 
-void integer_type_definition() #void :
+void integer_type_definition() :
 {}
 {
   range_constraint()
@@ -1227,7 +1189,7 @@ void interface_constant_declaration() :
 }
 
 /** Section 4.3.2: */
-void interface_declaration() #void :
+void interface_declaration() :
 {}
 {
     LOOKAHEAD(interface_constant_declaration() ) 
@@ -1240,7 +1202,7 @@ void interface_declaration() #void :
     interface_file_declaration()
 }
 
-void interface_element() #void :
+void interface_element() :
 {}
 {
   interface_declaration()
@@ -1279,19 +1241,19 @@ void iteration_scheme() :
   | <FOR> loop_parameter_specification()
 }
 
-void label() #void :
+void label() :
 {}
 {
   identifier()
 }
 
-void library_clause() #void :
+void library_clause() :
 {}
 {
   <LIBRARY> logical_name_list() ";"
 }
 
-void library_unit() #void :
+void library_unit() :
 {}
 {   LOOKAHEAD(<ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
     primary_unit()
@@ -1309,7 +1271,7 @@ void literal() :
   | <NULL>
 }
 
-void logical_name() #void :
+void logical_name() :
 {}
 {
   identifier()
@@ -1321,15 +1283,15 @@ void logical_name_list() :
   logical_name() ( "," logical_name() )*
 }
 
-int logical_operator() #void :
+void logical_operator() :
 {}
 {
-    <AND>             { return AND; }
-  | <OR>              { return OR; }
-  | <NAND>            { return NAND; }
-  | <NOR>             { return NOR; }
-  | <XOR>             { return XOR; }
-  | <XNOR>            { return XNOR; }
+    <AND>
+  | <OR>
+  | <NAND>
+  | <NOR>
+  | <XOR>
+  | <XNOR>
 }
 
 void loop_statement() :
@@ -1341,12 +1303,12 @@ void loop_statement() :
   <END> <LOOP> [ loop_label() ] ";"
 }
 
-int miscellaneous_operator() #void :
+void miscellaneous_operator() :
 {}
 {
-    <EXP>               { return EXP; }
-  | <ABS>               { return ABS; }
-  | <NOT>               { return NOT; }
+    <EXP>
+  | <ABS>
+  | <NOT>
 }
 
 void mode() :
@@ -1359,13 +1321,13 @@ void mode() :
   | <LINKAGE>
 }
 
-int multiplying_operator() #void :
+void multiplying_operator() :
 {}
 {
-    "*"                 { return MUL; }
-  | "/"                 { return DIV; }
-  | <MOD>               { return MOD; }
-  | <REM>               { return REM; }
+    <MUL>
+  | <DIV>
+  | <MOD>
+  | <REM>
 }
 
 void name() :
@@ -1383,7 +1345,7 @@ void name() :
   [ LOOKAHEAD(name_extension()) name_extension()   ]
 }
 
-void name_extension() #void :
+void name_extension() :
 {}
 {
   (
@@ -1416,7 +1378,7 @@ void null_statement() :
   [ label() ":" ] <NULL> ";"
 }
 
-void numeric_literal() #void :
+void numeric_literal() :
 {}
 {
     LOOKAHEAD(physical_literal())
@@ -1424,17 +1386,14 @@ void numeric_literal() #void :
   | abstract_literal()
 }
 
-void object_declaration() #void :
+void object_declaration() :
 {}
 {
-  try {
-      constant_declaration()
-    | signal_declaration()
-    | variable_declaration()
-    | file_declaration()
-  } catch(ParseException e) {
-    error_skipto(SEMICOLON, "syntax error in declaration");
-  }
+  // TODO error recovery to next SEMICOLON
+    constant_declaration()
+  | signal_declaration()
+  | variable_declaration()
+  | file_declaration()
 }
 
 void operator_symbol() :
@@ -1457,10 +1416,10 @@ void package_body() :
   <END> [ <PACKAGE> <BODY> ] [ package_simple_name() ] ";"
 }
 
-void package_body_declarative_item() #void :
+void package_body_declarative_item() :
 {}
 {
-  try {
+  // TODO error recovery to next SEMICOLON
     LOOKAHEAD(subprogram_declaration())
     subprogram_declaration()
   | subprogram_body()
@@ -1474,11 +1433,6 @@ void package_body_declarative_item() #void :
   | LOOKAHEAD(<GROUP> identifier() <IS>)
     group_template_declaration()
   | group_declaration()
-  }
-  catch( ParseException e )
-  {
-    error_skipto(SEMICOLON, "syntax error in declarative item");
-  }
 }
 
 void package_body_declarative_part() :
@@ -1495,30 +1449,27 @@ void package_declaration() :
   <END> [ <PACKAGE> ] [ package_simple_name() ] ";"
 }
 
-void package_declarative_item() #void :
+void package_declarative_item() :
 {}
 {
-  try {
-      subprogram_declaration()
-    | type_declaration()
-    | subtype_declaration()
-    | constant_declaration()
-    | signal_declaration()
-    | shared_variable_declaration()
-    | file_declaration()
-    | alias_declaration()
-    | component_declaration()
-    | LOOKAHEAD( attribute_declaration() )
-      attribute_declaration()
-    | attribute_specification()
-    | disconnection_specification()
-    | use_clause()
-    | LOOKAHEAD(<GROUP> identifier() <IS>)
-      group_template_declaration()
-    | group_declaration()
-  } catch(ParseException e) {
-    error_skipto(SEMICOLON, "syntax error in declaration");
-  }
+  // TODO error recovery to next SEMICOLON
+    subprogram_declaration()
+  | type_declaration()
+  | subtype_declaration()
+  | constant_declaration()
+  | signal_declaration()
+  | shared_variable_declaration()
+  | file_declaration()
+  | alias_declaration()
+  | component_declaration()
+  | LOOKAHEAD( attribute_declaration() )
+    attribute_declaration()
+  | attribute_specification()
+  | disconnection_specification()
+  | use_clause()
+  | LOOKAHEAD(<GROUP> identifier() <IS>)
+    group_template_declaration()
+  | group_declaration()
 }
 
 void package_declarative_part() :
@@ -1557,7 +1508,7 @@ void port_clause() :
   <PORT> "(" port_list() ")" ";"
 }
 
-void port_list() #void :
+void port_list() :
 {}
 {
   port_interface_list()
@@ -1577,7 +1528,7 @@ void prefix() :
   | name()
 }
 
-void primary() #void :
+void primary() :
 {}
 {
     LOOKAHEAD( qualified_expression() )
@@ -1597,7 +1548,7 @@ void primary() #void :
   | allocator()
 }
 
-void primary_unit() #void :
+void primary_unit() :
 {}
 {
     entity_declaration()
@@ -1619,7 +1570,7 @@ void procedure_call_statement() :
    procedure_call() ";"
 }
 
-void process_declarative_item() #void :
+void process_declarative_item() :
 {}
 {
     LOOKAHEAD(subprogram_declaration())
@@ -1683,7 +1634,7 @@ void range() :
   | range_attribute_name()
 }
 
-void range_constraint() #void :
+void range_constraint() :
 {}
 {
   <RANGE> range()
@@ -1697,25 +1648,21 @@ void record_type_definition() :
   <END> <RECORD> [ record_type_simple_name() ]
 }
 
-void relation() #void :
-{ int op; }
-{
-  shift_expression() 
-  [ LOOKAHEAD(1)
-  op=relational_operator()
-  shift_expression()
-  #shift_expression(2) ]
-}
-
-int relational_operator() #void :
+void relation() :
 {}
 {
-    <EQ>                { return EQ; }
-  | <NEQ>               { return NEQ; } 
-  | <LO>                { return LO; }
-  | <LE>                { return LE; }
-  | <GT>                { return GT; }
-  | <GE>                { return GE; }
+  shift_expression() [ LOOKAHEAD(1) relational_operator() shift_expression() ]
+}
+
+void relational_operator() :
+{}
+{
+    <EQ>
+  | <NEQ>
+  | <LO>
+  | <LE>
+  | <GT>
+  | <GE>
 }
 
 void report_statement() :
@@ -1731,7 +1678,7 @@ void return_statement() :
   [ label() ":" ] <RETURN> [ expression() ] ";"
 }
 
-void scalar_type_definition() #void :
+void scalar_type_definition() :
 {}
 {
     LOOKAHEAD(range_constraint() <UNITS> )
@@ -1741,7 +1688,7 @@ void scalar_type_definition() #void :
   | range_constraint()
 }
 
-void secondary_unit() #void :
+void secondary_unit() :
 {}
 {
     LOOKAHEAD( <ARCHITECTURE> )
@@ -1787,7 +1734,7 @@ void selected_waveforms() :
   ("," waveform() <WHEN> choices() )*
 }
 
-void sensitivity_clause() #void :
+void sensitivity_clause() :
 {}
 {
   <ON> sensitivity_list()
@@ -1805,60 +1752,55 @@ void sequence_of_statements() :
   ( sequential_statement() )*
 }
 
-void sequential_statement() #void :
+void sequential_statement() :
 {}
 {
-  try {
-    (
-      LOOKAHEAD(3)
-      wait_statement()
-    | LOOKAHEAD(3)
-      assertion_statement()
-    | LOOKAHEAD(3)
-      report_statement()
-    | LOOKAHEAD(  [ label() ":" ] target() "<=" )
-      signal_assignment_statement()
-    | LOOKAHEAD(  [ label() ":" ] target() ":=" )
-      variable_assignment_statement()
-    | LOOKAHEAD(3)
-      procedure_call_statement()
-    | LOOKAHEAD(3)
-      if_statement()
-    | LOOKAHEAD(3)
-      case_statement()
-    | LOOKAHEAD(3)
-      loop_statement()
-    | LOOKAHEAD(3)
-      next_statement()
-    | LOOKAHEAD(3)
-      exit_statement()
-    | LOOKAHEAD(3)
-      return_statement()
-    | LOOKAHEAD(3)
-      null_statement()
-    )
-  } catch (ParseException e) {
-    error_skipto(SEMICOLON, "syntax error in sequential statement");
-  } 
+  // TODO error recovery to next SEMICOLON
+  (
+    LOOKAHEAD(3)
+    wait_statement()
+  | LOOKAHEAD(3)
+    assertion_statement()
+  | LOOKAHEAD(3)
+    report_statement()
+  | LOOKAHEAD(  [ label() ":" ] target() "<=" )
+    signal_assignment_statement()
+  | LOOKAHEAD(  [ label() ":" ] target() ":=" )
+    variable_assignment_statement()
+  | LOOKAHEAD(3)
+    procedure_call_statement()
+  | LOOKAHEAD(3)
+    if_statement()
+  | LOOKAHEAD(3)
+    case_statement()
+  | LOOKAHEAD(3)
+    loop_statement()
+  | LOOKAHEAD(3)
+    next_statement()
+  | LOOKAHEAD(3)
+    exit_statement()
+  | LOOKAHEAD(3)
+    return_statement()
+  | LOOKAHEAD(3)
+    null_statement()
+  )
 }
 
-void shift_expression() #void :
-{ int op; }
-{
-  simple_expression() 
-  [ LOOKAHEAD(2) op=shift_operator()
-  simple_expression() #simple_expression(2)  ]
-}
-
-int shift_operator() #void :
+void shift_expression() :
 {}
 {
-    <SLL>               { return SLL; }
-  | <SRL>               { return SRL; }
-  | <SLA>               { return SLA; }
-  | <SRA>               { return SRA; }
-  | <ROL>               { return ROL; }
-  | <ROR>               { return ROR; }
+  simple_expression() [ LOOKAHEAD(2) shift_operator() simple_expression()  ]
+}
+
+void shift_operator() :
+{}
+{
+    <SLL>
+  | <SRL>
+  | <SLA>
+  | <SRA>
+  | <ROL>
+  | <ROR>
 }
 
 void sign() :
@@ -1902,13 +1844,13 @@ void signature() :
   [ <RETURN> type_mark() ]
 }
 
-void simple_expression() #void :
-{ int op; }
+void simple_expression() :
+{}
 {
- [ sign() ] term() ( LOOKAHEAD(2) op=adding_operator() term() #term(2) )*
+  [ sign() ] term() ( LOOKAHEAD(2) adding_operator() term() )*
 }
 
-void simple_name() #void :
+void simple_name() :
 {}
 {
   identifier()
@@ -1930,13 +1872,13 @@ void subprogram_body() :
   <END> [ subprogram_kind() ] [ designator() ] ";"
 }
 
-void subprogram_declaration() #void :
+void subprogram_declaration() :
 {}
 {
   subprogram_specification() ";"
 }
 
-void subprogram_declarative_item() #void :
+void subprogram_declarative_item() :
 {}
 {
     LOOKAHEAD(subprogram_declaration())
@@ -1963,11 +1905,11 @@ void subprogram_declarative_part() :
   ( subprogram_declarative_item() )*
 }
 
-int subprogram_kind() #void :
+void subprogram_kind() :
 {}
 {
-    <PROCEDURE>                 { return PROCEDURE; }
-  | <FUNCTION>                  { return FUNCTION; }
+    <PROCEDURE>
+  | <FUNCTION>
 }
 
 void subprogram_specification() :
@@ -2006,7 +1948,7 @@ void subtype_indication() :
     type_mark()  
 }
 
-void suffix() #void :
+void suffix() :
 {}
 {
     simple_name()
@@ -2015,21 +1957,20 @@ void suffix() #void :
   | <ALL>
 }
 
-void target() #void :
+void target() :
 {}
 {
     name()
   | aggregate()
 }
 
-void term() #void :
-{ int op; }
+void term() :
+{}
 {
-  factor() ( LOOKAHEAD(2) op = multiplying_operator() factor() #factor(2)
-  )*
+  factor() ( LOOKAHEAD(2) multiplying_operator() factor() )*
 }
 
-void timeout_clause() #void :
+void timeout_clause() :
 {}
 {
   <FOR> expression()
@@ -2041,7 +1982,7 @@ void type_conversion() :
   type_mark() "(" expression() ")"
 }
 
-void type_declaration() #void :
+void type_declaration() :
 {}
 {
     LOOKAHEAD( <TYPE> identifier() <IS> )
@@ -2049,7 +1990,7 @@ void type_declaration() #void :
   | incomplete_type_declaration()
 }
 
-void type_definition() #void :
+void type_definition() :
 {}
 {
     scalar_type_definition()
@@ -2058,7 +1999,7 @@ void type_definition() #void :
   | file_type_definition()
 }
 
-void type_mark() #void :
+void type_mark() :
 {}
 {
     LOOKAHEAD(type_name())
@@ -2119,382 +2060,382 @@ void waveform_element() :
 }
 
 /** Parts of grammar, which have to be checked during semantic analysis by semantic lookahead. */
-void block_label() #void :
+void block_label() :
 {}
 {
   label()
 }
 
-void block_statement_label() #void :
+void block_statement_label() :
 {}
 {
   label()
 }
 
-void case_label() #void :
+void case_label() :
 {}
 {
   label()
 }
 
-void generate_label() #void :
+void generate_label() :
 {}
 {
   label()
 }
 
-void generate_statement_label() #void :
+void generate_statement_label() :
 {}
 {
   label()
 }
 
-void if_label() #void :
+void if_label() :
 {}
 {
   label()
 }
 
-void instantiation_label() #void :
+void instantiation_label() :
 {}
 {
   label()
 }
 
-void loop_label() #void :
+void loop_label() :
 {}
 {
   label()
 }
 
-void process_label() #void :
+void process_label() :
 {}
 {
   label()
 }
 
-void architecture_simple_name() #void :
+void architecture_simple_name() :
 {}
 {
   simple_name()
 }
 
-void attribute_simple_name() #void :
+void attribute_simple_name() :
 {}
 {
   simple_name()
   | <RANGE>
 }
 
-void component_simple_name() #void :
+void component_simple_name() :
 {}
 {
   simple_name()
 }
 
-void configuration_simple_name() #void :
+void configuration_simple_name() :
 {}
 {
   simple_name()
 }
 
-void element_simple_name() #void :
+void element_simple_name() :
 {}
 {
   simple_name()
 }
 
-void entity_simple_name() #void :
+void entity_simple_name() :
 {}
 {
   simple_name()
 }
 
-void package_simple_name() #void :
+void package_simple_name() :
 {}
 {
   simple_name()
 }
 
-void architecture_name() #void :
+void architecture_name() :
 {}
 {
   name()
 }
 
-void entity_name() #void :
+void entity_name() :
 {}
 {
   name()           
 }
 
-void file_name() #void :
+void file_name() :
 {}
 {
   name()
 }
 
-void function_name() #void :
+void function_name() :
 {}
 {
   name()
 }
 
-void configuration_name() #void :
+void configuration_name() :
 {}
 {
   name()
 }
 
-void component_name() #void :
+void component_name() :
 {}
 {
   name()
 }
 
-void generic_name() #void :
+void generic_name() :
 {}
 {
   name()
 }
 
-void group_template_name() #void :
+void group_template_name() :
 {}
 {
   name()
 }
 
-void parameter_name() #void :
+void parameter_name() :
 {}
 {
   name()
 }
 
-void physical_type_simple_name() #void :
+void physical_type_simple_name() :
 {}
 {
   simple_name() 
 }
 
-void port_name() #void :
+void port_name() :
 {}
 {
   name()
 }
 
-void procedure_name() #void :
+void procedure_name() :
 {}
 {
   name()
 }
 
-void range_attribute_name() #void :
+void range_attribute_name() :
 {}
 {
   name()
 }
 
-void signal_name() #void:
+void signal_name() :
 {}
 {
   name()
 }
 
-void type_name() #void:
+void type_name() :
 {}
 {
   name()
 }
 
-void record_type_simple_name() #void :
+void record_type_simple_name() :
 {}
 {
   simple_name()
 }
 
-void resolution_function_name() #void :
+void resolution_function_name() :
 {}
 {
   name()
 }
 
-void subtype_name() #void :
+void subtype_name() :
 {}
 {
   name()
 }
 
-void unit_name() #void :
+void unit_name() :
 {}
 {
   name()
 }
 
-void variable_name() #void :
+void variable_name() :
 {}
 {
   name()
 }
 
-void architecture_identifier() #void :
+void architecture_identifier() :
 {}
 {
   identifier()
 }
 
-void static_expression() #void :
+void static_expression() :
 {}
 {
   expression()
 }
 
-void boolean_expression() #void :
+void boolean_expression() :
 {}
 {
   expression()
 }
 
-void file_open_kind_expression() #void :
+void file_open_kind_expression() :
 {}
 {
   expression()
 }
 
-void guard_expression() #void :
+void guard_expression() :
 {}
 {
   expression()
 }
 
-void time_expression() #void :
+void time_expression() :
 {}
 {
   expression() // unit_name()
   // unit_name can be derived by expression!!! 
 }
 
-void value_expression() #void :
+void value_expression() :
 {}
 {
   expression()
 }
 
-void string_expression() #void :
+void string_expression() :
 {}
 {
   expression()
 }
 
-void guarded_signal_list() #void :
+void guarded_signal_list() :
 {}
 {
   signal_list()
 }
 
-void parameter_association_list() #void :
+void parameter_association_list() :
 {}
 {
   association_list()
 }
 
-void port_association_list() #void :
+void port_association_list() :
 {}
 {
   association_list()
 }
 
-void generic_association_list() #void :
+void generic_association_list() :
 {}
 {
   association_list()
 }
 
-void generic_interface_list() #void :
+void generic_interface_list() :
 {}
 {
   interface_list()
 }
 
-void parameter_interface_list() #void :
+void parameter_interface_list() :
 {}
 {
   interface_list()
 }
 
-void port_interface_list() #void :
+void port_interface_list() :
 {}
 {
   interface_list()
 }
 
 /** Controversial: */
-void formal_port_clause() #void :
+void formal_port_clause() :
 {}
 {
   port_clause()
 }
 
-void local_port_clause() #void :
+void local_port_clause() :
 {}
 {
   port_clause()
 }
 
-void formal_generic_clause() #void :
+void formal_generic_clause() :
 {}
 {
   generic_clause()
 }
 
-void local_generic_clause() #void :
+void local_generic_clause() :
 {}
 {
   generic_clause()
 }
 
-void element_subtype_indication() #void :
+void element_subtype_indication() :
 {}
 {
   subtype_indication()
 }
 
-void discrete_subtype_indication() #void :
+void discrete_subtype_indication() :
 {}
 {
   subtype_indication()
 }
 
-void loop_parameter_specification() #void :
+void loop_parameter_specification() :
 {}
 {
   parameter_specification()
 }
 
-void generate_parameter_specification() #void :
+void generate_parameter_specification() :
 {}
 {
   parameter_specification()
 }
 
-void passive_concurrent_procedure_call_statement() #void :
+void passive_concurrent_procedure_call_statement() :
 {}
 {
   concurrent_procedure_call_statement()
 }
 
-void passive_process_statement() #void :
+void passive_process_statement() :
 {}
 {
   process_statement()
 }
 
-void magnitude_simple_expression() #void :
+void magnitude_simple_expression() :
 {}
 { 
   simple_expression() 
 }
 
-void phase_simple_expression() #void :
+void phase_simple_expression() :
 {}
 {
   simple_expression()
