@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.visitor.TreeDumper;
+import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 public class VHDL2VHDL {
   public static void main(String args[]) throws Exception {

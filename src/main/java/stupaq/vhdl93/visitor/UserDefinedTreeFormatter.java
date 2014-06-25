@@ -7,13 +7,11 @@ import java.util.Vector;
 import stupaq.vhdl93.ast.*;
 
 public abstract class UserDefinedTreeFormatter extends TreeFormatter {
-  private final Vector<FormatCommand> cmdQueue;
-  private boolean autoSurroundTokens = false;
+  protected final Vector<FormatCommand> cmdQueue;
 
   @SuppressWarnings("unchecked")
-  public UserDefinedTreeFormatter(int indentAmt, int wrapWidth, boolean autoSurroundTokens) {
+  public UserDefinedTreeFormatter(int indentAmt, int wrapWidth) {
     super(indentAmt, wrapWidth);
-    this.autoSurroundTokens = autoSurroundTokens;
     try {
       Field formatterQueue = TreeFormatter.class.getDeclaredField("cmdQueue");
       formatterQueue.setAccessible(true);
@@ -42,58 +40,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
       FormatCommand post) {
     if (list.present()) {
       processList(pre, list, post);
-    }
-  }
-
-  protected final void autoSurroundTokens(SimpleNode node, boolean value) {
-    autoSurroundTokens ^= value;
-    value ^= autoSurroundTokens;
-    node.accept(this);
-    autoSurroundTokens = value;
-  }
-
-  protected final boolean stripSpace() {
-    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
-      switch (cmdQueue.get(i).getCommand()) {
-        case FormatCommand.INDENT:
-        case FormatCommand.OUTDENT:
-        case FormatCommand.FORCE:
-          break;
-        case FormatCommand.SPACE:
-          cmdQueue.remove(i);
-          return true;
-        default:
-          i = -1;
-      }
-    }
-    return false;
-  }
-
-  protected final boolean ensureWhiteSpace() {
-    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
-      switch (cmdQueue.get(i).getCommand()) {
-        case FormatCommand.INDENT:
-        case FormatCommand.OUTDENT:
-          break;
-        case FormatCommand.SPACE:
-        case FormatCommand.FORCE:
-          return false;
-        default:
-          i = -1;
-      }
-    }
-    add(space());
-    return true;
-  }
-
-  @Override
-  public final void visit(NodeToken n) {
-    if (autoSurroundTokens) {
-      ensureWhiteSpace();
-    }
-    super.visit(n);
-    if (autoSurroundTokens) {
-      ensureWhiteSpace();
     }
   }
 

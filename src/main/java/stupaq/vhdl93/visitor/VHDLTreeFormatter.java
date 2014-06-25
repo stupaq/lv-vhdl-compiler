@@ -1,5 +1,11 @@
-package stupaq.vhdl2vhdl;
+package stupaq.vhdl93.visitor;
 
+import com.google.common.collect.Sets;
+
+import java.util.Set;
+
+import stupaq.vhdl93.ast.NodeToken;
+import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.architecture_body;
 import stupaq.vhdl93.ast.architecture_declarative_part;
 import stupaq.vhdl93.ast.architecture_statement_part;
@@ -17,15 +23,71 @@ import stupaq.vhdl93.ast.package_body_declarative_part;
 import stupaq.vhdl93.ast.package_declarative_part;
 import stupaq.vhdl93.ast.port_clause;
 import stupaq.vhdl93.ast.subprogram_declarative_part;
-import stupaq.vhdl93.visitor.UserDefinedTreeFormatter;
 
 public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
+  private final static Set<String> NO_AUTO_PREFIX = Sets.newHashSet(",", ";");
+  private boolean autoSurroundTokens = true;
+
   public VHDLTreeFormatter() {
     this(4, 80);
   }
 
   public VHDLTreeFormatter(int indentAmt, int wrapWidth) {
-    super(indentAmt, wrapWidth, true);
+    super(indentAmt, wrapWidth);
+  }
+
+  protected final void autoSurroundTokens(SimpleNode node, boolean value) {
+    autoSurroundTokens ^= value;
+    value ^= autoSurroundTokens;
+    node.accept(this);
+    autoSurroundTokens = value;
+  }
+
+  protected final boolean stripSpace() {
+    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
+      switch (cmdQueue.get(i).getCommand()) {
+        case FormatCommand.INDENT:
+        case FormatCommand.OUTDENT:
+        case FormatCommand.FORCE:
+          break;
+        case FormatCommand.SPACE:
+          cmdQueue.remove(i);
+          return true;
+        default:
+          i = -1;
+      }
+    }
+    return false;
+  }
+
+  protected final boolean ensureWhiteSpace() {
+    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
+      switch (cmdQueue.get(i).getCommand()) {
+        case FormatCommand.INDENT:
+        case FormatCommand.OUTDENT:
+          break;
+        case FormatCommand.SPACE:
+        case FormatCommand.FORCE:
+          return false;
+        default:
+          i = -1;
+      }
+    }
+    add(space());
+    return true;
+  }
+
+  @Override
+  public final void visit(NodeToken n) {
+    if (NO_AUTO_PREFIX.contains(n.tokenImage)) {
+      stripSpace();
+    } else if (autoSurroundTokens) {
+      ensureWhiteSpace();
+    }
+    super.visit(n);
+    if (autoSurroundTokens) {
+      ensureWhiteSpace();
+    }
   }
 
   @Override
