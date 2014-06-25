@@ -204,7 +204,7 @@ TOKEN :
   | <#letter:                          ["a"-"z","A"-"Z"]>
   | <#letter_or_digit:                 ["a"-"z","A"-"Z","0"-"9"]>
   | <#integer: <digit> (("_")? <digit>)*>
-  | <#base: <integer>>
+  | <#base: <integer> >
   | <#based_integer: (("_")? <extended_digit>)*>
   | <based_literal: <base> "#" <based_integer> ("." <based_integer>)? "#" (<exponent>)?>
   | <#basic_character: (<basic_graphic_character>|<format_effector>)>
