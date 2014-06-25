@@ -1,11 +1,9 @@
-package stupaq.vhdl2lv;
-
 import java.io.FileInputStream;
 
 import stupaq.parser.ErrorSummary;
 import stupaq.vhdl93.VHDL93Parser;
 
-public class VHDL2LV {
+public class vhdl2lv {
   public static void main(String args[]) throws Exception {
     if (args.length == 1) {
       FileInputStream file = new FileInputStream(args[0]);

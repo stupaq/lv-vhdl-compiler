@@ -1,93 +1,21 @@
 package stupaq.vhdl93.visitor;
 
-import com.google.common.collect.Sets;
-
-import java.util.Set;
-
-import stupaq.vhdl93.ast.NodeToken;
-import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.architecture_body;
-import stupaq.vhdl93.ast.architecture_declarative_part;
-import stupaq.vhdl93.ast.architecture_statement_part;
-import stupaq.vhdl93.ast.block_declarative_part;
 import stupaq.vhdl93.ast.component_instantiation_statement;
-import stupaq.vhdl93.ast.configuration_declarative_part;
+import stupaq.vhdl93.ast.conditional_signal_assignment;
 import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.entity_declarative_part;
 import stupaq.vhdl93.ast.entity_header;
-import stupaq.vhdl93.ast.entity_statement_part;
-import stupaq.vhdl93.ast.interface_element;
-import stupaq.vhdl93.ast.package_body_declarative_part;
-import stupaq.vhdl93.ast.package_declarative_part;
 import stupaq.vhdl93.ast.port_clause;
-import stupaq.vhdl93.ast.subprogram_declarative_part;
+import stupaq.vhdl93.ast.selected_signal_assignment;
 
-public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
-  private final static Set<String> NO_AUTO_PREFIX = Sets.newHashSet(",", ";");
-  private boolean autoSurroundTokens = true;
+public class VHDLTreeFormatter extends LineBreakingTreeFormatter {
+  private static final int INDENT_SPACES = 4, LINE_WIDTH = 80;
 
   public VHDLTreeFormatter() {
-    this(4, 80);
-  }
-
-  public VHDLTreeFormatter(int indentAmt, int wrapWidth) {
-    super(indentAmt, wrapWidth);
-  }
-
-  protected final void autoSurroundTokens(SimpleNode node, boolean value) {
-    autoSurroundTokens ^= value;
-    value ^= autoSurroundTokens;
-    node.accept(this);
-    autoSurroundTokens = value;
-  }
-
-  protected final boolean stripSpace() {
-    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
-      switch (cmdQueue.get(i).getCommand()) {
-        case FormatCommand.INDENT:
-        case FormatCommand.OUTDENT:
-        case FormatCommand.FORCE:
-          break;
-        case FormatCommand.SPACE:
-          cmdQueue.remove(i);
-          return true;
-        default:
-          i = -1;
-      }
-    }
-    return false;
-  }
-
-  protected final boolean ensureWhiteSpace() {
-    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
-      switch (cmdQueue.get(i).getCommand()) {
-        case FormatCommand.INDENT:
-        case FormatCommand.OUTDENT:
-          break;
-        case FormatCommand.SPACE:
-        case FormatCommand.FORCE:
-          return false;
-        default:
-          i = -1;
-      }
-    }
-    add(space());
-    return true;
-  }
-
-  @Override
-  public final void visit(NodeToken n) {
-    if (NO_AUTO_PREFIX.contains(n.tokenImage)) {
-      stripSpace();
-    } else if (autoSurroundTokens) {
-      ensureWhiteSpace();
-    }
-    super.visit(n);
-    if (autoSurroundTokens) {
-      ensureWhiteSpace();
-    }
+    super(INDENT_SPACES, LINE_WIDTH);
   }
 
   @Override
@@ -101,13 +29,11 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
     add(force());
     n.architecture_declarative_part.accept(this);
     add(outdent());
-    add(force());
     n.nodeToken3.accept(this);
     add(indent());
     add(force());
     n.architecture_statement_part.accept(this);
     add(outdent());
-    add(force());
     n.nodeToken4.accept(this);
     if (n.nodeOptional.present()) {
       n.nodeOptional.accept(this);
@@ -116,21 +42,6 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
       n.nodeOptional1.accept(this);
     }
     n.nodeToken5.accept(this);
-  }
-
-  @Override
-  public void visit(architecture_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
-  public void visit(architecture_statement_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
-  public void visit(block_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
   }
 
   @Override
@@ -154,19 +65,26 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(configuration_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
+  public void visit(conditional_signal_assignment n) {
+    n.target.accept(this);
+    add(space());
+    n.nodeToken.accept(this);
+    add(space());
+    n.options_.accept(this);
+    n.conditional_waveforms.accept(this);
+    n.nodeToken1.accept(this);
   }
 
   @Override
   public void visit(context_clause n) {
-    processOptionalList(null, n.nodeListOptional, force());
-    add(force());
+    if (n.nodeListOptional.present()) {
+      n.nodeListOptional.accept(this);
+      add(force());
+    }
   }
 
   @Override
   public void visit(design_file n) {
-    add(force());
     processList(n.nodeList, force());
     n.nodeToken.accept(this);
   }
@@ -184,7 +102,6 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
     if (n.nodeOptional.present()) {
       n.nodeOptional.accept(this);
     }
-    add(force());
     n.nodeToken2.accept(this);
     if (n.nodeOptional1.present()) {
       n.nodeOptional1.accept(this);
@@ -212,27 +129,6 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(entity_statement_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
-  public void visit(interface_element n) {
-    add(force());
-    n.interface_declaration.accept(this);
-  }
-
-  @Override
-  public void visit(package_body_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
-  public void visit(package_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
-  }
-
-  @Override
   public void visit(port_clause n) {
     n.nodeToken.accept(this);
     n.nodeToken1.accept(this);
@@ -245,7 +141,16 @@ public class VHDLTreeFormatter extends UserDefinedTreeFormatter {
   }
 
   @Override
-  public void visit(subprogram_declarative_part n) {
-    processOptionalList(null, n.nodeListOptional, force());
+  public void visit(selected_signal_assignment n) {
+    n.nodeToken.accept(this);
+    n.expression.accept(this);
+    n.nodeToken1.accept(this);
+    n.target.accept(this);
+    add(space());
+    n.nodeToken2.accept(this);
+    add(space());
+    n.options_.accept(this);
+    n.selected_waveforms.accept(this);
+    n.nodeToken3.accept(this);
   }
 }
