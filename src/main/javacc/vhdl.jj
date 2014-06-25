@@ -51,10 +51,6 @@ public class VHDL93Parser
   public ErrorHandler getErrorHandler() {
     return errorHandler;
   }
-
-  public SimpleNode rootNode() {
-    return (SimpleNode) jjtree.rootNode();
-  }
 }
 
 PARSER_END(VHDL93Parser)
@@ -322,9 +318,6 @@ void architecture_body() :
   <BEGIN>
     architecture_statement_part()
   <END> [ <ARCHITECTURE> ] [ architecture_simple_name() ] ";"
-  {
-    jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
-  }
 }
 
 void architecture_declarative_part() :
@@ -835,9 +828,6 @@ void entity_declaration() :
     entity_declarative_part()
   [ <BEGIN> entity_statement_part() ]
   <END> [ <ENTITY> ] [ entity_simple_name() ] ";"
-  {
-    jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
-  }
 }
 
 void entity_declarative_item() :
@@ -1104,8 +1094,8 @@ void guarded_signal_specification() :
 void identifier() :
 {}
 {  
-    <basic_identifier>    { jjtThis.name = t.image; }
-  | <extended_identifier> { jjtThis.name = t.image; }
+    <basic_identifier>
+  | <extended_identifier>
 }
 
 void identifier_list() :
@@ -1605,9 +1595,6 @@ void process_statement() :
   <BEGIN>
     process_statement_part()
   <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] ";"
-  {
-    jjtThis.jjtAccept(new ContextSensitiveCheckVisitor(), this);
-  }
 }
 
 void process_statement_part() :
