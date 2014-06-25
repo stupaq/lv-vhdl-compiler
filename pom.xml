@@ -27,7 +27,7 @@
                             <nodePackageName>stupaq.vhdl93.ast</nodePackageName>
                             <parentPointers>true</parentPointers>
                             <printer>true</printer>
-                            <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
+                            <sourceDirectory>${basedir}/src/main/jtb</sourceDirectory>
                             <specialTokens>true</specialTokens>
                             <visitorPackageName>stupaq.vhdl93.visitor</visitorPackageName>
                         </configuration>
