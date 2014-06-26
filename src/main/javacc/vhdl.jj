@@ -38,7 +38,7 @@ PARSER_BEGIN(VHDL93Parser)
 
 package stupaq.vhdl93;
 
-import stupaq.parser.*;
+import stupaq.vhdl93.errors.*;
 
 public class VHDL93Parser
 {

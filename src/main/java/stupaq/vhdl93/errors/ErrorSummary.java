@@ -1,4 +1,4 @@
-package stupaq.parser;
+package stupaq.vhdl93.errors;
 
 import stupaq.vhdl93.Token;
 

@@ -1,7 +1,7 @@
 import java.io.FileInputStream;
 
 import stupaq.labview.scripting.ScriptingTools;
-import stupaq.parser.ErrorSummary;
+import stupaq.vhdl93.errors.ErrorSummary;
 import stupaq.vhdl2lv.LVTranslationVisitor;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
