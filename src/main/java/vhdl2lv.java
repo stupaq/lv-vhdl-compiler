@@ -1,5 +1,6 @@
 import java.io.FileInputStream;
 
+import stupaq.labview.scripting.ScriptingTools;
 import stupaq.parser.ErrorSummary;
 import stupaq.vhdl2lv.LVTranslationVisitor;
 import stupaq.vhdl93.VHDL93Parser;
@@ -13,7 +14,8 @@ public class vhdl2lv {
       parser.setErrorHandler(new ErrorSummary());
       try {
         SimpleNode root = parser.design_file();
-        LVTranslationVisitor visitor = new LVTranslationVisitor();
+        ScriptingTools tools = new ScriptingTools();
+        LVTranslationVisitor visitor = new LVTranslationVisitor(tools);
         root.accept(visitor);
       } catch (Exception e) {
         e.printStackTrace();
