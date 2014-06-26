@@ -1053,6 +1053,12 @@ void generic_list() :
   generic_interface_list()
 }
 
+void generic_interface_list() :
+{}
+{
+  interface_constant_declaration() ( ";" interface_constant_declaration() )*
+}
+
 void generic_map_aspect() :
 {}
 {
@@ -1213,15 +1219,13 @@ void interface_list() :
 void interface_signal_declaration() :
 {}
 {
-  [<SIGNAL>] identifier_list() ":"
-  [ mode() ] subtype_indication() [ <BUS> ] [ ":=" static_expression() ]
+  [<SIGNAL>] identifier_list() ":" [ mode() ] subtype_indication() [ <BUS> ] [ ":=" static_expression() ]
 }
 
 void interface_variable_declaration() :
 {}
 {
-  [<VARIABLE>] identifier_list() ":"
-  [ mode() ] subtype_indication() [ ":=" static_expression() ]
+  [<VARIABLE>] identifier_list() ":" [ mode() ] subtype_indication() [ ":=" static_expression() ]
 }
 
 void iteration_scheme() :
@@ -1502,6 +1506,12 @@ void port_list() :
 {}
 {
   port_interface_list()
+}
+
+void port_interface_list() :
+{}
+{
+  interface_signal_declaration() ( ";" interface_signal_declaration() )*
 }
 
 void port_map_aspect() :
@@ -2343,19 +2353,7 @@ void generic_association_list() :
   association_list()
 }
 
-void generic_interface_list() :
-{}
-{
-  interface_list()
-}
-
 void parameter_interface_list() :
-{}
-{
-  interface_list()
-}
-
-void port_interface_list() :
 {}
 {
   interface_list()
