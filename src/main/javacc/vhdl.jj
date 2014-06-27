@@ -279,7 +279,7 @@ void enumeration_type_definition() :
 void file_type_definition() :
 {}
 {
-  <FILE> <OF> type_mark()
+  <FILE> <OF> type_name()
 }
 
 void floating_type_definition() :
@@ -303,7 +303,7 @@ void incomplete_type_declaration() :
 void index_subtype_definition() :
 {}
 {
-  type_mark() <RANGE> <BOX>
+  type_name() <RANGE> <BOX>
 }
 
 void integer_type_definition() :
@@ -347,13 +347,13 @@ void subtype_declaration() :
 void subtype_indication() :
 {}
 {
-  [ LOOKAHEAD( resolution_function_name() type_mark() ) resolution_function_name() ] type_mark() [ constraint() ]
+  [ LOOKAHEAD( resolution_function_name() type_name() ) resolution_function_name() ] type_name() [ constraint() ]
 }
 
 void type_conversion() :
 {}
 {
-  type_mark() <LPAREN> expression() <RPAREN>
+  type_name() <LPAREN> expression() <RPAREN>
 }
 
 void type_declaration() :
@@ -373,10 +373,10 @@ void type_definition() :
   | file_type_definition()
 }
 
-void type_mark() :
+void type_name() :
 {}
 {
-  simple_name() [ LOOKAHEAD( name_extension() ) name_extension() ]
+  identifier() [ LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
 void unconstrained_array_definition() :
@@ -418,8 +418,8 @@ void actual_part() :
 {
     LOOKAHEAD( function_name() <LPAREN> actual_designator() <RPAREN> )
     function_name() <LPAREN> actual_designator() <RPAREN>
-  | LOOKAHEAD( type_mark() <LPAREN> actual_designator() <RPAREN> )
-    type_mark() <LPAREN> actual_designator() <RPAREN>
+  | LOOKAHEAD( type_name() <LPAREN> actual_designator() <RPAREN> )
+    type_name() <LPAREN> actual_designator() <RPAREN>
   | actual_designator()
 }
 
@@ -456,7 +456,7 @@ void allocator() :
 {
   <NEW>
   (
-      LOOKAHEAD( type_mark() <TICK> )
+      LOOKAHEAD( type_name() <TICK> )
       qualified_expression()
     | subtype_indication()
   )
@@ -534,7 +534,7 @@ void association_list() :
 void attribute_declaration() :
 {}
 {
-  <ATTRIBUTE> identifier() <COLON> type_mark() <SEMICOLON>
+  <ATTRIBUTE> identifier() <COLON> type_name() <SEMICOLON>
 }
 
 void attribute_designator() :
@@ -574,8 +574,8 @@ void block_configuration() :
 {}
 {
   <FOR> block_specification()
-                ( use_clause() )*
-                ( configuration_item() )*
+    ( use_clause() )*
+    ( configuration_item() )*
   <END> <FOR> <SEMICOLON>
 }
 
@@ -1033,7 +1033,7 @@ void entity_statement_part() :
 void entity_tag() :
 {}
 {
-    simple_name()
+    identifier()
   | <character_literal>
   | operator_symbol()
 }
@@ -1115,8 +1115,8 @@ void formal_part() :
 {
     LOOKAHEAD( function_name() <LPAREN> formal_designator() <RPAREN> )
     function_name() <LPAREN> formal_designator() <RPAREN>
-  | LOOKAHEAD( type_mark() <LPAREN> formal_designator() <RPAREN> )
-    type_mark() <LPAREN> formal_designator() <RPAREN>
+  | LOOKAHEAD( type_name() <LPAREN> formal_designator() <RPAREN> )
+    type_name() <LPAREN> formal_designator() <RPAREN>
   | formal_designator()
 }
 
@@ -1198,7 +1198,7 @@ void group_declaration() :
 void guarded_signal_specification() :
 {}
 {
-  guarded_signal_list() <COLON> type_mark()
+  guarded_signal_list() <COLON> type_name()
 }
 
 void identifier() :
@@ -1412,15 +1412,14 @@ void name() :
 {}
 {
 /**
- *    simple_name()
+ *    identifier()
  *  | operator_symbol()
  *  | selected_name()
  *  | indexed_name()
  *  | slice_name()
  *  | attribute_name()
  */
-  ( simple_name() | operator_symbol() )
-  [ LOOKAHEAD( name_extension() ) name_extension()   ]
+  ( identifier() | operator_symbol() ) [ LOOKAHEAD( name_extension() ) name_extension()   ]
 }
 
 void name_extension() :
@@ -1678,7 +1677,7 @@ void process_statement_part() :
 void qualified_expression() :
 {}
 {
-  type_mark() <TICK>
+  type_name() <TICK>
   (   LOOKAHEAD( aggregate() )
       aggregate()
     | <LPAREN> expression() <RPAREN>
@@ -1757,7 +1756,7 @@ void selected_name() :
    * the follwoing does the same ( i hope ... )
    */
 
-  ( simple_name() | operator_symbol() )
+  ( identifier() | operator_symbol() )
   [ LOOKAHEAD( name_extension() )  name_extension() ]
 
   /**
@@ -1884,20 +1883,14 @@ void signal_list() :
 void signature() :
 {}
 {
-  [ type_mark() ( LOOKAHEAD( <COMMA> type_mark() ) <COMMA> type_mark() )* ]
-  [ <RETURN> type_mark() ]
+  [ type_name() ( LOOKAHEAD( <COMMA> type_name() ) <COMMA> type_name() )* ]
+  [ <RETURN> type_name() ]
 }
 
 void simple_expression() :
 {}
 {
   [ sign() ] term() ( LOOKAHEAD( 2 ) adding_operator() term() )*
-}
-
-void simple_name() :
-{}
-{
-  identifier()
 }
 
 void slice_name() :
@@ -1958,7 +1951,7 @@ void subprogram_specification() :
 {}
 {
     <PROCEDURE> designator() [ <LPAREN> formal_parameter_list() <RPAREN> ]
-  | [ <PURE> | <IMPURE> ]  <FUNCTION> designator() [ <LPAREN> formal_parameter_list() <RPAREN> ] <RETURN> type_mark()
+  | [ <PURE> | <IMPURE> ]  <FUNCTION> designator() [ <LPAREN> formal_parameter_list() <RPAREN> ] <RETURN> type_name()
 }
 
 void subprogram_statement_part() :
@@ -1970,7 +1963,7 @@ void subprogram_statement_part() :
 void suffix() :
 {}
 {
-    simple_name()
+    identifier()
   | <character_literal>
   | operator_symbol()
   | <ALL>
@@ -2091,44 +2084,44 @@ void process_label() :
 void architecture_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void attribute_simple_name() :
 {}
 {
-  simple_name()
+    identifier()
   | <RANGE>
 }
 
 void component_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void configuration_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void element_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void entity_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void package_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void architecture_name() :
@@ -2188,7 +2181,7 @@ void parameter_name() :
 void physical_type_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void port_name() :
@@ -2218,7 +2211,7 @@ void signal_name() :
 void record_type_simple_name() :
 {}
 {
-  simple_name()
+  identifier()
 }
 
 void resolution_function_name() :

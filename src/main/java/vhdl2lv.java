@@ -1,9 +1,5 @@
-import org.slf4j.LoggerFactory;
-
 import java.io.FileInputStream;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.vhdl2lv.LVTranslationVisitor;
 import stupaq.vhdl93.VHDL93Parser;

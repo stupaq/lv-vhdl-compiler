@@ -44,6 +44,36 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
+  public final void visit(array_type_definition n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(composite_type_definition n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(subtype_indication n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(type_declaration n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(type_definition n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(type_name n) {
+    super.visit(n);
+  }
+
+  @Override
   public final void visit(abstract_literal n) {
     super.visit(n);
   }
@@ -79,11 +109,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(array_type_definition n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(block_declarative_item n) {
     super.visit(n);
   }
@@ -95,11 +120,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
 
   @Override
   public final void visit(choice n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(composite_type_definition n) {
     super.visit(n);
   }
 
@@ -349,32 +369,12 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(subtype_indication n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(suffix n) {
     super.visit(n);
   }
 
   @Override
   public final void visit(target n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(type_declaration n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(type_definition n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(type_mark n) {
     super.visit(n);
   }
 
