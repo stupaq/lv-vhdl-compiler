@@ -95,7 +95,8 @@
                         </goals>
                         <configuration>
                             <descriptiveFieldNames>true</descriptiveFieldNames>
-                            <!--<forceLaCheck>true</forceLaCheck>-->
+                            <forceLaCheck>true</forceLaCheck>
+                            <lookAhead>3</lookAhead>
                             <isStatic>false</isStatic>
                             <nodePackageName>stupaq.vhdl93.ast</nodePackageName>
                             <nodeParentClass>stupaq.vhdl93.ast.SimpleNode</nodeParentClass>

@@ -253,7 +253,7 @@ void access_type_definition() :
 void array_type_definition() :
 {}
 {
-    LOOKAHEAD( unconstrained_array_definition() ) unconstrained_array_definition()
+    LOOKAHEAD( unconstrained_array_definition() <LPAREN> index_subtype_definition() ) unconstrained_array_definition()
   | constrained_array_definition()
 }
 
@@ -347,10 +347,7 @@ void subtype_declaration() :
 void subtype_indication() :
 {}
 {
-    LOOKAHEAD( resolution_function_name() type_mark() constraint() ) resolution_function_name() type_mark() constraint()
-  | LOOKAHEAD( type_mark() constraint() ) type_mark() constraint()
-  | LOOKAHEAD( resolution_function_name() type_mark() ) resolution_function_name() type_mark()
-  | LOOKAHEAD( type_mark() ) type_mark()
+  [ LOOKAHEAD( resolution_function_name() type_mark() ) resolution_function_name() ] type_mark() [ constraint() ]
 }
 
 void type_conversion() :
@@ -379,7 +376,7 @@ void type_definition() :
 void type_mark() :
 {}
 {
-  type_name()
+  simple_name() [ LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
 void unconstrained_array_definition() :
@@ -525,8 +522,7 @@ void assertion_statement() :
 void association_element() :
 {}
 {
-  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ]
-  actual_part()
+  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ] actual_part()
 }
 
 void association_list() :
@@ -2217,12 +2213,6 @@ void signal_name() :
 {}
 {
   name()
-}
-
-void type_name() :
-{}
-{
-  simple_name() [ LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
 void record_type_simple_name() :
