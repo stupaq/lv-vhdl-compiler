@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/lv-scripting-java/lv-scripting-java.iml" filepath="$PROJECT_DIR$/lv-scripting-java/lv-scripting-java.iml" />
       <module fileurl="file://$PROJECT_DIR$/lv-vhdl-compiler.iml" filepath="$PROJECT_DIR$/lv-vhdl-compiler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lv-vhdl-frontend/lv-vhdl-frontend.iml" filepath="$PROJECT_DIR$/lv-vhdl-frontend/lv-vhdl-frontend.iml" />
     </modules>
   </component>
 </project>

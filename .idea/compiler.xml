@@ -22,12 +22,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
-        <module name="lv-vhdl-compiler" />
+        <module name="lv-scripting-java" />
+        <module name="lv-vhdl-frontend" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="lv-scripting-java" target="1.7" />
       <module name="lv-vhdl-compiler" target="1.7" />
+      <module name="lv-vhdl-frontend" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>
