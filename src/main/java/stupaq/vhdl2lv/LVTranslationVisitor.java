@@ -8,23 +8,33 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import stupaq.labview.scripting.ScriptingTools;
+import stupaq.labview.scripting.EditableVI;
 import stupaq.vhdl93.ast.architecture_body;
 import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 
+import static stupaq.vhdl93.ast.PropertyAccessor.representation;
+
 public class LVTranslationVisitor extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(LVTranslationVisitor.class);
   private final Map<String, EntityDeclaration> knownEntities = Maps.newHashMap();
+  private final LVProject project;
+  private EditableVI currentVi;
 
-  public LVTranslationVisitor(ScriptingTools tools) {
+  public LVTranslationVisitor(LVProject project) {
+    this.project = project;
   }
 
   @Override
   public void visit(architecture_body n) {
+    String name = representation(n.identifier);
+    project.remove(name);
+    currentVi = project.create(name);
+    n.architecture_statement_part.accept(this);
     // FIXME
+    n.architecture_declarative_part.accept(this);
   }
 
   @Override
