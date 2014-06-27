@@ -14,6 +14,7 @@
     <artifactId>lv-vhdl-compiler</artifactId>
     <version>0.1-SNAPSHOT</version>
 
+    <!-- FIXME decide which dependencies are truly "provided" -->
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -28,9 +29,16 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.github.sviperll</groupId>
+            <artifactId>adt4j-core</artifactId>
+            <version>0.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>stupaq</groupId>
             <artifactId>lv-scripting-java</artifactId>
             <version>0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
