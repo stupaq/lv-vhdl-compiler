@@ -55,6 +55,7 @@ public class VHDL93Parser
 
 PARSER_END(VHDL93Parser)
 
+/** LEXICAL ELEMENTS */
 SKIP :
 {
     " "
@@ -65,31 +66,30 @@ SKIP :
 
 SPECIAL_TOKEN :
 {
-  <COMMENT: "--" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+  <COMMENT: "--" ( ~["\n","\r"] )* ( "\n"|"\r"|"\r\n" )>
 }
 
-/** Section 13: Lexical elements */
 TOKEN [IGNORE_CASE] :
 {
-    <ABS:          "abs">
-  | <ACCESS:       "access">
-  | <ACROSS:       "across">
-  | <AFTER:        "after">
-  | <ALIAS:        "alias">
-  | <ALL:          "all">
-  | <AND:          "and">
-  | <ARCHITECTURE: "architecture">
-  | <ARRAY:        "array">
-  | <ASSERT:       "assert">
-  | <ATTRIBUTE:    "attribute">
-  | <BEGIN:        "begin">
-  | <BLOCK:        "block">
-  | <BODY:         "body">
-  | <BREAK:        "break">
-  | <BUFFER:       "buffer">
-  | <BUS:          "bus">
-  | <CASE:         "case">
-  | <COMPONENT:    "component">
+    <ABS:           "abs">
+  | <ACCESS:        "access">
+  | <ACROSS:        "across">
+  | <AFTER:         "after">
+  | <ALIAS:         "alias">
+  | <ALL:           "all">
+  | <AND:           "and">
+  | <ARCHITECTURE:  "architecture">
+  | <ARRAY:         "array">
+  | <ASSERT:        "assert">
+  | <ATTRIBUTE:     "attribute">
+  | <BEGIN:         "begin">
+  | <BLOCK:         "block">
+  | <BODY:          "body">
+  | <BREAK:         "break">
+  | <BUFFER:        "buffer">
+  | <BUS:           "bus">
+  | <CASE:          "case">
+  | <COMPONENT:     "component">
   | <CONFIGURATION: "configuration">
   | <CONSTANT:      "constant">
   | <DISCONNECT:    "disconnect">
@@ -179,54 +179,215 @@ TOKEN [IGNORE_CASE] :
   | <XOR:           "xor">
 }
 
-TOKEN :
+TOKEN:
 {
-    <#upper_case_letter:               ["A"-"Z"]>
-  | <#lower_case_letter:               ["a"-"z"]>
-  | <#digit:                           ["0"-"9"]>
-  | <#extended_digit:                  ["0"-"9","A"-"F","a"-"f"]>
-  | <#special_character:               ["#","&","'","(",")","*","+",",","-",
-                                        ".","/",":",";","<","=",">","[","]",
-                                        "_","|"]>
-  | <#other_special_character:         ["!","$","%","@","?","^","`","{","}","~",
-                                        "\\"]>
-  | <#format_effector:                 ["\n","\t"]>
-  | <#base_specifier:                  ["B","O","X","b","o","x"]>
-  | <#underline:                       "_">
-  | <#letter:                          ["a"-"z","A"-"Z"]>
-  | <#letter_or_digit:                 ["a"-"z","A"-"Z","0"-"9"]>
-  | <#integer: <digit> (("_")? <digit>)*>
-  | <#base: <integer> >
-  | <#based_integer: (("_")? <extended_digit>)*>
-  | <based_literal: <base> "#" <based_integer> ("." <based_integer>)? "#" (<exponent>)?>
-  | <#basic_character: (<basic_graphic_character>|<format_effector>)>
-  | <#basic_graphic_character: (["A"-"Z"]|<digit>|<special_character>|" ")>
-  | <basic_identifier: <letter> ( ("_")? <letter_or_digit> )*>
-  | <bit_string_literal: <base_specifier> "\"" <bit_value> "\"">
-  | <#bit_value: <extended_digit> ( ("_")? <extended_digit>)*>
-  | <character_literal:  "'" <graphic_character> "'">
-  | <decimal_literal: <integer> ( "." <integer>)? ( <exponent> )?>
-  | <#exponent: ("E" ("+")? <integer>) | ("E" "-" <integer>)>
-  | <extended_identifier: "\\" <graphic_character> ( <graphic_character> )* "\\">
-  | <#graphic_character: (<basic_graphic_character>
-                          | <lower_case_letter>
-                          | <other_special_character>)>
-  | <string_literal: "\"" (<graphic_character>|"\"\"")* "\"">
-
-  | <EXP: "**">
-  | <MUL: "*">
-  | <DIV: "/">
-  | <ADD: "+">
-  | <SUB: "-">
-  | <CONCAT: "&">
-  | <EQ:  "=">
-  | <NEQ: "/=">
-  | <GE:  ">=">
-  | <LE:  "<=">
-  | <GT:  ">">
-  | <LO:  "<">
-  | <SEMICOLON: ";">
+  <character_literal:       "'" (" ")* ( <graphic_character> | "\"" ) (" ")* "'">
 }
+
+TOKEN [IGNORE_CASE] :
+{
+    <#digit:                ["0"-"9"]>
+  | <#hex_digit:            ["0"-"9", "A"-"F"]>
+
+  | <#integer:              <digit> ( ("_" )? <digit> )*>
+  | <#base:                 <integer> >
+  | <#based_integer:        ( ("_")? <hex_digit> )*>
+  | <#exponent:             ( "E" ("+")? <integer> ) | ( "E" "-" <integer> )>
+  | <based_literal:         <base> "#" <based_integer> ( "." <based_integer> )? "#" ( <exponent> )?>
+  | <decimal_literal:       <integer> ( "." <integer> )? ( <exponent> )?>
+
+  | <#base_specifier:       ["B", "O", "X"]>
+  | <#bit_value:            <hex_digit> ( ( "_" )* <hex_digit> )*>
+  | <bit_string_literal:    <base_specifier> "\"" <bit_value> "\"">
+
+  | <#letter:               ["a"-"z", "A"-"Z"]>
+  | <#letter_or_digit:      ["a"-"z", "A"-"Z", "0"-"9"]>
+  | <basic_identifier:      <letter> ( ( "_" )? <letter_or_digit> )*>
+
+  | <#special_character:    ["#","&","'","(",")","*","+",",","-",".","/",":",";","<","=",">","[","]","_","|","!","$","%","@","?","^","`","{","}","~"," ","\u00a0"-"\uffff"]>
+  | <#format_effector:      ["\n","\t","\b","\f","\r"]>
+  | <#egraphic_character:   ( <letter_or_digit> | <special_character> | <format_effector> )>
+  | <#graphic_character:    ( <egraphic_character> | "\\" )>
+
+  | <extended_identifier:   "\\" ( <egraphic_character> | "\\\\" ) ( ( <egraphic_character> | "\\\\" ) )* "\\">
+
+  | <string_literal:        "\"" ( <graphic_character> | "\"\"" )* "\"">
+
+  | <EXP:       "**">
+  | <MUL:       "*">
+  | <DIV:       "/">
+  | <ADD:       "+">
+  | <SUB:       "-">
+  | <CONCAT:    "&">
+  | <EQ:        "=">
+  | <NEQ:       "/=">
+  | <GE:        ">=">
+  | <LE:        "<=">
+  | <GT:        ">">
+  | <LO:        "<">
+  | <SEMICOLON: ";">
+  | <COMMA:     ",">
+  | <COLON:     ":">
+  | <BOX:       "<>">
+  | <TICK:      "'">
+  | <LPAREN:    "(">
+  | <RPAREN:    ")">
+  | <LBRACKET:  "[">
+  | <RBRACKET:  "]">
+  | <ASSIGN:    ":=">
+  | <PERIOD:    ".">
+  | <FOLLOWS:   "=>">
+  | <PIPE:      "|">
+  | <LBRACE:    "{">
+  | <RBRACE:    "}">
+}
+/** /LEXICAL ELEMENTS */
+
+/** TYPES */
+void access_type_definition() :
+{}
+{
+  <ACCESS> subtype_indication()
+}
+
+void array_type_definition() :
+{}
+{
+    LOOKAHEAD( unconstrained_array_definition() ) unconstrained_array_definition()
+  | constrained_array_definition()
+}
+
+void composite_type_definition() :
+{}
+{
+    array_type_definition()
+  | record_type_definition()
+}
+
+void element_subtype_definition() :
+{}
+{
+  subtype_indication()
+}
+
+void enumeration_type_definition() :
+{}
+{
+  <LPAREN> enumeration_literal() ( <COMMA> enumeration_literal() )* <RPAREN>
+}
+
+void file_type_definition() :
+{}
+{
+  <FILE> <OF> type_mark()
+}
+
+void floating_type_definition() :
+{}
+{
+  range_constraint()
+}
+
+void full_type_declaration() :
+{}
+{
+  <TYPE> identifier() <IS> type_definition() <SEMICOLON>
+}
+
+void incomplete_type_declaration() :
+{}
+{
+  <TYPE> identifier() <SEMICOLON>
+}
+
+void index_subtype_definition() :
+{}
+{
+  type_mark() <RANGE> <BOX>
+}
+
+void integer_type_definition() :
+{}
+{
+  range_constraint()
+}
+
+void physical_type_definition() :
+{}
+{
+  range_constraint()
+  <UNITS>
+    base_unit_declaration()
+    ( secondary_unit_declaration() )*
+  <END> <UNITS> [ physical_type_simple_name() ]
+}
+
+void record_type_definition() :
+{}
+{
+  <RECORD>
+    ( element_declaration() )+
+  <END> <RECORD> [ record_type_simple_name() ]
+}
+
+void scalar_type_definition() :
+{}
+{
+    LOOKAHEAD( range_constraint() <UNITS> ) physical_type_definition()
+  | LOOKAHEAD( enumeration_type_definition() ) enumeration_type_definition()
+  | range_constraint()
+}
+
+void subtype_declaration() :
+{}
+{
+  <SUBTYPE> identifier() <IS> subtype_indication() <SEMICOLON>
+}
+
+void subtype_indication() :
+{}
+{
+    LOOKAHEAD( resolution_function_name() type_mark() constraint() ) resolution_function_name() type_mark() constraint()
+  | LOOKAHEAD( type_mark() constraint() ) type_mark() constraint()
+  | LOOKAHEAD( resolution_function_name() type_mark() ) resolution_function_name() type_mark()
+  | LOOKAHEAD( type_mark() ) type_mark()
+}
+
+void type_conversion() :
+{}
+{
+  type_mark() <LPAREN> expression() <RPAREN>
+}
+
+void type_declaration() :
+{}
+{
+    LOOKAHEAD( <TYPE> identifier() <IS> )
+    full_type_declaration()
+  | incomplete_type_declaration()
+}
+
+void type_definition() :
+{}
+{
+    scalar_type_definition()
+  | composite_type_definition()
+  | access_type_definition()
+  | file_type_definition()
+}
+
+void type_mark() :
+{}
+{
+  type_name()
+}
+
+void unconstrained_array_definition() :
+{}
+{
+  <ARRAY> <LPAREN> index_subtype_definition() ( <COMMA> index_subtype_definition() )* <RPAREN> <OF> element_subtype_indication()
+}
+/** /TYPES */
 
 void abstract_literal() :
 {}
@@ -235,22 +396,16 @@ void abstract_literal() :
   | <based_literal>
 }
 
-void access_type_definition() :
-{}
-{
-  <ACCESS> subtype_indication()
-}
-
 void actual_designator() :
 {}
 {
-    LOOKAHEAD(expression())
+    LOOKAHEAD( expression() )
     expression()
-  | LOOKAHEAD(signal_name())
+  | LOOKAHEAD( signal_name() )
     signal_name()
-  | LOOKAHEAD(variable_name())
+  | LOOKAHEAD( variable_name() )
     variable_name()
-  | LOOKAHEAD(file_name())
+  | LOOKAHEAD( file_name() )
     file_name()
   | <OPEN>
 }
@@ -264,10 +419,10 @@ void actual_parameter_part() :
 void actual_part() :
 {}
 {
-    LOOKAHEAD(function_name() "(" actual_designator() ")")
-    function_name() "(" actual_designator() ")"
-  | LOOKAHEAD(type_mark() "(" actual_designator() ")")
-    type_mark() "(" actual_designator() ")"
+    LOOKAHEAD( function_name() <LPAREN> actual_designator() <RPAREN> )
+    function_name() <LPAREN> actual_designator() <RPAREN>
+  | LOOKAHEAD( type_mark() <LPAREN> actual_designator() <RPAREN> )
+    type_mark() <LPAREN> actual_designator() <RPAREN>
   | actual_designator()
 }
 
@@ -282,13 +437,13 @@ void adding_operator() :
 void aggregate() :
 {}
 {
-  "(" element_association() ( "," element_association() )* ")"
+  <LPAREN> element_association() ( <COMMA> element_association() )* <RPAREN>
 }
 
 void alias_declaration() :
 {}
 {
-  <ALIAS> alias_designator() [ ":" subtype_indication() ] <IS> name() signature() ";"
+  <ALIAS> alias_designator() [ <COLON> subtype_indication() ] <IS> name() signature() <SEMICOLON>
 }
 
 void alias_designator() :
@@ -304,7 +459,7 @@ void allocator() :
 {
   <NEW>
   (
-      LOOKAHEAD( type_mark() "'")
+      LOOKAHEAD( type_mark() <TICK> )
       qualified_expression()
     | subtype_indication()
   )
@@ -317,7 +472,7 @@ void architecture_body() :
     architecture_declarative_part()
   <BEGIN>
     architecture_statement_part()
-  <END> [ <ARCHITECTURE> ] [ architecture_simple_name() ] ";"
+  <END> [ <ARCHITECTURE> ] [ architecture_simple_name() ] <SEMICOLON>
 }
 
 void architecture_declarative_part() :
@@ -336,29 +491,21 @@ void architecture_statement() :
 {}
 {
   // TODO error recovery to next SEMICOLON
-    LOOKAHEAD([block_label() ":"] <BLOCK>)
+    LOOKAHEAD( [block_label() <COLON>] <BLOCK> )
     block_statement()
-  | LOOKAHEAD([process_label() ":"] [<POSTPONED>] <PROCESS>)
+  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
     process_statement()
-  | LOOKAHEAD([label() ":"] [<POSTPONED>] procedure_call() ";")
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] procedure_call() <SEMICOLON> )
     concurrent_procedure_call_statement()
-  | LOOKAHEAD([label() ":"] [<POSTPONED>] <ASSERT>)
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] <ASSERT> )
     concurrent_assertion_statement()
-  | LOOKAHEAD([label() ":"] [<POSTPONED>] conditional_signal_assignment()|
-              [label() ":"] [<POSTPONED>] selected_signal_assignment())
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] conditional_signal_assignment()|
+              [label() <COLON>] [<POSTPONED>] selected_signal_assignment() )
     concurrent_signal_assignment_statement()
-  | LOOKAHEAD(instantiation_label() ":" instantiated_unit() )
+  | LOOKAHEAD( instantiation_label() <COLON> instantiated_unit() )
     component_instantiation_statement()
-  | LOOKAHEAD(generate_statement())
+  | LOOKAHEAD( generate_statement() )
     generate_statement()
-}
-
-void array_type_definition() :
-{}
-{
-    LOOKAHEAD(unconstrained_array_definition())
-    unconstrained_array_definition()
-  | constrained_array_definition()
 }
 
 void assertion() :
@@ -372,26 +519,26 @@ void assertion() :
 void assertion_statement() :
 {}
 {
-  [ label() ":" ] assertion() ";"
+  [ label() <COLON> ] assertion() <SEMICOLON>
 }
 
 void association_element() :
 {}
 {
-  [ LOOKAHEAD( formal_part() "=>" ) formal_part() "=>" ]
+  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ]
   actual_part()
 }
 
 void association_list() :
 {}
 {
-  association_element() ( "," association_element() )*
+  association_element() ( <COMMA> association_element() )*
 }
 
 void attribute_declaration() :
 {}
 {
-  <ATTRIBUTE> identifier() ":" type_mark() ";"
+  <ATTRIBUTE> identifier() <COLON> type_mark() <SEMICOLON>
 }
 
 void attribute_designator() :
@@ -403,20 +550,20 @@ void attribute_designator() :
 void attribute_name() :
 {}
 {
-  prefix() signature() "'" attribute_designator() [ "(" expression() ("," expression())* ")" ]
+  prefix() signature() <TICK> attribute_designator() [ <LPAREN> expression() ( <COMMA> expression() )* <RPAREN> ]
 }
 
 void attribute_specification() :
 {}
 {
   <ATTRIBUTE> attribute_designator() <OF>
-  entity_specification() <IS> expression() ";"
+  entity_specification() <IS> expression() <SEMICOLON>
 }
 
 void base_unit_declaration() :
 {}
 {
-  identifier() ";"
+  identifier() <SEMICOLON>
 }
 
 void binding_indication() :
@@ -433,14 +580,14 @@ void block_configuration() :
   <FOR> block_specification()
                 ( use_clause() )*
                 ( configuration_item() )*
-  <END> <FOR> ";"
+  <END> <FOR> <SEMICOLON>
 }
 
 void block_declarative_item() :
 {}
 {
   // TODO error recovery to next SEMICOLON
-    LOOKAHEAD(subprogram_declaration())
+    LOOKAHEAD( subprogram_declaration() )
     subprogram_declaration()
   | subprogram_body()
   | type_declaration()
@@ -451,13 +598,13 @@ void block_declarative_item() :
   | file_declaration()
   | alias_declaration()
   | component_declaration()
-  | LOOKAHEAD(attribute_declaration())
+  | LOOKAHEAD( attribute_declaration() )
     attribute_declaration()
   | attribute_specification()
   | configuration_specification()
   | disconnection_specification()
   | use_clause()
-  | LOOKAHEAD(<GROUP> identifier() <IS>)
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
     group_template_declaration()
   | group_declaration()
 }
@@ -471,61 +618,61 @@ void block_declarative_part() :
 void block_header() :
 {}
 {
-  [ generic_clause()  [ generic_map_aspect() ";" ] ]
-  [ port_clause()     [ port_map_aspect() ";"    ] ]
+  [ generic_clause()  [ generic_map_aspect() <SEMICOLON> ] ]
+  [ port_clause()     [ port_map_aspect() <SEMICOLON>    ] ]
 }
 
 void block_specification() :
 {}
 {
-    LOOKAHEAD(architecture_name())
+    LOOKAHEAD( architecture_name() )
     architecture_name()
-  | LOOKAHEAD(block_statement_label())
+  | LOOKAHEAD( block_statement_label() )
     block_statement_label()
-  | LOOKAHEAD(generate_statement_label())
-    generate_statement_label() [ "(" index_specification() ")" ]
+  | LOOKAHEAD( generate_statement_label() )
+    generate_statement_label() [ <LPAREN> index_specification() <RPAREN> ]
 }
 
 void block_statement() :
 {}
 {
-  block_label() ":"
-                <BLOCK> [ "(" guard_expression() ")" ] [ <IS> ]
+  block_label() <COLON>
+                <BLOCK> [ <LPAREN> guard_expression() <RPAREN> ] [ <IS> ]
                         block_header()
                         block_declarative_part()
                 <BEGIN>
                         block_statement_part()
-                <END> <BLOCK> [ block_label() ] ";"
+                <END> <BLOCK> [ block_label() ] <SEMICOLON>
 }
 
 void block_statement_part() :
 {}
 {
-  (architecture_statement() )*
+  ( architecture_statement() )*
 }
 
 void case_statement() :
 {}
 {
-  [ case_label() ":" ]
+  [ case_label() <COLON> ]
                 <CASE> expression() <IS>
                         case_statement_alternative()
                         ( case_statement_alternative() )*
-                <END> <CASE> [ case_label() ] ";"
+                <END> <CASE> [ case_label() ] <SEMICOLON>
 }
 
 void case_statement_alternative() :
 {}
 {
-  <WHEN> choices() "=>" sequence_of_statements()
+  <WHEN> choices() <FOLLOWS> sequence_of_statements()
 }
 
 void choice() :
 {}
 {
-    LOOKAHEAD(simple_expression())
+    LOOKAHEAD( simple_expression() )
     simple_expression()
-  | LOOKAHEAD(discrete_range())
+  | LOOKAHEAD( discrete_range() )
     discrete_range()
   | element_simple_name()
   | <OTHERS>
@@ -534,16 +681,16 @@ void choice() :
 void choices() :
 {}
 {
-  choice() ( "|" choice() )*
+  choice() ( <PIPE> choice() )*
 }
 
 void component_configuration() :
 {}
 {
   <FOR> component_specification()
-                [ binding_indication() ";" ]
+                [ binding_indication() <SEMICOLON> ]
                 [ block_configuration() ]
-  <END> <FOR> ";"
+  <END> <FOR> <SEMICOLON>
 }
 
 void component_declaration() :
@@ -552,52 +699,45 @@ void component_declaration() :
   <COMPONENT> identifier() [ <IS> ]
       [ local_generic_clause() ]
       [ local_port_clause() ]
-  <END> <COMPONENT> [ component_simple_name() ] ";"
+  <END> <COMPONENT> [ component_simple_name() ] <SEMICOLON>
 }
 
 void component_instantiation_statement() :
 {}
 {
-  instantiation_label() ":"
+  instantiation_label() <COLON>
          instantiated_unit()
          [ generic_map_aspect() ]
-         [ port_map_aspect() ] ";"
+         [ port_map_aspect() ] <SEMICOLON>
 }
 
 void component_specification() :
 {}
 {
-  instantiation_list() ":" component_name()
-}
-
-void composite_type_definition() :
-{}
-{
-    array_type_definition()
-  | record_type_definition()
+  instantiation_list() <COLON> component_name()
 }
 
 void concurrent_assertion_statement() :
 {}
 {
-  [ label() ":" ] [ <POSTPONED> ] assertion() ";"
+  [ label() <COLON> ] [ <POSTPONED> ] assertion() <SEMICOLON>
 }
 
 void concurrent_procedure_call_statement() :
 {}
 {
-  [ LOOKAHEAD( label() ":") label() ":" ]
-  [ <POSTPONED> ] procedure_call() ";"
+  [ LOOKAHEAD( label() <COLON> ) label() <COLON> ]
+  [ <POSTPONED> ] procedure_call() <SEMICOLON>
 }
 
 void concurrent_signal_assignment_statement() :
 {}
 {
-    [ LOOKAHEAD( label() ":") label() ":" ]
-    [ <POSTPONED> ]
-    ( LOOKAHEAD(  target() "<=" options_() conditional_waveforms() ";")
-        conditional_signal_assignment()
-      | selected_signal_assignment() )
+  [ LOOKAHEAD( label() <COLON> ) label() <COLON> ] [ <POSTPONED> ]
+  (
+      LOOKAHEAD( target() <LE> options_() conditional_waveforms() <SEMICOLON> ) conditional_signal_assignment()
+    | selected_signal_assignment()
+  )
 }
 
 void condition() :
@@ -615,7 +755,7 @@ void condition_clause() :
 void conditional_signal_assignment() :
 {}
 {
-  target() "<=" options_() conditional_waveforms() ";"
+  target() <LE> options_() conditional_waveforms() <SEMICOLON>
 }
 
 void conditional_waveforms() :
@@ -624,7 +764,7 @@ void conditional_waveforms() :
   //( waveform() <WHEN> condition() <ELSE> )*
   //waveform() [ <WHEN> condition() ]
   waveform()
-    ( LOOKAHEAD( <WHEN> condition() <ELSE>)
+    ( LOOKAHEAD( <WHEN> condition() <ELSE> )
         <WHEN> condition() <ELSE> waveform() )*
     [ <WHEN> condition() ]
 }
@@ -635,7 +775,7 @@ void configuration_declaration() :
   <CONFIGURATION> identifier() <OF> entity_name() <IS>
     configuration_declarative_part()
     block_configuration()
-  <END> [ <CONFIGURATION> ] [ configuration_simple_name() ] ";"
+  <END> [ <CONFIGURATION> ] [ configuration_simple_name() ] <SEMICOLON>
 }
 
 void configuration_declarative_item() :
@@ -656,7 +796,7 @@ void configuration_declarative_part() :
 void configuration_item() :
 {}
 {
-    LOOKAHEAD(block_configuration())
+    LOOKAHEAD( block_configuration() )
     block_configuration()
   | component_configuration()
 }
@@ -664,14 +804,13 @@ void configuration_item() :
 void configuration_specification() :
 {}
 {
-  <FOR> component_specification() binding_indication() ";"
+  <FOR> component_specification() binding_indication() <SEMICOLON>
 }
 
 void constant_declaration() :
 {}
 {
-  <CONSTANT> identifier_list() ":" subtype_indication()
-    [ ":=" expression() ] ";"
+  <CONSTANT> identifier_list() <COLON> subtype_indication() [ <ASSIGN> expression() ] <SEMICOLON>
 }
 
 void constrained_array_definition() :
@@ -737,13 +876,13 @@ void disconnection_specification() :
 {}
 {
   <DISCONNECT> guarded_signal_specification() <AFTER>
-    time_expression() ";"
+    time_expression() <SEMICOLON>
 }
 
 void discrete_range()  :
 {}
 {
-    LOOKAHEAD(simple_expression() direction() )
+    LOOKAHEAD( simple_expression() direction() )
     range()
   | LOOKAHEAD( discrete_subtype_indication() )
     discrete_subtype_indication()
@@ -753,28 +892,22 @@ void discrete_range()  :
 void element_association() :
 {}
 {
-  [ LOOKAHEAD(choices() "=>") choices() "=>" ]
+  [ LOOKAHEAD( choices() <FOLLOWS> ) choices() <FOLLOWS> ]
   expression()
 }
 
 void element_declaration() :
 {}
 {
-  identifier_list() ":" element_subtype_definition() ";"
-}
-
-void element_subtype_definition() :
-{}
-{
-  subtype_indication()
+  identifier_list() <COLON> element_subtype_definition() <SEMICOLON>
 }
 
 void entity_aspect() :
 {}
 {
     <ENTITY> entity_name()
-    [ LOOKAHEAD("(" architecture_identifier() ")")
-    "(" architecture_identifier() ")" ]
+    [ LOOKAHEAD( <LPAREN> architecture_identifier() <RPAREN> )
+    <LPAREN> architecture_identifier() <RPAREN> ]
   | <CONFIGURATION> configuration_name()
   | <OPEN>
 }
@@ -782,8 +915,7 @@ void entity_aspect() :
 void shared_variable_declaration() :
 {}
 {
-  [ <SHARED> ] <VARIABLE> identifier_list() ":"
-  subtype_indication() [ ":=" expression() ] ";"
+  [ <SHARED> ] <VARIABLE> identifier_list() <COLON> subtype_indication() [ <ASSIGN> expression() ] <SEMICOLON>
 }
 
 /** Section 5: Specifications */
@@ -812,13 +944,13 @@ void entity_class() :
 void entity_class_entry()  :
 {}
 {
-  entity_class() [ "<>" ]
+  entity_class() [ <BOX> ]
 }
 
 void entity_class_entry_list() :
 {}
 {
-  entity_class_entry() ( "," entity_class_entry() )*
+  entity_class_entry() ( <COMMA> entity_class_entry() )*
 }
 
 void entity_declaration() :
@@ -827,14 +959,14 @@ void entity_declaration() :
   <ENTITY> identifier() <IS> entity_header()
     entity_declarative_part()
   [ <BEGIN> entity_statement_part() ]
-  <END> [ <ENTITY> ] [ entity_simple_name() ] ";"
+  <END> [ <ENTITY> ] [ entity_simple_name() ] <SEMICOLON>
 }
 
 void entity_declarative_item() :
 {}
 {
   // TODO error recovery to next SEMICOLON
-    LOOKAHEAD(subprogram_declaration())
+    LOOKAHEAD( subprogram_declaration() )
     subprogram_declaration()
   | subprogram_body()
   | type_declaration()
@@ -844,12 +976,12 @@ void entity_declarative_item() :
   | shared_variable_declaration()
   | file_declaration()
   | alias_declaration()
-  | LOOKAHEAD(attribute_declaration())
+  | LOOKAHEAD( attribute_declaration() )
     attribute_declaration()
   | attribute_specification()
   | disconnection_specification()
   | use_clause()
-  | LOOKAHEAD(<GROUP> identifier() <IS>)
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
     group_template_declaration()
   | group_declaration()
 }
@@ -876,7 +1008,7 @@ void entity_header() :
 void entity_name_list() :
 {}
 {
-  entity_designator() ( "," entity_designator() )*
+  entity_designator() ( <COMMA> entity_designator() )*
   | <OTHERS>
   | <ALL>
 }
@@ -884,14 +1016,14 @@ void entity_name_list() :
 void entity_specification() :
 {}
 {
-        entity_name_list() ":" entity_class()
+        entity_name_list() <COLON> entity_class()
 }
 
 void entity_statement() :
 {}
 {   LOOKAHEAD( concurrent_assertion_statement() )
     concurrent_assertion_statement()
-  | LOOKAHEAD([process_label() ":"] [<POSTPONED>] <PROCESS>)
+  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
     passive_process_statement()
   | passive_concurrent_procedure_call_statement()
 }
@@ -917,17 +1049,11 @@ void enumeration_literal() :
   | identifier()
 }
 
-void enumeration_type_definition() :
-{}
-{
-  "(" enumeration_literal() ( "," enumeration_literal())* ")"
-}
-
 void exit_statement() :
 {}
 {
-  [ label() ":" ] <EXIT> [ loop_label() ]
-    [ <WHEN> condition() ] ";"
+  [ label() <COLON> ] <EXIT> [ loop_label() ]
+    [ <WHEN> condition() ] <SEMICOLON>
 }
 
 void expression() :
@@ -942,7 +1068,7 @@ void expression() :
  *    ( <XNOR> relation() )*
  *  )
  */
-  relation() ( LOOKAHEAD(1) logical_operator() relation() )*
+  relation() ( LOOKAHEAD( 1 ) logical_operator() relation() )*
 }
 
 void factor() :
@@ -950,14 +1076,14 @@ void factor() :
 {
     <ABS> primary()
   | <NOT> primary()
-  | primary() [ LOOKAHEAD("**" primary() ) <EXP> primary() ]
+  | primary() [ LOOKAHEAD( <EXP> primary() ) <EXP> primary() ]
 }
 
 void file_declaration() :
 {}
 {
-  <FILE> identifier_list() ":" subtype_indication()
-     [ file_open_information() ] ";"
+  <FILE> identifier_list() <COLON> subtype_indication()
+     [ file_open_information() ] <SEMICOLON>
 }
 
 void file_logical_name() :
@@ -970,18 +1096,6 @@ void file_open_information() :
 {}
 {
   [ <OPEN> file_open_kind_expression() ] <IS> file_logical_name()
-}
-
-void file_type_definition() :
-{}
-{
-  <FILE> <OF> type_mark()
-}
-
-void floating_type_definition() :
-{}
-{
-  range_constraint()
 }
 
 void formal_designator() :
@@ -1003,35 +1117,29 @@ void formal_parameter_list() :
 void formal_part() :
 {}
 {
-    LOOKAHEAD( function_name() "(" formal_designator() ")")
-    function_name() "(" formal_designator() ")"
-  | LOOKAHEAD( type_mark() "(" formal_designator() ")")
-    type_mark() "(" formal_designator() ")"
+    LOOKAHEAD( function_name() <LPAREN> formal_designator() <RPAREN> )
+    function_name() <LPAREN> formal_designator() <RPAREN>
+  | LOOKAHEAD( type_mark() <LPAREN> formal_designator() <RPAREN> )
+    type_mark() <LPAREN> formal_designator() <RPAREN>
   | formal_designator()
-}
-
-void full_type_declaration() :
-{}
-{
-  <TYPE> identifier() <IS> type_definition() ";"
 }
 
 void function_call() :
 {}
 {
   function_name()
-  [ LOOKAHEAD( "(" actual_parameter_part() ")" ) "(" actual_parameter_part() ")" ]
+  [ LOOKAHEAD( <LPAREN> actual_parameter_part() <RPAREN> ) <LPAREN> actual_parameter_part() <RPAREN> ]
 }
 
 /** Section 9.7 */
 void generate_statement() :
 {}
 {
-  generate_label() ":"
+  generate_label() <COLON>
   generation_scheme() <GENERATE>
-    [ LOOKAHEAD(2) ( block_declarative_item() )* <BEGIN> ]
+    [ LOOKAHEAD( 2 ) ( block_declarative_item() )* <BEGIN> ]
     ( architecture_statement() )*
-  <END> <GENERATE> [ generate_label() ] ";"
+  <END> <GENERATE> [ generate_label() ] <SEMICOLON>
 }
 
 void generation_scheme() :
@@ -1044,7 +1152,7 @@ void generation_scheme() :
 void generic_clause() :
 {}
 {
-  <GENERIC> "(" generic_list() ")" ";"
+  <GENERIC> <LPAREN> generic_list() <RPAREN> <SEMICOLON>
 }
 
 void generic_list() :
@@ -1056,13 +1164,13 @@ void generic_list() :
 void generic_interface_list() :
 {}
 {
-  interface_constant_declaration() ( ";" interface_constant_declaration() )*
+  interface_constant_declaration() ( <SEMICOLON> interface_constant_declaration() )*
 }
 
 void generic_map_aspect() :
 {}
 {
-  <GENERIC> <MAP> "(" generic_association_list() ")"
+  <GENERIC> <MAP> <LPAREN> generic_association_list() <RPAREN>
 }
 
 void group_constituent() :
@@ -1075,26 +1183,26 @@ void group_constituent() :
 void group_constituent_list() :
 {}
 {
-  group_constituent() ( "," group_constituent() )*
+  group_constituent() ( <COMMA> group_constituent() )*
 }
 
 void group_template_declaration() :
 {}
 {
-  <GROUP> identifier() <IS> "(" entity_class_entry_list() ")" ";"
+  <GROUP> identifier() <IS> <LPAREN> entity_class_entry_list() <RPAREN> <SEMICOLON>
 }
 
 void group_declaration() :
 {}
 {
-  <GROUP> identifier() ":" group_template_name()
-  "(" group_constituent_list() ")" ";"
+  <GROUP> identifier() <COLON> group_template_name()
+  <LPAREN> group_constituent_list() <RPAREN> <SEMICOLON>
 }
 
 void guarded_signal_specification() :
 {}
 {
-  guarded_signal_list() ":" type_mark()
+  guarded_signal_list() <COLON> type_mark()
 }
 
 void identifier() :
@@ -1107,32 +1215,26 @@ void identifier() :
 void identifier_list() :
 {}
 {
-  identifier() ( "," identifier() )*
+  identifier() ( <COMMA> identifier() )*
 }
 
 void if_statement() :
 {}
 {
-  [ if_label() ":" ]
+  [ if_label() <COLON> ]
   <IF> condition() <THEN>
   sequence_of_statements()
   ( <ELSIF> condition() <THEN>
     sequence_of_statements() )*
   [ <ELSE>
     sequence_of_statements() ]
-  <END> <IF> [ if_label() ] ";"
-}
-
-void incomplete_type_declaration() :
-{}
-{
-  <TYPE> identifier() ";"
+  <END> <IF> [ if_label() ] <SEMICOLON>
 }
 
 void index_constraint() :
 {}
 {
-  "(" discrete_range() ( "," discrete_range() )* ")"
+  <LPAREN> discrete_range() ( <COMMA> discrete_range() )* <RPAREN>
 }
 
 void index_specification() :
@@ -1143,58 +1245,45 @@ void index_specification() :
   | static_expression()
 }
 
-void index_subtype_definition() :
-{}
-{
-  type_mark() <RANGE> "<>"
-}
-
 void indexed_name() :
 {}
 {
-  prefix() "(" expression() ( "," expression() )* ")"
+  prefix() <LPAREN> expression() ( <COMMA> expression() )* <RPAREN>
 }
 
 void instantiated_unit() :
 {}
 {
     [ <COMPONENT> ] component_name()
-  | <ENTITY> entity_name() [ "(" architecture_identifier() ")" ]
+  | <ENTITY> entity_name() [ <LPAREN> architecture_identifier() <RPAREN> ]
   | <CONFIGURATION> configuration_name()
 }
 
 void instantiation_list() :
 {}
 {
-    instantiation_label() ( "," instantiation_label() )*
+    instantiation_label() ( <COMMA> instantiation_label() )*
   | <OTHERS>
   | <ALL>
-}
-
-void integer_type_definition() :
-{}
-{
-  range_constraint()
 }
 
 void interface_constant_declaration() :
 {}
 {
-  [ <CONSTANT> ] identifier_list() ":" [ <IN> ]
-    subtype_indication() [ ":=" static_expression() ]
+  [ <CONSTANT> ] identifier_list() <COLON> [ <IN> ] subtype_indication() [ <ASSIGN> static_expression() ]
 }
 
 /** Section 4.3.2: */
 void interface_declaration() :
 {}
 {
-    LOOKAHEAD(interface_constant_declaration() )
+    LOOKAHEAD( interface_constant_declaration() )
     interface_constant_declaration()
-  | LOOKAHEAD(interface_signal_declaration() )
+  | LOOKAHEAD( interface_signal_declaration() )
     interface_signal_declaration()
-  | LOOKAHEAD(interface_variable_declaration() )
+  | LOOKAHEAD( interface_variable_declaration() )
     interface_variable_declaration()
-  | LOOKAHEAD(interface_file_declaration() )
+  | LOOKAHEAD( interface_file_declaration() )
     interface_file_declaration()
 }
 
@@ -1207,25 +1296,25 @@ void interface_element() :
 void interface_file_declaration() :
 {}
 {
-  <FILE> identifier_list() ":" subtype_indication()
+  <FILE> identifier_list() <COLON> subtype_indication()
 }
 
 void interface_list() :
 {}
 {
-  interface_element() ( ";" interface_element() )*
+  interface_element() ( <SEMICOLON> interface_element() )*
 }
 
 void interface_signal_declaration() :
 {}
 {
-  [<SIGNAL>] identifier_list() ":" [ mode() ] subtype_indication() [ <BUS> ] [ ":=" static_expression() ]
+  [<SIGNAL>] identifier_list() <COLON> [ mode() ] subtype_indication() [ <BUS> ] [ <ASSIGN> static_expression() ]
 }
 
 void interface_variable_declaration() :
 {}
 {
-  [<VARIABLE>] identifier_list() ":" [ mode() ] subtype_indication() [ ":=" static_expression() ]
+  [<VARIABLE>] identifier_list() <COLON> [ mode() ] subtype_indication() [ <ASSIGN> static_expression() ]
 }
 
 void iteration_scheme() :
@@ -1244,12 +1333,12 @@ void label() :
 void library_clause() :
 {}
 {
-  <LIBRARY> logical_name_list() ";"
+  <LIBRARY> logical_name_list() <SEMICOLON>
 }
 
 void library_unit() :
 {}
-{   LOOKAHEAD(<ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
+{   LOOKAHEAD( <ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
     primary_unit()
   | secondary_unit()
 }
@@ -1257,8 +1346,7 @@ void library_unit() :
 void literal() :
 {}
 {
-    LOOKAHEAD( numeric_literal() )
-    numeric_literal()
+    LOOKAHEAD( numeric_literal() ) numeric_literal()
   | enumeration_literal()
   | <string_literal>
   | <bit_string_literal>
@@ -1274,7 +1362,7 @@ void logical_name() :
 void logical_name_list() :
 {}
 {
-  logical_name() ( "," logical_name() )*
+  logical_name() ( <COMMA> logical_name() )*
 }
 
 void logical_operator() :
@@ -1291,10 +1379,10 @@ void logical_operator() :
 void loop_statement() :
 {}
 {
-  [ loop_label() ":" ]
+  [ loop_label() <COLON> ]
   [ iteration_scheme() ] <LOOP>
                         sequence_of_statements()
-  <END> <LOOP> [ loop_label() ] ";"
+  <END> <LOOP> [ loop_label() ] <SEMICOLON>
 }
 
 void miscellaneous_operator() :
@@ -1336,47 +1424,37 @@ void name() :
  *  | attribute_name()
  */
   ( simple_name() | operator_symbol() )
-  [ LOOKAHEAD(name_extension()) name_extension()   ]
+  [ LOOKAHEAD( name_extension() ) name_extension()   ]
 }
 
 void name_extension() :
 {}
 {
   (
-      LOOKAHEAD( signature() "'"  )
-      signature() "'" attribute_designator()
-      [ LOOKAHEAD( "(" expression() ")") "(" expression() ")"]
-    | "." suffix()
-    | LOOKAHEAD( "(" discrete_range() ")" )
-      "(" discrete_range() ")"
-    | LOOKAHEAD( "(" expression() ("," expression() )* ")" )
-      "(" expression() ("," expression() )* ")"
-    /**
-     * The following production is already in sign. "'" ... ,
-     * since signature can be empty!
-     * | "'" attribute_designator() [ "(" expression() ")"]
-     */
+      LOOKAHEAD( signature() <TICK> ) signature() <TICK> attribute_designator() [ LOOKAHEAD( <LPAREN> expression() <RPAREN> ) <LPAREN> expression() <RPAREN> ]
+    | <PERIOD> suffix()
+    | LOOKAHEAD( <LPAREN> discrete_range() <RPAREN> ) <LPAREN> discrete_range() <RPAREN>
+    | LOOKAHEAD( <LPAREN> expression() ( <COMMA> expression() )* <RPAREN> ) <LPAREN> expression() ( <COMMA> expression() )* <RPAREN>
   )
-  [  LOOKAHEAD(name_extension() ) name_extension() ]
+  [  LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
 void next_statement() :
 {}
 {
-  [ label() ":" ] <NEXT> [ loop_label() ] [ <WHEN> condition() ] ";"
+  [ label() <COLON> ] <NEXT> [ loop_label() ] [ <WHEN> condition() ] <SEMICOLON>
 }
 
 void null_statement() :
 {}
 {
-  [ label() ":" ] <NULL> ";"
+  [ label() <COLON> ] <NULL> <SEMICOLON>
 }
 
 void numeric_literal() :
 {}
 {
-    LOOKAHEAD(physical_literal())
-    physical_literal()
+    LOOKAHEAD( physical_literal() ) physical_literal()
   | abstract_literal()
 }
 
@@ -1407,14 +1485,14 @@ void package_body() :
 {
   <PACKAGE> <BODY> package_simple_name() <IS>
        package_body_declarative_part()
-  <END> [ <PACKAGE> <BODY> ] [ package_simple_name() ] ";"
+  <END> [ <PACKAGE> <BODY> ] [ package_simple_name() ] <SEMICOLON>
 }
 
 void package_body_declarative_item() :
 {}
 {
   // TODO error recovery to next SEMICOLON
-    LOOKAHEAD(subprogram_declaration())
+    LOOKAHEAD( subprogram_declaration() )
     subprogram_declaration()
   | subprogram_body()
   | type_declaration()
@@ -1424,7 +1502,7 @@ void package_body_declarative_item() :
   | file_declaration()
   | alias_declaration()
   | use_clause()
-  | LOOKAHEAD(<GROUP> identifier() <IS>)
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
     group_template_declaration()
   | group_declaration()
 }
@@ -1440,7 +1518,7 @@ void package_declaration() :
 {
   <PACKAGE> identifier() <IS>
     package_declarative_part()
-  <END> [ <PACKAGE> ] [ package_simple_name() ] ";"
+  <END> [ <PACKAGE> ] [ package_simple_name() ] <SEMICOLON>
 }
 
 void package_declarative_item() :
@@ -1461,7 +1539,7 @@ void package_declarative_item() :
   | attribute_specification()
   | disconnection_specification()
   | use_clause()
-  | LOOKAHEAD(<GROUP> identifier() <IS>)
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
     group_template_declaration()
   | group_declaration()
 }
@@ -1481,25 +1559,13 @@ void parameter_specification() :
 void physical_literal() :
 {}
 {
-  [ LOOKAHEAD(abstract_literal() unit_name() )
-    abstract_literal() ]
-  unit_name()
-}
-
-void physical_type_definition() :
-{}
-{
-  range_constraint()
-  <UNITS>
-  base_unit_declaration()
-  ( secondary_unit_declaration() )*
-  <END> <UNITS> [ physical_type_simple_name() ]
+  [ LOOKAHEAD( abstract_literal() unit_name() ) abstract_literal() ] unit_name()
 }
 
 void port_clause() :
 {}
 {
-  <PORT> "(" port_list() ")" ";"
+  <PORT> <LPAREN> port_list() <RPAREN> <SEMICOLON>
 }
 
 void port_list() :
@@ -1511,13 +1577,13 @@ void port_list() :
 void port_interface_list() :
 {}
 {
-  interface_signal_declaration() ( ";" interface_signal_declaration() )*
+  interface_signal_declaration() ( <SEMICOLON> interface_signal_declaration() )*
 }
 
 void port_map_aspect() :
 {}
 {
-  <PORT> <MAP> "(" port_association_list() ")"
+  <PORT> <MAP> <LPAREN> port_association_list() <RPAREN>
 }
 
 void prefix() :
@@ -1535,14 +1601,14 @@ void primary() :
     qualified_expression()
   | LOOKAHEAD( function_call() )
     function_call()
-  | LOOKAHEAD(name())
+  | LOOKAHEAD( name() )
     name()
-  | LOOKAHEAD(literal())
+  | LOOKAHEAD( literal() )
     literal()
   | LOOKAHEAD( aggregate() )
     aggregate()
-  | LOOKAHEAD( "(" expression() ")")
-    "(" expression() ")"
+  | LOOKAHEAD( <LPAREN> expression() <RPAREN> )
+    <LPAREN> expression() <RPAREN>
   | LOOKAHEAD( type_conversion() )
     type_conversion()
   | allocator()
@@ -1553,27 +1619,27 @@ void primary_unit() :
 {
     entity_declaration()
   | configuration_declaration()
-  | LOOKAHEAD(<PACKAGE> identifier())
+  | LOOKAHEAD( <PACKAGE> identifier() )
     package_declaration()
 }
 
 void procedure_call() :
 {}
 {
-  procedure_name() [ "(" actual_parameter_part() ")" ]
+  procedure_name() [ <LPAREN> actual_parameter_part() <RPAREN> ]
 }
 
 void procedure_call_statement() :
 {}
 {
-   [ LOOKAHEAD( label() ";") label() ":" ]
-   procedure_call() ";"
+   [ LOOKAHEAD( label() <SEMICOLON> ) label() <COLON> ]
+   procedure_call() <SEMICOLON>
 }
 
 void process_declarative_item() :
 {}
 {
-    LOOKAHEAD(subprogram_declaration())
+    LOOKAHEAD( subprogram_declaration() )
     subprogram_declaration()
   | subprogram_body()
   | type_declaration()
@@ -1600,11 +1666,11 @@ void process_declarative_part() :
 void process_statement() :
 {}
 {
-  [ process_label() ":" ] [ <POSTPONED> ] <PROCESS> [ "(" sensitivity_list() ")" ] [ <IS> ]
+  [ process_label() <COLON> ] [ <POSTPONED> ] <PROCESS> [ <LPAREN> sensitivity_list() <RPAREN> ] [ <IS> ]
     process_declarative_part()
   <BEGIN>
     process_statement_part()
-  <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] ";"
+  <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] <SEMICOLON>
 }
 
 void process_statement_part() :
@@ -1616,10 +1682,10 @@ void process_statement_part() :
 void qualified_expression() :
 {}
 {
-  type_mark() "'"
+  type_mark() <TICK>
   (   LOOKAHEAD( aggregate() )
       aggregate()
-    | "(" expression() ")"
+    | <LPAREN> expression() <RPAREN>
   )
 }
 
@@ -1643,18 +1709,10 @@ void range_constraint() :
   <RANGE> range()
 }
 
-void record_type_definition() :
-{}
-{
-  <RECORD>
-  ( element_declaration() )+
-  <END> <RECORD> [ record_type_simple_name() ]
-}
-
 void relation() :
 {}
 {
-  shift_expression() [ LOOKAHEAD(1) relational_operator() shift_expression() ]
+  shift_expression() [ LOOKAHEAD( 1 ) relational_operator() shift_expression() ]
 }
 
 void relational_operator() :
@@ -1671,48 +1729,36 @@ void relational_operator() :
 void report_statement() :
 {}
 {
-  [ label() ":" ]  <REPORT> expression()
-  [ <SEVERITY> expression() ] ";"
+  [ label() <COLON> ]  <REPORT> expression()
+  [ <SEVERITY> expression() ] <SEMICOLON>
 }
 
 void return_statement() :
 {}
 {
-  [ label() ":" ] <RETURN> [ expression() ] ";"
-}
-
-void scalar_type_definition() :
-{}
-{
-    LOOKAHEAD(range_constraint() <UNITS> )
-    physical_type_definition()
-  | LOOKAHEAD(enumeration_type_definition())
-    enumeration_type_definition()
-  | range_constraint()
+  [ label() <COLON> ] <RETURN> [ expression() ] <SEMICOLON>
 }
 
 void secondary_unit() :
 {}
 {
-    LOOKAHEAD( <ARCHITECTURE> )
-    architecture_body()
-  | LOOKAHEAD( <PACKAGE> <BODY> )
-    package_body()
+    LOOKAHEAD( <ARCHITECTURE> ) architecture_body()
+  | LOOKAHEAD( <PACKAGE> <BODY> ) package_body()
 }
 
 void secondary_unit_declaration() :
 {}
 {
-  identifier() "=" physical_literal() ";"
+  identifier() <EQ> physical_literal() <SEMICOLON>
 }
 
 void selected_name() :
 {}
 {
   /**
-   * prefix() "." suffix()
+   * prefix() <PERIOD> suffix()
    * results in left-recursion...
-   * the follwoing does the same (i hope ...)
+   * the follwoing does the same ( i hope ... )
    */
 
   ( simple_name() | operator_symbol() )
@@ -1720,21 +1766,20 @@ void selected_name() :
 
   /**
    * semantic analysis has to ensure that last production
-   * was "." suffix()
+   * was <PERIOD> suffix()
    */
 }
 
 void selected_signal_assignment() :
 {}
 {
-  <WITH> expression() <SELECT> target()  "<=" options_() selected_waveforms() ";"
+  <WITH> expression() <SELECT> target()  <LE> options_() selected_waveforms() <SEMICOLON>
 }
 
 void selected_waveforms() :
 {}
 {
-  waveform() <WHEN> choices()
-  ("," waveform() <WHEN> choices() )*
+  waveform() <WHEN> choices() ( <COMMA> waveform() <WHEN> choices() )*
 }
 
 void sensitivity_clause() :
@@ -1746,7 +1791,7 @@ void sensitivity_clause() :
 void sensitivity_list() :
 {}
 {
-  signal_name() ( "," signal_name() )*
+  signal_name() ( <COMMA> signal_name() )*
 }
 
 void sequence_of_statements() :
@@ -1760,31 +1805,31 @@ void sequential_statement() :
 {
   // TODO error recovery to next SEMICOLON
   (
-    LOOKAHEAD(3)
+    LOOKAHEAD( 3 )
     wait_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     assertion_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     report_statement()
-  | LOOKAHEAD(  [ label() ":" ] target() "<=" )
+  | LOOKAHEAD(  [ label() <COLON> ] target() <LE> )
     signal_assignment_statement()
-  | LOOKAHEAD(  [ label() ":" ] target() ":=" )
+  | LOOKAHEAD(  [ label() <COLON> ] target() <ASSIGN> )
     variable_assignment_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     procedure_call_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     if_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     case_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     loop_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     next_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     exit_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     return_statement()
-  | LOOKAHEAD(3)
+  | LOOKAHEAD( 3 )
     null_statement()
   )
 }
@@ -1792,7 +1837,7 @@ void sequential_statement() :
 void shift_expression() :
 {}
 {
-  simple_expression() [ LOOKAHEAD(2) shift_operator() simple_expression()  ]
+  simple_expression() [ LOOKAHEAD( 2 ) shift_operator() simple_expression()  ]
 }
 
 void shift_operator() :
@@ -1809,20 +1854,20 @@ void shift_operator() :
 void sign() :
 {}
 {
-    "+"
-  | "-"
+    <ADD>
+  | <SUB>
 }
 
 void signal_assignment_statement() :
 {}
 {
-  [ LOOKAHEAD( label() ":") label() ":" ] target() "<=" [ delay_mechanism() ] waveform() ";"
+  [ LOOKAHEAD( label() <COLON> ) label() <COLON> ] target() <LE> [ delay_mechanism() ] waveform() <SEMICOLON>
 }
 
 void signal_declaration() :
 {}
 {
-  <SIGNAL> identifier_list() ":" subtype_indication() [ signal_kind() ] [ ":=" expression() ] ";"
+  <SIGNAL> identifier_list() <COLON> subtype_indication() [ signal_kind() ] [ <ASSIGN> expression() ] <SEMICOLON>
 }
 
 void signal_kind() :
@@ -1835,7 +1880,7 @@ void signal_kind() :
 void signal_list() :
 {}
 {
-    signal_name() ( "," signal_name() )*
+    signal_name() ( <COMMA> signal_name() )*
   | <OTHERS>
   | <ALL>
 }
@@ -1843,14 +1888,14 @@ void signal_list() :
 void signature() :
 {}
 {
-  [ type_mark() ( LOOKAHEAD( "," type_mark() ) "," type_mark() )* ]
+  [ type_mark() ( LOOKAHEAD( <COMMA> type_mark() ) <COMMA> type_mark() )* ]
   [ <RETURN> type_mark() ]
 }
 
 void simple_expression() :
 {}
 {
-  [ sign() ] term() ( LOOKAHEAD(2) adding_operator() term() )*
+  [ sign() ] term() ( LOOKAHEAD( 2 ) adding_operator() term() )*
 }
 
 void simple_name() :
@@ -1862,7 +1907,7 @@ void simple_name() :
 void slice_name() :
 {}
 {
-  prefix() "(" discrete_range() ")"
+  prefix() <LPAREN> discrete_range() <RPAREN>
 }
 
 void subprogram_body() :
@@ -1872,19 +1917,19 @@ void subprogram_body() :
     subprogram_declarative_part()
   <BEGIN>
     subprogram_statement_part()
-  <END> [ subprogram_kind() ] [ designator() ] ";"
+  <END> [ subprogram_kind() ] [ designator() ] <SEMICOLON>
 }
 
 void subprogram_declaration() :
 {}
 {
-  subprogram_specification() ";"
+  subprogram_specification() <SEMICOLON>
 }
 
 void subprogram_declarative_item() :
 {}
 {
-    LOOKAHEAD(subprogram_declaration())
+    LOOKAHEAD( subprogram_declaration() )
     subprogram_declaration()
   | subprogram_body()
   | type_declaration()
@@ -1893,12 +1938,10 @@ void subprogram_declarative_item() :
   | variable_declaration()
   | file_declaration()
   | alias_declaration()
-  | LOOKAHEAD(attribute_declaration())
-    attribute_declaration()
+  | LOOKAHEAD( attribute_declaration() ) attribute_declaration()
   | attribute_specification()
   | use_clause()
-  | LOOKAHEAD( <GROUP> identifier() <IS>)
-    group_template_declaration()
+  | LOOKAHEAD( <GROUP> identifier() <IS> ) group_template_declaration()
   | group_declaration()
 }
 
@@ -1918,37 +1961,14 @@ void subprogram_kind() :
 void subprogram_specification() :
 {}
 {
-  <PROCEDURE> designator() [ "(" formal_parameter_list() ")" ]
-  | [ <PURE> | <IMPURE> ]  <FUNCTION> designator()
-     [ "(" formal_parameter_list() ")" ]
-                <RETURN> type_mark()
+    <PROCEDURE> designator() [ <LPAREN> formal_parameter_list() <RPAREN> ]
+  | [ <PURE> | <IMPURE> ]  <FUNCTION> designator() [ <LPAREN> formal_parameter_list() <RPAREN> ] <RETURN> type_mark()
 }
 
 void subprogram_statement_part() :
 {}
 {
   ( sequential_statement() )*
-}
-
-void subtype_declaration() :
-{}
-{
-  <SUBTYPE> identifier() <IS> subtype_indication() ";"
-}
-
-/** Section 4.1: */
-void subtype_indication() :
-{}
-{
-  // After implementation of symbol tables this can be replaced by semantic lookahead.
-    LOOKAHEAD(resolution_function_name() type_mark() constraint())
-    resolution_function_name() type_mark() constraint()
-  | LOOKAHEAD( type_mark() constraint() )
-    type_mark() constraint()
-  | LOOKAHEAD( resolution_function_name() type_mark() )
-    resolution_function_name() type_mark()
-  | LOOKAHEAD( type_mark() )
-    type_mark()
 }
 
 void suffix() :
@@ -1970,7 +1990,7 @@ void target() :
 void term() :
 {}
 {
-  factor() ( LOOKAHEAD(2) multiplying_operator() factor() )*
+  factor() ( LOOKAHEAD( 2 ) multiplying_operator() factor() )*
 }
 
 void timeout_clause() :
@@ -1979,87 +1999,42 @@ void timeout_clause() :
   <FOR> expression()
 }
 
-void type_conversion() :
-{}
-{
-  type_mark() "(" expression() ")"
-}
-
-void type_declaration() :
-{}
-{
-    LOOKAHEAD( <TYPE> identifier() <IS> )
-    full_type_declaration()
-  | incomplete_type_declaration()
-}
-
-void type_definition() :
-{}
-{
-    scalar_type_definition()
-  | composite_type_definition()
-  | access_type_definition()
-  | file_type_definition()
-}
-
-void type_mark() :
-{}
-{
-    LOOKAHEAD(type_name())
-    type_name()
-  | LOOKAHEAD(subtype_name())
-    subtype_name()
-}
-
-void unconstrained_array_definition() :
-{}
-{
-  <ARRAY> "(" index_subtype_definition()
-    ( "," index_subtype_definition() )* ")"
-      <OF> element_subtype_indication()
-}
-
 void use_clause() :
 {}
 {
-   <USE> selected_name() ( "," selected_name() )* ";"
+   <USE> selected_name() ( <COMMA> selected_name() )* <SEMICOLON>
 }
 
 void variable_assignment_statement() :
 {}
 {
-  [ LOOKAHEAD( label() ":") label() ":" ]
-  target()  ":=" expression() ";"
+  [ LOOKAHEAD( label() <COLON> ) label() <COLON> ] target() <ASSIGN> expression() <SEMICOLON>
 }
 
 void variable_declaration() :
 {}
 {
-  [ <SHARED> ] <VARIABLE> identifier_list() ":"
-  subtype_indication() [ ":=" expression() ] ";"
+  [ <SHARED> ] <VARIABLE> identifier_list() <COLON> subtype_indication() [ <ASSIGN> expression() ] <SEMICOLON>
 }
 
 void wait_statement() :
 {}
 {
-   [ LOOKAHEAD( label() ) ":" label() ":"]
-   <WAIT> [ sensitivity_clause() ]
-   [ condition_clause() ] [ timeout_clause() ] ";"
+  [ LOOKAHEAD( label() ) <COLON> label() <COLON>] <WAIT> [ sensitivity_clause() ] [ condition_clause() ] [ timeout_clause() ] <SEMICOLON>
 }
 
 void waveform() :
 {}
 {
-  waveform_element() ( "," waveform_element() )*
+    waveform_element() ( <COMMA> waveform_element() )*
   | <UNAFFECTED>
 }
 
 void waveform_element() :
 {}
 {
-     LOOKAHEAD(<NULL>)
-     <NULL>             [<AFTER> time_expression() ]
-  |  value_expression() [ <AFTER> time_expression() ]
+    LOOKAHEAD( <NULL> ) <NULL> [<AFTER> time_expression() ]
+  | value_expression() [ <AFTER> time_expression() ]
 }
 
 /** Parts of grammar, which have to be checked during semantic analysis by semantic lookahead. */
@@ -2247,7 +2222,7 @@ void signal_name() :
 void type_name() :
 {}
 {
-  name()
+  simple_name() [ LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
 void record_type_simple_name() :
@@ -2257,12 +2232,6 @@ void record_type_simple_name() :
 }
 
 void resolution_function_name() :
-{}
-{
-  name()
-}
-
-void subtype_name() :
 {}
 {
   name()
