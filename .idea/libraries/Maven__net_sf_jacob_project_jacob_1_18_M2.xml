@@ -1,9 +1,13 @@
 <component name="libraryTable">
   <library name="Maven: net.sf.jacob-project:jacob:1.18-M2">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lv-scripting-java/lib/net/sf/jacob-project/jacob/1.18-M2/jacob-1.18-M2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/jacob-project/jacob/1.18-M2/jacob-1.18-M2.jar!/" />
     </CLASSES>
-    <JAVADOC />
-    <SOURCES />
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/jacob-project/jacob/1.18-M2/jacob-1.18-M2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sf/jacob-project/jacob/1.18-M2/jacob-1.18-M2-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

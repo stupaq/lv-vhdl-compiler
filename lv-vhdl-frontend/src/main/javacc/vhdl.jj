@@ -243,6 +243,33 @@ TOKEN [IGNORE_CASE] :
 }
 /** /LEXICAL ELEMENTS */
 
+/** PRIMITIVES */
+void label() :
+{}
+{
+  identifier()
+}
+
+void name() :
+{}
+{
+  ( identifier() | operator_symbol() ) [ LOOKAHEAD( name_extension() ) name_extension()   ]
+}
+
+void identifier() :
+{}
+{
+    <basic_identifier>
+  | <extended_identifier>
+}
+
+void identifier_list() :
+{}
+{
+  identifier() ( <COMMA> identifier() )*
+}
+/** /PRIMITIVES */
+
 /** TYPES */
 void access_type_definition() :
 {}
@@ -386,6 +413,205 @@ void unconstrained_array_definition() :
 }
 /** /TYPES */
 
+/** DESIGN */
+void design_file() :
+{}
+{
+  ( design_unit() )+ <EOF>
+}
+
+void design_unit() :
+{}
+{
+  context_clause()
+  library_unit()
+}
+
+void context_clause() :
+{}
+{
+  ( context_item() )*
+}
+
+void context_item() :
+{}
+{
+    library_clause()
+  | use_clause()
+}
+
+void library_clause() :
+{}
+{
+  <LIBRARY> logical_name_list() <SEMICOLON>
+}
+
+void use_clause() :
+{}
+{
+  <USE> selected_name() ( <COMMA> selected_name() )* <SEMICOLON>
+}
+
+void library_unit() :
+{}
+{   LOOKAHEAD( <ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
+      primary_unit()
+  | secondary_unit()
+}
+
+void primary_unit() :
+{}
+{
+    entity_declaration()
+  | configuration_declaration()
+  | LOOKAHEAD( <PACKAGE> identifier() )
+      package_declaration()
+}
+
+void secondary_unit() :
+{}
+{
+    LOOKAHEAD( <ARCHITECTURE> )
+      architecture_declaration()
+  | LOOKAHEAD( <PACKAGE> <BODY> )
+      package_body()
+}
+/** /DESIGN */
+
+/** ENTITY */
+void entity_declaration() :
+{}
+{
+  <ENTITY> entity_identifier() <IS>
+    entity_header()
+    entity_declarative_part()
+  [ <BEGIN> entity_statement_part() ]
+  <END> [ <ENTITY> ] [ entity_identifier() ] <SEMICOLON>
+}
+
+void entity_header() :
+{}
+{
+  [ formal_generic_clause() ]
+  [ formal_port_clause() ]
+}
+
+void entity_declarative_part() :
+{}
+{
+  ( entity_declarative_item() )*
+}
+
+void entity_declarative_item() :
+{}
+{
+  // TODO error recovery to next SEMICOLON
+    LOOKAHEAD( subprogram_declaration() )
+      subprogram_declaration()
+  | subprogram_body()
+  | type_declaration()
+  | subtype_declaration()
+  | constant_declaration()
+  | signal_declaration()
+  | shared_variable_declaration()
+  | file_declaration()
+  | alias_declaration()
+  | LOOKAHEAD( attribute_declaration() )
+      attribute_declaration()
+  | attribute_specification()
+  | disconnection_specification()
+  | use_clause()
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
+      group_template_declaration()
+  | group_declaration()
+}
+
+void entity_statement_part() :
+{}
+{
+  ( entity_statement() )*
+}
+
+void entity_statement() :
+{}
+{   LOOKAHEAD( concurrent_assertion_statement() )
+      concurrent_assertion_statement()
+  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
+      passive_process_statement()
+  | passive_concurrent_procedure_call_statement()
+}
+
+void entity_identifier() :
+{}
+{
+  identifier()
+}
+
+void entity_name() :
+{}
+{
+  name()
+}
+/** /ENTITY */
+
+/** ARCHITECTURE */
+void architecture_declaration() :
+{}
+{
+  <ARCHITECTURE> architecture_identifier() <OF> entity_name() <IS>
+    architecture_declarative_part()
+  <BEGIN>
+    architecture_statement_part()
+  <END> [ <ARCHITECTURE> ] [ architecture_identifier() ] <SEMICOLON>
+}
+
+void architecture_declarative_part() :
+{}
+{
+  ( block_declarative_item() )*
+}
+
+void architecture_statement_part() :
+{}
+{
+  ( concurrent_statement() )*
+}
+
+void architecture_identifier() :
+{}
+{
+  identifier()
+}
+
+void architecture_name() :
+{}
+{
+  name()
+}
+/** /ARCHITECTURE */
+
+/** CONCURRENT STATEMENTS */
+void concurrent_statement() :
+{}
+{
+  // TODO error recovery to next SEMICOLON
+    LOOKAHEAD( [block_label() <COLON>] <BLOCK> )
+      block_statement()
+  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
+      process_statement()
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] procedure_call() <SEMICOLON> )
+      concurrent_procedure_call_statement()
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] <ASSERT> )
+      concurrent_assertion_statement()
+  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] conditional_signal_assignment() | [label() <COLON>] [<POSTPONED>] selected_signal_assignment() )
+      concurrent_signal_assignment_statement()
+  | LOOKAHEAD( instantiation_label() <COLON> instantiated_unit() )
+      component_instantiation_statement()
+  | LOOKAHEAD( generate_statement() )
+      generate_statement()
+}
+/** /CONCURRENT STATEMENTS */
+
 void abstract_literal() :
 {}
 {
@@ -462,55 +688,10 @@ void allocator() :
   )
 }
 
-void architecture_body() :
-{}
-{
-  <ARCHITECTURE> identifier() <OF> entity_name() <IS>
-    architecture_declarative_part()
-  <BEGIN>
-    architecture_statement_part()
-  <END> [ <ARCHITECTURE> ] [ architecture_simple_name() ] <SEMICOLON>
-}
-
-void architecture_declarative_part() :
-{}
-{
-  ( block_declarative_item() )*
-}
-
-void architecture_statement_part() :
-{}
-{
-  ( architecture_statement() )*
-}
-
-void architecture_statement() :
-{}
-{
-  // TODO error recovery to next SEMICOLON
-    LOOKAHEAD( [block_label() <COLON>] <BLOCK> )
-    block_statement()
-  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
-    process_statement()
-  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] procedure_call() <SEMICOLON> )
-    concurrent_procedure_call_statement()
-  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] <ASSERT> )
-    concurrent_assertion_statement()
-  | LOOKAHEAD( [label() <COLON>] [<POSTPONED>] conditional_signal_assignment()|
-              [label() <COLON>] [<POSTPONED>] selected_signal_assignment() )
-    concurrent_signal_assignment_statement()
-  | LOOKAHEAD( instantiation_label() <COLON> instantiated_unit() )
-    component_instantiation_statement()
-  | LOOKAHEAD( generate_statement() )
-    generate_statement()
-}
-
 void assertion() :
 {}
 {
-  <ASSERT> condition()
-  [ <REPORT> expression() ]
-  [ <SEVERITY> expression() ]
+  <ASSERT> condition() [ <REPORT> expression() ] [ <SEVERITY> expression() ]
 }
 
 void assertion_statement() :
@@ -583,8 +764,7 @@ void block_declarative_item() :
 {}
 {
   // TODO error recovery to next SEMICOLON
-    LOOKAHEAD( subprogram_declaration() )
-    subprogram_declaration()
+    LOOKAHEAD( subprogram_declaration() ) subprogram_declaration()
   | subprogram_body()
   | type_declaration()
   | subtype_declaration()
@@ -594,14 +774,12 @@ void block_declarative_item() :
   | file_declaration()
   | alias_declaration()
   | component_declaration()
-  | LOOKAHEAD( attribute_declaration() )
-    attribute_declaration()
+  | LOOKAHEAD( attribute_declaration() ) attribute_declaration()
   | attribute_specification()
   | configuration_specification()
   | disconnection_specification()
   | use_clause()
-  | LOOKAHEAD( <GROUP> identifier() <IS> )
-    group_template_declaration()
+  | LOOKAHEAD( <GROUP> identifier() <IS> ) group_template_declaration()
   | group_declaration()
 }
 
@@ -644,17 +822,15 @@ void block_statement() :
 void block_statement_part() :
 {}
 {
-  ( architecture_statement() )*
+  ( concurrent_statement() )*
 }
 
 void case_statement() :
 {}
 {
-  [ case_label() <COLON> ]
-                <CASE> expression() <IS>
-                        case_statement_alternative()
-                        ( case_statement_alternative() )*
-                <END> <CASE> [ case_label() ] <SEMICOLON>
+  [ case_label() <COLON> ] <CASE> expression() <IS>
+    ( case_statement_alternative() )+
+  <END> <CASE> [ case_label() ] <SEMICOLON>
 }
 
 void case_statement_alternative() :
@@ -822,37 +998,12 @@ void constraint() :
   | index_constraint()
 }
 
-void context_clause() :
-{}
-{
-  ( context_item() )*
-}
-
-void context_item() :
-{}
-{
-    library_clause()
-  | use_clause()
-}
-
 /** Section 4: Declarations */
 void delay_mechanism() :
 {}
 {
     <TRANSPORT>
   | [ <REJECT> time_expression() ] <INERTIAL>
-}
-
-void design_file() :
-{}
-{
-  ( design_unit() )+ <EOF>
-}
-
-void design_unit() :
-{}
-{
-  context_clause() library_unit()
 }
 
 void designator() :
@@ -949,56 +1100,10 @@ void entity_class_entry_list() :
   entity_class_entry() ( <COMMA> entity_class_entry() )*
 }
 
-void entity_declaration() :
-{}
-{
-  <ENTITY> identifier() <IS> entity_header()
-    entity_declarative_part()
-  [ <BEGIN> entity_statement_part() ]
-  <END> [ <ENTITY> ] [ entity_simple_name() ] <SEMICOLON>
-}
-
-void entity_declarative_item() :
-{}
-{
-  // TODO error recovery to next SEMICOLON
-    LOOKAHEAD( subprogram_declaration() )
-    subprogram_declaration()
-  | subprogram_body()
-  | type_declaration()
-  | subtype_declaration()
-  | constant_declaration()
-  | signal_declaration()
-  | shared_variable_declaration()
-  | file_declaration()
-  | alias_declaration()
-  | LOOKAHEAD( attribute_declaration() )
-    attribute_declaration()
-  | attribute_specification()
-  | disconnection_specification()
-  | use_clause()
-  | LOOKAHEAD( <GROUP> identifier() <IS> )
-    group_template_declaration()
-  | group_declaration()
-}
-
-void entity_declarative_part() :
-{}
-{
-  ( entity_declarative_item() )*
-}
-
 void entity_designator() :
 {}
 {
   entity_tag() signature()
-}
-
-void entity_header() :
-{}
-{
-  [ formal_generic_clause() ]
-  [ formal_port_clause() ]
 }
 
 void entity_name_list() :
@@ -1013,21 +1118,6 @@ void entity_specification() :
 {}
 {
         entity_name_list() <COLON> entity_class()
-}
-
-void entity_statement() :
-{}
-{   LOOKAHEAD( concurrent_assertion_statement() )
-    concurrent_assertion_statement()
-  | LOOKAHEAD( [process_label() <COLON>] [<POSTPONED>] <PROCESS> )
-    passive_process_statement()
-  | passive_concurrent_procedure_call_statement()
-}
-
-void entity_statement_part() :
-{}
-{
-  ( entity_statement() )*
 }
 
 void entity_tag() :
@@ -1134,7 +1224,7 @@ void generate_statement() :
   generate_label() <COLON>
   generation_scheme() <GENERATE>
     [ LOOKAHEAD( 2 ) ( block_declarative_item() )* <BEGIN> ]
-    ( architecture_statement() )*
+    ( concurrent_statement() )*
   <END> <GENERATE> [ generate_label() ] <SEMICOLON>
 }
 
@@ -1199,19 +1289,6 @@ void guarded_signal_specification() :
 {}
 {
   guarded_signal_list() <COLON> type_name()
-}
-
-void identifier() :
-{}
-{
-    <basic_identifier>
-  | <extended_identifier>
-}
-
-void identifier_list() :
-{}
-{
-  identifier() ( <COMMA> identifier() )*
 }
 
 void if_statement() :
@@ -1320,25 +1397,6 @@ void iteration_scheme() :
   | <FOR> loop_parameter_specification()
 }
 
-void label() :
-{}
-{
-  identifier()
-}
-
-void library_clause() :
-{}
-{
-  <LIBRARY> logical_name_list() <SEMICOLON>
-}
-
-void library_unit() :
-{}
-{   LOOKAHEAD( <ENTITY> | <CONFIGURATION> | <PACKAGE> identifier() )
-    primary_unit()
-  | secondary_unit()
-}
-
 void literal() :
 {}
 {
@@ -1406,20 +1464,6 @@ void multiplying_operator() :
   | <DIV>
   | <MOD>
   | <REM>
-}
-
-void name() :
-{}
-{
-/**
- *    identifier()
- *  | operator_symbol()
- *  | selected_name()
- *  | indexed_name()
- *  | slice_name()
- *  | attribute_name()
- */
-  ( identifier() | operator_symbol() ) [ LOOKAHEAD( name_extension() ) name_extension()   ]
 }
 
 void name_extension() :
@@ -1609,15 +1653,6 @@ void primary() :
   | allocator()
 }
 
-void primary_unit() :
-{}
-{
-    entity_declaration()
-  | configuration_declaration()
-  | LOOKAHEAD( <PACKAGE> identifier() )
-    package_declaration()
-}
-
 void procedure_call() :
 {}
 {
@@ -1732,13 +1767,6 @@ void return_statement() :
 {}
 {
   [ label() <COLON> ] <RETURN> [ expression() ] <SEMICOLON>
-}
-
-void secondary_unit() :
-{}
-{
-    LOOKAHEAD( <ARCHITECTURE> ) architecture_body()
-  | LOOKAHEAD( <PACKAGE> <BODY> ) package_body()
 }
 
 void secondary_unit_declaration() :
@@ -1988,12 +2016,6 @@ void timeout_clause() :
   <FOR> expression()
 }
 
-void use_clause() :
-{}
-{
-   <USE> selected_name() ( <COMMA> selected_name() )* <SEMICOLON>
-}
-
 void variable_assignment_statement() :
 {}
 {
@@ -2081,12 +2103,6 @@ void process_label() :
   label()
 }
 
-void architecture_simple_name() :
-{}
-{
-  identifier()
-}
-
 void attribute_simple_name() :
 {}
 {
@@ -2122,18 +2138,6 @@ void package_simple_name() :
 {}
 {
   identifier()
-}
-
-void architecture_name() :
-{}
-{
-  name()
-}
-
-void entity_name() :
-{}
-{
-  name()
 }
 
 void file_name() :
@@ -2230,12 +2234,6 @@ void variable_name() :
 {}
 {
   name()
-}
-
-void architecture_identifier() :
-{}
-{
-  identifier()
 }
 
 void static_expression() :

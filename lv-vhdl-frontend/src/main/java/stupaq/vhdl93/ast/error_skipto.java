@@ -23,13 +23,4 @@ public class error_skipto extends SimpleNode implements Node {
   @Override
   public <A> void accept(GJVoidVisitor<A> v, A argu) {
   }
-
-  @Override
-  public void setParent(Node n) {
-  }
-
-  @Override
-  public Node getParent() {
-    return null;
-  }
 }

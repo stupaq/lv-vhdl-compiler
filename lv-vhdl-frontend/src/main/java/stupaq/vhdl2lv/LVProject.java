@@ -17,15 +17,15 @@ public class LVProject {
     tools = new ScriptingTools();
   }
 
-  public EditableVI create(String name) {
-    return new EditableVI(tools, new VIPath(root, name));
-  }
-
-  public void remove(String name) {
-    try {
-      Files.delete(root.resolve(name));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+  public EditableVI create(String name, boolean override) {
+    VIPath path = new VIPath(root, name);
+    if (override) {
+      try {
+        Files.deleteIfExists(path.path());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
+    return new EditableVI(tools, path);
   }
 }
