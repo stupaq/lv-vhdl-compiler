@@ -18,7 +18,7 @@ public class LVProject {
   }
 
   public EditableVI create(String name, boolean override) {
-    VIPath path = new VIPath(root, name);
+    VIPath path = new VIPath(root, name + ".vi");
     if (override) {
       try {
         Files.deleteIfExists(path.path());
@@ -26,6 +26,8 @@ public class LVProject {
         throw new RuntimeException(e);
       }
     }
-    return new EditableVI(tools, path);
+    EditableVI vi = new EditableVI(tools, path);
+    vi.create();
+    return vi;
   }
 }

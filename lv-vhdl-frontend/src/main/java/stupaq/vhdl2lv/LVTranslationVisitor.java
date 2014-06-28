@@ -1,5 +1,6 @@
 package stupaq.vhdl2lv;
 
+import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
@@ -10,14 +11,16 @@ import java.util.Map.Entry;
 
 import stupaq.labview.UID;
 import stupaq.labview.scripting.EditableVI;
+import stupaq.vhdl93.ast.NodeSequence;
+import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.component_instantiation_statement;
 import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.entity_declaration;
-import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 
+import static stupaq.vhdl93.ast.ASTGetters.name;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 public class LVTranslationVisitor extends DepthFirstVisitor {
@@ -28,10 +31,26 @@ public class LVTranslationVisitor extends DepthFirstVisitor {
   private final LVProject project;
   /** Context of {@link architecture_declaration}. */
   private EditableVI currentVi;
-  private String statementLabel;
 
   public LVTranslationVisitor(LVProject project) {
     this.project = project;
+  }
+
+  private EntityDeclaration resolveEntity(String entityName) {
+    EntityDeclaration entity = knownEntities.get(entityName);
+    if (entity == null) {
+      entity = knownEntities.get(EntityDeclaration.DEFAULT_LIBRARY_PREFIX + entityName);
+    }
+    Verify.verifyNotNull(entity, "Unknown entity: %s", entityName);
+    return entity;
+  }
+
+  private static NodeSequence sequence(SimpleNode... args) {
+    NodeSequence node = new NodeSequence(args.length);
+    for (SimpleNode n : args) {
+      node.addNode(n);
+    }
+    return node;
   }
 
   @Override
@@ -53,23 +72,20 @@ public class LVTranslationVisitor extends DepthFirstVisitor {
 
   @Override
   public void visit(architecture_declaration n) {
-    String architectureId = representation(n.architecture_identifier.identifier);
-    EntityDeclaration entity = knownEntities.get(representation(n.entity_name));
-    currentVi = project.create(architectureId, true);
-    UID entityUID = currentVi.inlineCNodeCreate(representation(entity.node()));
+    EntityDeclaration entity = resolveEntity(representation(n.entity_name));
+    currentVi = project.create(entity.name(), true);
+    UID entityUid = currentVi.inlineCNodeCreate(representation(entity.node()), "");
     n.architecture_statement_part.accept(this);
     // FIXME
-    n.architecture_declarative_part.accept(this);
+    currentVi.cleanUpDiagram();
   }
 
   @Override
   public void visit(component_instantiation_statement n) {
-    statementLabel = representation(n.instantiation_label);
-    super.visit(n);
-  }
-
-  @Override
-  public void visit(instantiated_unit n) {
-    super.visit(n);
+    EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
+    String label = representation(n.instantiation_label.label);
+    UID instanceUid = currentVi.inlineCNodeCreate(representation(
+        sequence(n.instantiated_unit, n.nodeOptional, n.nodeOptional1, n.nodeToken1)), label);
+    // FIXME
   }
 }

@@ -8,6 +8,23 @@ import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 public class ASTGetters {
+  public static String name(SimpleNode n) {
+    return new NodeOptional(n).accept(new GJNoArguDepthFirst<String>() {
+      String name;
+
+      @Override
+      public String visit(NodeOptional n) {
+        super.visit(n);
+        return name;
+      }
+
+      @Override
+      public String visit(name n) {
+        return (name = representation(n));
+      }
+    });
+  }
+
   public static String representation(SimpleNode n) {
     n.accept(new VHDLTreeFormatter());
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

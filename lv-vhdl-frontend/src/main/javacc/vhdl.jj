@@ -612,6 +612,17 @@ void concurrent_statement() :
 }
 /** /CONCURRENT STATEMENTS */
 
+/** COMPONENT INSTANTIATION */
+void component_instantiation_statement() :
+{}
+{
+  instantiation_label() <COLON> instantiated_unit()
+    [ generic_map_aspect() ]
+    [ port_map_aspect() ]
+  <SEMICOLON>
+}
+/** /COMPONENT INSTANTIATION */
+
 void abstract_literal() :
 {}
 {
@@ -872,15 +883,6 @@ void component_declaration() :
       [ local_generic_clause() ]
       [ local_port_clause() ]
   <END> <COMPONENT> [ component_simple_name() ] <SEMICOLON>
-}
-
-void component_instantiation_statement() :
-{}
-{
-  instantiation_label() <COLON>
-         instantiated_unit()
-         [ generic_map_aspect() ]
-         [ port_map_aspect() ] <SEMICOLON>
 }
 
 void component_specification() :
