@@ -114,4 +114,11 @@
         </plugins>
     </reporting>
 
+    <repositories>
+        <repository>
+            <id>lib-local-repository</id>
+            <url>file://${basedir}/../lv-scripting-java/lib</url>
+        </repository>
+    </repositories>
+
 </project>

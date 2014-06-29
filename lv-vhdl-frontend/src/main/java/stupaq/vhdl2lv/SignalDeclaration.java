@@ -12,7 +12,7 @@ public class SignalDeclaration extends HDLElement<interface_signal_declaration> 
     super(node);
     Verify.verify(!node.identifier_list.nodeListOptional.present());
     type = new TypeIndication(node.subtype_indication);
-    reference = IOReference.from(node().identifier_list.identifier);
+    reference = new IOReference(node().identifier_list.identifier);
   }
 
   public IOReference reference() {

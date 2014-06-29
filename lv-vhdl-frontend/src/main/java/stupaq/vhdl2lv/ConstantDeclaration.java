@@ -12,7 +12,7 @@ public class ConstantDeclaration extends HDLElement<interface_constant_declarati
     super(node);
     Verify.verify(!node.identifier_list.nodeListOptional.present());
     type = new TypeIndication(node.subtype_indication);
-    reference = IOReference.from(node().identifier_list.identifier);
+    reference = new IOReference(node().identifier_list.identifier);
   }
 
   public IOReference reference() {

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
 import stupaq.labview.UID;
@@ -27,12 +28,14 @@ import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.generate_statement;
 import stupaq.vhdl93.ast.generic_map_aspect;
+import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.port_map_aspect;
 import stupaq.vhdl93.ast.process_statement;
 import stupaq.vhdl93.ast.signal_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 
+import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.name;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
@@ -79,25 +82,68 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     EntityDeclaration entity = resolveEntity(representation(n.entity_name));
     currentVi = project.create(entity.name(), true);
     UID entityUid = currentVi.inlineCNodeCreate(representation(entity.node()), "");
+    for (ConstantDeclaration constant : entity.generics()) {
+      UID terminal = currentVi.inlineCNodeAddIO(entityUid, false, constant.reference().toString());
+      namedSources.put(constant.reference(), terminal);
+    }
+    for (PortDeclaration port : entity.ports()) {
+      // IN and OUT are source and sink when we look from the outside (entity declaration).
+      UID terminal = currentVi.inlineCNodeAddIO(entityUid, port.direction() == PortDirection.OUT,
+          port.reference().toString());
+      if (port.direction() == PortDirection.OUT) {
+        danglingSinks.put(port.reference(), terminal);
+      } else {
+        namedSources.put(port.reference(), terminal);
+      }
+    }
     n.architecture_statement_part.accept(this);
-    // FIXME
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Named sources:");
+      for (Entry<IOReference, UID> entry : namedSources.entrySet()) {
+        LOGGER.debug("\t" + entry.toString());
+      }
+      LOGGER.debug("Dangling sinks:");
+      for (Entry<IOReference, UID> entry : danglingSinks.entries()) {
+        LOGGER.debug("\t" + entry.toString());
+      }
+    }
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
       @Override
-      public void visit(constant_declaration n) {
+      public void visit(expression n) {
         // FIXME
-        super.visit(n);
+      }
+
+      @Override
+      public void visit(constant_declaration n) {
+        IOReference ref = new IOReference(n.identifier_list.identifier);
+        Verify.verify(n.nodeOptional.present(), "Value is missing for constant: %s",
+            ref.toString());
+        Verify.verify(!namedSources.containsKey(ref),
+            "Constant and data source have the same name: %s", ref.toString());
+        // FIXME
       }
 
       @Override
       public void visit(signal_declaration n) {
-        // FIXME
-        super.visit(n);
+        MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported");
+        String label = representation(n);
+        IOReference ref = new IOReference(n.identifier_list.identifier);
+        LOGGER.debug("Signal: " + ref + " connects:");
+        UID source = namedSources.remove(ref);
+        if (source != null) {
+          for (UID sink : danglingSinks.removeAll(ref)) {
+            LOGGER.debug("\t" + source + " => " + sink);
+            currentVi.connectWire(source, sink, label);
+          }
+        }
       }
     });
-    for (PortDeclaration port : entity.ports()) {
-      UID terminal = currentVi.inlineCNodeAddIO(entityUid, port.direction() == PortDirection.IN,
-          port.reference().toString());
-      // FIXME
+    for (Entry<IOReference, UID> source : namedSources.entrySet()) {
+      LOGGER.debug("Signal: " + source.getKey() + " connects:");
+      for (UID sink : danglingSinks.removeAll(source.getKey())) {
+        LOGGER.debug("\t" + source.getValue() + " => " + sink);
+        currentVi.connectWire(source.getValue(), sink, "");
+      }
     }
     currentVi.cleanUpDiagram();
   }
@@ -107,17 +153,28 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
     final UID instanceUid = currentVi.inlineCNodeCreate(entity.name(), label);
-    n.nodeOptional.accept(new DepthFirstVisitor() {
-      /** Context of {@link generic_map_aspect}. */
+    sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
+      /** Context of {@link #visit(generic_map_aspect)}. */
       List<ConstantDeclaration> generics;
-      /** Context of {@link port_map_aspect}. */
+      /** Context of {@link #visit(port_map_aspect)}. */
       List<PortDeclaration> ports;
-      /** Context of {@link association_list}. */
+      /** Context of {@link #visit(association_list)}. */
       int index;
       /** Context of {@link #visit(association_element)}. */
       boolean portIsSink;
-      /** Result of {@link #visit(expression)}. */
-      UID expressionResult;
+      /** Context of {@link #visit(association_element)}. */
+      UID portTerminal;
+
+      @Override
+      public void visit(identifier n) {
+        IOReference ref = new IOReference(representation(n));
+        if (portIsSink) {
+          danglingSinks.put(ref, portTerminal);
+        } else {
+          namedSources.put(ref, portTerminal);
+        }
+        portTerminal = null;
+      }
 
       @Override
       public void visit(association_list n) {
@@ -130,36 +187,24 @@ public class DesignFileEmitter extends DepthFirstVisitor {
         MissingFeature.throwIf(n.nodeOptional.present(),
             "Resolving associations is not yet implemented.");
         // Resolve port contract.
-        IOReference ref;
-        if (generics != null) {
-          ConstantDeclaration constant = generics.get(index++);
-          portIsSink = true;
-          ref = constant.reference();
-        } else if (ports != null) {
+        String label;
+        if (ports != null) {
           PortDeclaration port = ports.get(index++);
           portIsSink = port.direction() == PortDirection.IN;
-          ref = port.reference();
+          label = port.reference().toString();
+        } else if (generics != null) {
+          ConstantDeclaration constant = generics.get(index++);
+          portIsSink = true;
+          label = constant.reference().toString();
         } else {
           throw new AssertionError();
         }
-        // Resolve port assignment.
-        expressionResult = null;
-        n.actual_part.accept(this);
         // Create port.
-        UID terminal = currentVi.inlineCNodeAddIO(instanceUid, portIsSink, ref.toString());
-        // Create a wire or add to dangling sinks.
-        if (portIsSink) {
-          if (expressionResult != null) {
-            currentVi.connectWire(expressionResult, terminal, "");
-          } else {
-            danglingSinks.put(ref, terminal);
-          }
-        } else {
-          if (expressionResult != null) {
-            currentVi.connectWire(terminal, expressionResult, "");
-          }
-          namedSources.put(ref, terminal);
-        }
+        portTerminal = currentVi.inlineCNodeAddIO(instanceUid, portIsSink, label);
+        // Resolve port assignment (rhs).
+        n.actual_part.accept(this);
+        // If everything went OK, the port context should be zeroed.
+        Verify.verify(portTerminal == null, "Unresolved assignment in entity instantiation");
       }
 
       @Override
@@ -179,7 +224,13 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(expression n) {
         UID expressionUid = currentVi.inlineCNodeCreate(representation(n), "");
-        expressionResult = currentVi.inlineCNodeAddIO(expressionUid, !portIsSink, "<result>");
+        UID expressionTerminal = currentVi.inlineCNodeAddIO(expressionUid, !portIsSink, "<result>");
+        if (portIsSink) {
+          currentVi.connectWire(expressionTerminal, portTerminal, "");
+        } else {
+          currentVi.connectWire(portTerminal, expressionTerminal, "");
+        }
+        portTerminal = null;
         // Note that we do not visit recursively in current setting, so we are sure,
         // that this is the top-level expression context.
       }
@@ -188,31 +239,31 @@ public class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(block_statement n) {
-    // FIXME
+    // TODO
   }
 
   @Override
   public void visit(process_statement n) {
-    // FIXME
+    // TODO
   }
 
   @Override
   public void visit(concurrent_procedure_call_statement n) {
-    // FIXME
+    // TODO
   }
 
   @Override
   public void visit(concurrent_assertion_statement n) {
-    // FIXME
+    // TODO
   }
 
   @Override
   public void visit(concurrent_signal_assignment_statement n) {
-    // FIXME
+    // TODO
   }
 
   @Override
   public void visit(generate_statement n) {
-    // FIXME
+    // TODO
   }
 }

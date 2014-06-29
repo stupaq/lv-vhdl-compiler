@@ -21,4 +21,9 @@ public class IOSources extends ForwardingMap<IOReference, UID> {
     Verify.verify(!containsKey(key), "Multiple sources for signal: %s", key);
     return super.put(key, value);
   }
+
+  @Override
+  public void putAll(Map<? extends IOReference, ? extends UID> map) {
+    super.standardPutAll(map);
+  }
 }

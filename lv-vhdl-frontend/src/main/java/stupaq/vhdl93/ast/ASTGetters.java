@@ -1,7 +1,5 @@
 package stupaq.vhdl93.ast;
 
-import com.google.common.base.CharMatcher;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -9,18 +7,20 @@ import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
+import static stupaq.vhdl93.ast.ASTBuilders.sequence;
+
 public final class ASTGetters {
   private ASTGetters() {
   }
 
   public static String name(SimpleNode n) {
-    return new NodeOptional(n).accept(new GJNoArguDepthFirst<String>() {
+    String name = sequence(n).accept(new GJNoArguDepthFirst<String>() {
       String name;
 
       @Override
-      public String visit(NodeOptional n) {
+      public String visit(NodeSequence n) {
         super.visit(n);
-        return CharMatcher.WHITESPACE.trimFrom(name);
+        return name;
       }
 
       @Override
@@ -28,25 +28,27 @@ public final class ASTGetters {
         return (name = representation(n));
       }
     });
+    return name == null ? null : name.trim();
   }
 
   public static String representation(SimpleNode n) {
     n.accept(new VHDLTreeFormatter());
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
       n.accept(new TreeDumper(baos));
-      return CharMatcher.WHITESPACE.trimFrom(baos.toString());
+      return baos.toString().trim();
     } catch (IOException ignored) {
       return null;
     }
   }
 
   public static String representation(identifier n) {
-    return CharMatcher.WHITESPACE.trimFrom(n.nodeChoice.accept(new GJNoArguDepthFirst<String>() {
+    String rep = n.nodeChoice.accept(new GJNoArguDepthFirst<String>() {
       @Override
       public String visit(NodeToken n) {
         return n.tokenImage.toLowerCase();
       }
-    }));
+    });
+    return rep == null ? null : rep.trim();
   }
 
   public static String representation(label n) {

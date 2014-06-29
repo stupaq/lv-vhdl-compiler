@@ -114,11 +114,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(actual_designator n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(actual_parameter_part n) {
     super.visit(n);
   }
@@ -215,11 +210,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
 
   @Override
   public final void visit(factor n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(formal_designator n) {
     super.visit(n);
   }
 

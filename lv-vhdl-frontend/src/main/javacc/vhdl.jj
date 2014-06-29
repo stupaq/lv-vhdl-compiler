@@ -300,35 +300,139 @@ void association_element() :
 void formal_part() :
 {}
 {
-    LOOKAHEAD( name() <LPAREN> formal_designator() <RPAREN> )
-      name() <LPAREN> formal_designator() <RPAREN>
-  | formal_designator()
-}
-
-void formal_designator() :
-{}
-{
-  name()
+  identifier()
 }
 
 void actual_part() :
 {}
 {
-    LOOKAHEAD( name() <LPAREN> actual_designator() <RPAREN> )
-      name() <LPAREN> actual_designator() <RPAREN>
-  | actual_designator()
-}
-
-void actual_designator() :
-{}
-{
     <OPEN>
-  | LOOKAHEAD( name() )
-      name()
+  | LOOKAHEAD( identifier() <COMMA> )
+      identifier()
+  | LOOKAHEAD( identifier() <RPAREN> )
+      identifier()
   | LOOKAHEAD( expression() )
       expression()
 }
 /** /PRIMITIVES */
+
+/** EXPRESSIONS */
+void expression() :
+{}
+{
+  relation_expression() ( LOOKAHEAD( 2 ) logical_operator() relation_expression() )*
+}
+
+void logical_operator() :
+{}
+{
+    <AND>
+  | <OR>
+  | <NAND>
+  | <NOR>
+  | <XOR>
+  | <XNOR>
+}
+
+void relation_expression() :
+{}
+{
+  shift_expression() [ LOOKAHEAD( 2 ) relational_operator() shift_expression() ]
+}
+
+void relational_operator() :
+{}
+{
+    <EQ>
+  | <NEQ>
+  | <LO>
+  | <LE>
+  | <GT>
+  | <GE>
+}
+
+void shift_expression() :
+{}
+{
+  simple_expression() [ LOOKAHEAD( 2 ) shift_operator() simple_expression()  ]
+}
+
+void shift_operator() :
+{}
+{
+    <SLL>
+  | <SRL>
+  | <SLA>
+  | <SRA>
+  | <ROL>
+  | <ROR>
+}
+
+void simple_expression() :
+{}
+{
+  [ sign() ] term() ( LOOKAHEAD( 2 ) adding_operator() term() )*
+}
+
+void sign() :
+{}
+{
+    <ADD>
+  | <SUB>
+}
+
+void adding_operator() :
+{}
+{
+    <ADD>
+  | <SUB>
+  | <CONCAT>
+}
+
+void term() :
+{}
+{
+  factor() ( LOOKAHEAD( 2 ) multiplying_operator() factor() )*
+}
+
+void multiplying_operator() :
+{}
+{
+    <MUL>
+  | <DIV>
+  | <MOD>
+  | <REM>
+}
+
+void factor() :
+{}
+{
+    <ABS> primary()
+  | <NOT> primary()
+  | primary() [ LOOKAHEAD( <EXP> primary() ) <EXP> primary() ]
+}
+
+void primary() :
+{}
+{
+    LOOKAHEAD( qualified_expression() )
+      qualified_expression()
+  | LOOKAHEAD( function_call() )
+      function_call()
+  | LOOKAHEAD( name() )
+      name()
+  | LOOKAHEAD( literal() )
+      literal()
+  | LOOKAHEAD( aggregate() )
+      aggregate()
+  | LOOKAHEAD( <LPAREN> expression() <RPAREN> )
+      <LPAREN> expression() <RPAREN>
+  | LOOKAHEAD( type_conversion() )
+      type_conversion()
+  | allocator()
+}
+// TODO more non-terminals need to be moved here...
+/** /EXPRESSIONS */
 
 /** TYPES */
 void access_type_definition() :
@@ -706,14 +810,6 @@ void actual_parameter_part() :
 {}
 {
   parameter_association_list()
-}
-
-void adding_operator() :
-{}
-{
-    <ADD>
-  | <SUB>
-  | <CONCAT>
 }
 
 void aggregate() :
@@ -1180,29 +1276,6 @@ void exit_statement() :
     [ <WHEN> condition() ] <SEMICOLON>
 }
 
-void expression() :
-{}
-{
-/**  relation() (
- *   ( <AND> relation() )* |
- *    ( <OR> relation() )*  |
- *    ( <XOR> relation() )* |
- *    [ <NAND> relation() ] |
- *    [ <NOR> relation() ]  |
- *    ( <XNOR> relation() )*
- *  )
- */
-  relation() ( LOOKAHEAD( 1 ) logical_operator() relation() )*
-}
-
-void factor() :
-{}
-{
-    <ABS> primary()
-  | <NOT> primary()
-  | primary() [ LOOKAHEAD( <EXP> primary() ) <EXP> primary() ]
-}
-
 void file_declaration() :
 {}
 {
@@ -1431,17 +1504,6 @@ void logical_name_list() :
   logical_name() ( <COMMA> logical_name() )*
 }
 
-void logical_operator() :
-{}
-{
-    <AND>
-  | <OR>
-  | <NAND>
-  | <NOR>
-  | <XOR>
-  | <XNOR>
-}
-
 void loop_statement() :
 {}
 {
@@ -1467,15 +1529,6 @@ void mode() :
   | <INOUT>
   | <BUFFER>
   | <LINKAGE>
-}
-
-void multiplying_operator() :
-{}
-{
-    <MUL>
-  | <DIV>
-  | <MOD>
-  | <REM>
 }
 
 void next_statement() :
@@ -1627,26 +1680,6 @@ void prefix() :
   | name()
 }
 
-void primary() :
-{}
-{
-    LOOKAHEAD( qualified_expression() )
-    qualified_expression()
-  | LOOKAHEAD( function_call() )
-    function_call()
-  | LOOKAHEAD( name() )
-    name()
-  | LOOKAHEAD( literal() )
-    literal()
-  | LOOKAHEAD( aggregate() )
-    aggregate()
-  | LOOKAHEAD( <LPAREN> expression() <RPAREN> )
-    <LPAREN> expression() <RPAREN>
-  | LOOKAHEAD( type_conversion() )
-    type_conversion()
-  | allocator()
-}
-
 void procedure_call() :
 {}
 {
@@ -1731,23 +1764,6 @@ void range_constraint() :
 {}
 {
   <RANGE> range()
-}
-
-void relation() :
-{}
-{
-  shift_expression() [ LOOKAHEAD( 1 ) relational_operator() shift_expression() ]
-}
-
-void relational_operator() :
-{}
-{
-    <EQ>
-  | <NEQ>
-  | <LO>
-  | <LE>
-  | <GT>
-  | <GE>
 }
 
 void report_statement() :
@@ -1851,30 +1867,6 @@ void sequential_statement() :
   )
 }
 
-void shift_expression() :
-{}
-{
-  simple_expression() [ LOOKAHEAD( 2 ) shift_operator() simple_expression()  ]
-}
-
-void shift_operator() :
-{}
-{
-    <SLL>
-  | <SRL>
-  | <SLA>
-  | <SRA>
-  | <ROL>
-  | <ROR>
-}
-
-void sign() :
-{}
-{
-    <ADD>
-  | <SUB>
-}
-
 void signal_assignment_statement() :
 {}
 {
@@ -1907,12 +1899,6 @@ void signature() :
 {
   [ type_name() ( LOOKAHEAD( <COMMA> type_name() ) <COMMA> type_name() )* ]
   [ <RETURN> type_name() ]
-}
-
-void simple_expression() :
-{}
-{
-  [ sign() ] term() ( LOOKAHEAD( 2 ) adding_operator() term() )*
 }
 
 void slice_name() :
@@ -1996,12 +1982,6 @@ void target() :
 {
     name()
   | aggregate()
-}
-
-void term() :
-{}
-{
-  factor() ( LOOKAHEAD( 2 ) multiplying_operator() factor() )*
 }
 
 void timeout_clause() :
