@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.EditableVI;
 import stupaq.labview.scripting.ScriptingTools;
+import stupaq.vhdl93.ast.design_file;
 
 public class LVProject {
   private final ScriptingTools tools;
@@ -15,6 +16,10 @@ public class LVProject {
   public LVProject(Path root) {
     this.root = root;
     tools = new ScriptingTools();
+  }
+
+  public void update(design_file n) {
+    n.accept(new DesignFileEmitter(this));
   }
 
   public EditableVI create(String name, boolean override) {

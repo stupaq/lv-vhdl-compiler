@@ -256,6 +256,22 @@ void name() :
   ( identifier() | operator_symbol() ) [ LOOKAHEAD( name_extension() ) name_extension()   ]
 }
 
+void name_extension() :
+{}
+{
+  (
+      LOOKAHEAD( signature() <TICK> )
+        signature() <TICK> attribute_designator()
+          [ LOOKAHEAD( <LPAREN> expression() <RPAREN> ) <LPAREN> expression() <RPAREN> ]
+    | <PERIOD> suffix()
+    | LOOKAHEAD( <LPAREN> discrete_range() <RPAREN> )
+        <LPAREN> discrete_range() <RPAREN>
+    | LOOKAHEAD( <LPAREN> expression() ( <COMMA> expression())* <RPAREN> )
+        <LPAREN> expression() ( <COMMA> expression() )* <RPAREN>
+  )
+  [  LOOKAHEAD( name_extension() ) name_extension() ]
+}
+
 void identifier() :
 {}
 {
@@ -267,6 +283,50 @@ void identifier_list() :
 {}
 {
   identifier() ( <COMMA> identifier() )*
+}
+
+void association_list() :
+{}
+{
+  association_element() ( <COMMA> association_element() )*
+}
+
+void association_element() :
+{}
+{
+  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ] actual_part()
+}
+
+void formal_part() :
+{}
+{
+    LOOKAHEAD( name() <LPAREN> formal_designator() <RPAREN> )
+      name() <LPAREN> formal_designator() <RPAREN>
+  | formal_designator()
+}
+
+void formal_designator() :
+{}
+{
+  name()
+}
+
+void actual_part() :
+{}
+{
+    LOOKAHEAD( name() <LPAREN> actual_designator() <RPAREN> )
+      name() <LPAREN> actual_designator() <RPAREN>
+  | actual_designator()
+}
+
+void actual_designator() :
+{}
+{
+    <OPEN>
+  | LOOKAHEAD( name() )
+      name()
+  | LOOKAHEAD( expression() )
+      expression()
 }
 /** /PRIMITIVES */
 
@@ -621,6 +681,18 @@ void component_instantiation_statement() :
     [ port_map_aspect() ]
   <SEMICOLON>
 }
+
+void generic_map_aspect() :
+{}
+{
+  <GENERIC> <MAP> <LPAREN> association_list() <RPAREN>
+}
+
+void port_map_aspect() :
+{}
+{
+  <PORT> <MAP> <LPAREN> association_list() <RPAREN>
+}
 /** /COMPONENT INSTANTIATION */
 
 void abstract_literal() :
@@ -630,34 +702,10 @@ void abstract_literal() :
   | <based_literal>
 }
 
-void actual_designator() :
-{}
-{
-    LOOKAHEAD( expression() )
-    expression()
-  | LOOKAHEAD( signal_name() )
-    signal_name()
-  | LOOKAHEAD( variable_name() )
-    variable_name()
-  | LOOKAHEAD( file_name() )
-    file_name()
-  | <OPEN>
-}
-
 void actual_parameter_part() :
 {}
 {
   parameter_association_list()
-}
-
-void actual_part() :
-{}
-{
-    LOOKAHEAD( function_name() <LPAREN> actual_designator() <RPAREN> )
-    function_name() <LPAREN> actual_designator() <RPAREN>
-  | LOOKAHEAD( type_name() <LPAREN> actual_designator() <RPAREN> )
-    type_name() <LPAREN> actual_designator() <RPAREN>
-  | actual_designator()
 }
 
 void adding_operator() :
@@ -709,18 +757,6 @@ void assertion_statement() :
 {}
 {
   [ label() <COLON> ] assertion() <SEMICOLON>
-}
-
-void association_element() :
-{}
-{
-  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ] actual_part()
-}
-
-void association_list() :
-{}
-{
-  association_element() ( <COMMA> association_element() )*
 }
 
 void attribute_declaration() :
@@ -1186,30 +1222,10 @@ void file_open_information() :
   [ <OPEN> file_open_kind_expression() ] <IS> file_logical_name()
 }
 
-void formal_designator() :
-{}
-{
-    LOOKAHEAD( generic_name() )
-    generic_name()
-  | LOOKAHEAD( port_name() )
-    port_name()
-  | parameter_name()
-}
-
 void formal_parameter_list() :
 {}
 {
   parameter_interface_list()
-}
-
-void formal_part() :
-{}
-{
-    LOOKAHEAD( function_name() <LPAREN> formal_designator() <RPAREN> )
-    function_name() <LPAREN> formal_designator() <RPAREN>
-  | LOOKAHEAD( type_name() <LPAREN> formal_designator() <RPAREN> )
-    type_name() <LPAREN> formal_designator() <RPAREN>
-  | formal_designator()
 }
 
 void function_call() :
@@ -1253,12 +1269,6 @@ void generic_interface_list() :
 {}
 {
   interface_constant_declaration() ( <SEMICOLON> interface_constant_declaration() )*
-}
-
-void generic_map_aspect() :
-{}
-{
-  <GENERIC> <MAP> <LPAREN> generic_association_list() <RPAREN>
 }
 
 void group_constituent() :
@@ -1468,18 +1478,6 @@ void multiplying_operator() :
   | <REM>
 }
 
-void name_extension() :
-{}
-{
-  (
-      LOOKAHEAD( signature() <TICK> ) signature() <TICK> attribute_designator() [ LOOKAHEAD( <LPAREN> expression() <RPAREN> ) <LPAREN> expression() <RPAREN> ]
-    | <PERIOD> suffix()
-    | LOOKAHEAD( <LPAREN> discrete_range() <RPAREN> ) <LPAREN> discrete_range() <RPAREN>
-    | LOOKAHEAD( <LPAREN> expression() ( <COMMA> expression() )* <RPAREN> ) <LPAREN> expression() ( <COMMA> expression() )* <RPAREN>
-  )
-  [  LOOKAHEAD( name_extension() ) name_extension() ]
-}
-
 void next_statement() :
 {}
 {
@@ -1619,12 +1617,6 @@ void port_interface_list() :
 {}
 {
   interface_signal_declaration() ( <SEMICOLON> interface_signal_declaration() )*
-}
-
-void port_map_aspect() :
-{}
-{
-  <PORT> <MAP> <LPAREN> port_association_list() <RPAREN>
 }
 
 void prefix() :
@@ -2288,18 +2280,6 @@ void guarded_signal_list() :
 }
 
 void parameter_association_list() :
-{}
-{
-  association_list()
-}
-
-void port_association_list() :
-{}
-{
-  association_list()
-}
-
-void generic_association_list() :
 {}
 {
   association_list()

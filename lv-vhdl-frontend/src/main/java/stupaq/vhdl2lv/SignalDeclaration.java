@@ -4,19 +4,19 @@ import com.google.common.base.Verify;
 
 import stupaq.vhdl93.ast.interface_signal_declaration;
 
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
-public class SignalDeclaration extends VHDLElement<interface_signal_declaration> {
+public class SignalDeclaration extends HDLElement<interface_signal_declaration> {
   public final TypeIndication type;
+  private final IOReference reference;
 
   public SignalDeclaration(interface_signal_declaration node) {
     super(node);
     Verify.verify(!node.identifier_list.nodeListOptional.present());
     type = new TypeIndication(node.subtype_indication);
+    reference = IOReference.from(node().identifier_list.identifier);
   }
 
-  public String identifier() {
-    return representation(node().identifier_list.identifier);
+  public IOReference reference() {
+    return reference;
   }
 
   public TypeIndication type() {
@@ -25,6 +25,6 @@ public class SignalDeclaration extends VHDLElement<interface_signal_declaration>
 
   @Override
   public String toString() {
-    return "SignalDeclaration{" + "identifier=" + identifier() + ", type=" + type + '}';
+    return "SignalDeclaration{" + "reference=" + reference + ", type=" + type + '}';
   }
 }

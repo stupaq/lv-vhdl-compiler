@@ -2,9 +2,8 @@ import java.io.FileInputStream;
 import java.nio.file.Paths;
 
 import stupaq.vhdl2lv.LVProject;
-import stupaq.vhdl2lv.LVTranslationVisitor;
 import stupaq.vhdl93.VHDL93Parser;
-import stupaq.vhdl93.ast.SimpleNode;
+import stupaq.vhdl93.ast.design_file;
 
 public class vhdl2lv {
   public static void main(String args[]) throws Exception {
@@ -12,10 +11,9 @@ public class vhdl2lv {
       FileInputStream file = new FileInputStream(args[0]);
       VHDL93Parser parser = new VHDL93Parser(file);
       try {
-        SimpleNode root = parser.design_file();
+        design_file root = parser.design_file();
         LVProject project = new LVProject(Paths.get(args[1]));
-        LVTranslationVisitor visitor = new LVTranslationVisitor(project);
-        root.accept(visitor);
+        project.update(root);
       } catch (Exception e) {
         e.printStackTrace();
         throw e;
