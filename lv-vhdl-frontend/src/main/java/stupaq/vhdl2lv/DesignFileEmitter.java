@@ -84,15 +84,16 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
-    UID entityUid = currentVi.inlineCNodeCreate(representation(entity.node()), "");
+    UID entityUid = currentVi.formulaNodeCreate(representation(entity.node()), "", false);
     for (ConstantDeclaration constant : entity.generics()) {
-      UID terminal = currentVi.inlineCNodeAddIO(entityUid, false, constant.reference().toString());
+      UID terminal = currentVi.formulaNodeAddIO(entityUid, false, constant.reference().toString(),
+          false);
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
-      UID terminal = currentVi.inlineCNodeAddIO(entityUid, port.direction() == PortDirection.OUT,
-          port.reference().toString());
+      UID terminal = currentVi.formulaNodeAddIO(entityUid, port.direction() == PortDirection.OUT,
+          port.reference().toString(), false);
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
       } else {
@@ -158,7 +159,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(component_instantiation_statement n) {
     final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
-    final UID instanceUid = currentVi.inlineCNodeCreate(entity.name(), label);
+    final UID instanceUid = currentVi.formulaNodeCreate(entity.name(), label, false);
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /** Context of {@link #visit(generic_map_aspect)}. */
       List<ConstantDeclaration> generics;
@@ -206,7 +207,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
           throw new AssertionError();
         }
         // Create port.
-        portTerminal = currentVi.inlineCNodeAddIO(instanceUid, portIsSink, label);
+        portTerminal = currentVi.formulaNodeAddIO(instanceUid, portIsSink, label, false);
         // Resolve port assignment (rhs).
         n.actual_part.accept(this);
         // If everything went OK, the port context should be zeroed.
@@ -229,8 +230,9 @@ public class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(expression n) {
-        UID expressionUid = currentVi.inlineCNodeCreate(representation(n), "");
-        UID expressionTerminal = currentVi.inlineCNodeAddIO(expressionUid, !portIsSink, "<result>");
+        UID expressionUid = currentVi.formulaNodeCreate(representation(n), "", false);
+        UID expressionTerminal = currentVi.formulaNodeAddIO(expressionUid, !portIsSink, "<result>",
+            false);
         if (portIsSink) {
           currentVi.connectWire(expressionTerminal, portTerminal, "");
         } else {
