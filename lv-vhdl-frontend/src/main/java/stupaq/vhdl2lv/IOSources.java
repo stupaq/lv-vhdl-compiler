@@ -6,24 +6,24 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
-import stupaq.labview.UID;
+import stupaq.labview.scripting.hierarchy.Terminal;
 
-public class IOSources extends ForwardingMap<IOReference, UID> {
-  private final Map<IOReference, UID> sources = Maps.newHashMap();
+public class IOSources extends ForwardingMap<IOReference, Terminal> {
+  private final Map<IOReference, Terminal> sources = Maps.newHashMap();
 
   @Override
-  protected Map<IOReference, UID> delegate() {
+  protected Map<IOReference, Terminal> delegate() {
     return sources;
   }
 
   @Override
-  public UID put(IOReference key, UID value) {
+  public Terminal put(IOReference key, Terminal value) {
     Verify.verify(!containsKey(key), "Multiple sources for signal: %s", key);
     return super.put(key, value);
   }
 
   @Override
-  public void putAll(Map<? extends IOReference, ? extends UID> map) {
+  public void putAll(Map<? extends IOReference, ? extends Terminal> map) {
     super.standardPutAll(map);
   }
 }

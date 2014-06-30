@@ -10,20 +10,20 @@ import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
 
-import stupaq.labview.UID;
+import stupaq.labview.scripting.hierarchy.Terminal;
 
-public class IOSinks extends ForwardingMultimap<IOReference, UID> {
-  private final Multimap<IOReference, UID> sinks =
-      Multimaps.newSetMultimap(Maps.<IOReference, Collection<UID>>newHashMap(),
-          new Supplier<Set<UID>>() {
+public class IOSinks extends ForwardingMultimap<IOReference, Terminal> {
+  private final Multimap<IOReference, Terminal> sinks =
+      Multimaps.newSetMultimap(Maps.<IOReference, Collection<Terminal>>newHashMap(),
+          new Supplier<Set<Terminal>>() {
             @Override
-            public Set<UID> get() {
+            public Set<Terminal> get() {
               return Sets.newHashSet();
             }
           });
 
   @Override
-  protected Multimap<IOReference, UID> delegate() {
+  protected Multimap<IOReference, Terminal> delegate() {
     return sinks;
   }
 }

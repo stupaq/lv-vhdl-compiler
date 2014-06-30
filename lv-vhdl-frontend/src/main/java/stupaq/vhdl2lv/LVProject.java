@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import stupaq.labview.VIPath;
-import stupaq.labview.scripting.EditableVI;
+import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.vhdl93.ast.design_file;
 
@@ -22,7 +22,7 @@ public class LVProject {
     n.accept(new DesignFileEmitter(this));
   }
 
-  public EditableVI create(String name, boolean override) {
+  public VI create(String name, boolean override) {
     VIPath path = new VIPath(root, name + ".vi");
     if (override) {
       try {
@@ -31,7 +31,7 @@ public class LVProject {
         throw new RuntimeException(e);
       }
     }
-    EditableVI vi = new EditableVI(tools, path);
+    VI vi = new VI(tools, path);
     vi.create();
     return vi;
   }

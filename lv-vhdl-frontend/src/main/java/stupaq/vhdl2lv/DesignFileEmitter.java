@@ -11,8 +11,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
-import stupaq.labview.UID;
-import stupaq.labview.scripting.EditableVI;
+import stupaq.labview.scripting.hierarchy.Formula;
+import stupaq.labview.scripting.hierarchy.FormulaNode;
+import stupaq.labview.scripting.hierarchy.InlineCNode;
+import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.scripting.hierarchy.VI;
+import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.vhdl2lv.PortDeclaration.PortDirection;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.association_element;
@@ -46,7 +50,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   /** Context of {@link #visit(design_file)}. */
   private final LVProject project;
   /** Context of {@link #visit(architecture_declaration)}. */
-  private EditableVI currentVi;
+  private VI currentVi;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
@@ -84,16 +88,16 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
-    UID entityUid = currentVi.formulaNodeCreate(representation(entity.node()), "", false);
+    Formula architecture = new InlineCNode(currentVi.generic(), representation(entity.node()),
+        representation(n.architecture_identifier.identifier));
     for (ConstantDeclaration constant : entity.generics()) {
-      UID terminal = currentVi.formulaNodeAddIO(entityUid, false, constant.reference().toString(),
-          false);
+      Terminal terminal = architecture.addOutput(constant.reference().toString());
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
-      UID terminal = currentVi.formulaNodeAddIO(entityUid, port.direction() == PortDirection.OUT,
-          port.reference().toString(), false);
+      Terminal terminal =
+          architecture.addIO(port.direction() == PortDirection.OUT, port.reference().toString());
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
       } else {
@@ -103,11 +107,11 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     n.architecture_statement_part.accept(this);
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug("Named sources:");
-      for (Entry<IOReference, UID> entry : namedSources.entrySet()) {
+      for (Entry<IOReference, Terminal> entry : namedSources.entrySet()) {
         LOGGER.debug("\t" + entry.toString());
       }
       LOGGER.debug("Dangling sinks:");
-      for (Entry<IOReference, UID> entry : danglingSinks.entries()) {
+      for (Entry<IOReference, Terminal> entry : danglingSinks.entries()) {
         LOGGER.debug("\t" + entry.toString());
       }
     }
@@ -133,20 +137,20 @@ public class DesignFileEmitter extends DepthFirstVisitor {
         String label = representation(n);
         IOReference ref = new IOReference(n.identifier_list.identifier);
         LOGGER.debug("Signal: " + ref + " connects:");
-        UID source = namedSources.remove(ref);
+        Terminal source = namedSources.remove(ref);
         if (source != null) {
-          for (UID sink : danglingSinks.removeAll(ref)) {
+          for (Terminal sink : danglingSinks.removeAll(ref)) {
             LOGGER.debug("\t" + source + " => " + sink);
-            currentVi.connectWire(source, sink, label);
+            new Wire(source, sink, label);
           }
         }
       }
     });
-    for (Entry<IOReference, UID> source : namedSources.entrySet()) {
+    for (Entry<IOReference, Terminal> source : namedSources.entrySet()) {
       LOGGER.debug("Signal: " + source.getKey() + " connects:");
-      for (UID sink : danglingSinks.removeAll(source.getKey())) {
+      for (Terminal sink : danglingSinks.removeAll(source.getKey())) {
         LOGGER.debug("\t" + source.getValue() + " => " + sink);
-        currentVi.connectWire(source.getValue(), sink, "");
+        new Wire(source.getValue(), sink, "");
       }
     }
     currentVi.cleanUpDiagram();
@@ -159,7 +163,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(component_instantiation_statement n) {
     final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
-    final UID instanceUid = currentVi.formulaNodeCreate(entity.name(), label, false);
+    final InlineCNode instance = new InlineCNode(currentVi.generic(), entity.name(), label);
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /** Context of {@link #visit(generic_map_aspect)}. */
       List<ConstantDeclaration> generics;
@@ -170,7 +174,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       /** Context of {@link #visit(association_element)}. */
       boolean portIsSink;
       /** Context of {@link #visit(association_element)}. */
-      UID portTerminal;
+      Terminal portTerminal;
 
       @Override
       public void visit(identifier n) {
@@ -207,7 +211,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
           throw new AssertionError();
         }
         // Create port.
-        portTerminal = currentVi.formulaNodeAddIO(instanceUid, portIsSink, label, false);
+        portTerminal = instance.addIO(portIsSink, label);
         // Resolve port assignment (rhs).
         n.actual_part.accept(this);
         // If everything went OK, the port context should be zeroed.
@@ -230,13 +234,12 @@ public class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(expression n) {
-        UID expressionUid = currentVi.formulaNodeCreate(representation(n), "", false);
-        UID expressionTerminal = currentVi.formulaNodeAddIO(expressionUid, !portIsSink, "<result>",
-            false);
+        FormulaNode expression = new FormulaNode(currentVi.generic(), representation(n), "");
+        Terminal terminal = expression.addIO(!portIsSink, "<result>");
         if (portIsSink) {
-          currentVi.connectWire(expressionTerminal, portTerminal, "");
+          new Wire(terminal, portTerminal, "");
         } else {
-          currentVi.connectWire(portTerminal, expressionTerminal, "");
+          new Wire(portTerminal, terminal, "");
         }
         portTerminal = null;
         // Note that we do not visit recursively in current setting, so we are sure,
