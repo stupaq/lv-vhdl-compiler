@@ -48,9 +48,9 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   /** Context of {@link #visit(architecture_declaration)}. */
   private EditableVI currentVi;
   /** Context of {@link #visit(architecture_declaration)}. */
-  private IOSources namedSources = new IOSources();
+  private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
-  private IOSinks danglingSinks = new IOSinks();
+  private IOSinks danglingSinks;
 
   public DesignFileEmitter(LVProject project) {
     this.project = project;
@@ -80,6 +80,9 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(architecture_declaration n) {
     EntityDeclaration entity = resolveEntity(representation(n.entity_name));
+    LOGGER.debug("Architecture of: " + entity.name());
+    namedSources = new IOSources();
+    danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
     UID entityUid = currentVi.inlineCNodeCreate(representation(entity.node()), "");
     for (ConstantDeclaration constant : entity.generics()) {
@@ -146,6 +149,9 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       }
     }
     currentVi.cleanUpDiagram();
+    namedSources = null;
+    danglingSinks = null;
+    currentVi = null;
   }
 
   @Override
