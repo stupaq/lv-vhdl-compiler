@@ -91,9 +91,10 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
+    int connPaneIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
       Terminal terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
-          constant.reference().toString()).terminal();
+          constant.reference().toString(), connPaneIndex++).terminal();
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
@@ -101,10 +102,10 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       Terminal terminal;
       if (port.direction() == PortDirection.OUT) {
         terminal = new Indicator(currentVi.generic(), ControlCreate.NUMERIC,
-            port.reference().toString()).terminal();
+            port.reference().toString(), connPaneIndex++).terminal();
       } else {
         terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
-            port.reference().toString()).terminal();
+            port.reference().toString(), connPaneIndex++).terminal();
       }
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
