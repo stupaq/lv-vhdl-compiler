@@ -288,13 +288,34 @@ void identifier_list() :
 void association_list() :
 {}
 {
-  association_element() ( <COMMA> association_element() )*
+    LOOKAHEAD( named_association_element() )
+      named_association_list()
+  | LOOKAHEAD( positional_association_element() )
+      positional_association_list()
 }
 
-void association_element() :
+void named_association_list() :
 {}
 {
-  [ LOOKAHEAD( formal_part() <FOLLOWS> ) formal_part() <FOLLOWS> ] actual_part()
+  named_association_element() ( <COMMA> named_association_element() )*
+}
+
+void positional_association_list() :
+{}
+{
+  positional_association_element() ( <COMMA> positional_association_element() )*
+}
+
+void named_association_element() :
+{}
+{
+  formal_part() <FOLLOWS> actual_part()
+}
+
+void positional_association_element() :
+{}
+{
+  actual_part()
 }
 
 void formal_part() :

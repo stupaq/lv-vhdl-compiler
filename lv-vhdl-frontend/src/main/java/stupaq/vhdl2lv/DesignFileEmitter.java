@@ -6,7 +6,6 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -20,24 +19,7 @@ import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.ControlCreate;
 import stupaq.vhdl2lv.PortDeclaration.PortDirection;
-import stupaq.vhdl93.ast.architecture_declaration;
-import stupaq.vhdl93.ast.association_element;
-import stupaq.vhdl93.ast.association_list;
-import stupaq.vhdl93.ast.block_statement;
-import stupaq.vhdl93.ast.component_instantiation_statement;
-import stupaq.vhdl93.ast.concurrent_assertion_statement;
-import stupaq.vhdl93.ast.concurrent_procedure_call_statement;
-import stupaq.vhdl93.ast.concurrent_signal_assignment_statement;
-import stupaq.vhdl93.ast.constant_declaration;
-import stupaq.vhdl93.ast.design_file;
-import stupaq.vhdl93.ast.entity_declaration;
-import stupaq.vhdl93.ast.expression;
-import stupaq.vhdl93.ast.generate_statement;
-import stupaq.vhdl93.ast.generic_map_aspect;
-import stupaq.vhdl93.ast.identifier;
-import stupaq.vhdl93.ast.port_map_aspect;
-import stupaq.vhdl93.ast.process_statement;
-import stupaq.vhdl93.ast.signal_declaration;
+import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 
@@ -69,6 +51,10 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     }
     Verify.verifyNotNull(entity, "Unknown entity: %s", entityName);
     return entity;
+  }
+
+  private class ExpressionEmitter extends DepthFirstVisitor {
+    // FIXME
   }
 
   @Override
@@ -175,17 +161,18 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     String label = representation(n.instantiation_label.label);
     final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), label);
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
-      /** Context of {@link #visit(generic_map_aspect)}. */
-      List<ConstantDeclaration> generics;
-      /** Context of {@link #visit(port_map_aspect)}. */
-      List<PortDeclaration> ports;
-      /** Context of {@link #visit(association_list)}. */
+      /**
+       * Context of {@link #visit(generic_map_aspect)} and {@link
+       * #visit(port_map_aspect)}.
+       */
+      boolean isGenericAspect;
+      /** Context of {@link #visit(positional_association_list)}. */
       int elementIndex;
-      /** Context of {@link #visit(association_list)}. */
-      int connPanelIndexBase;
-      /** Context of {@link #visit(association_element)}. */
+      /** Context of {@link #visit(actual_part)}. */
+      int listIndex;
+      /** Context of {@link #visit(actual_part)}. */
       boolean portIsSink;
-      /** Context of {@link #visit(association_element)}. */
+      /** Context of {@link #visit(actual_part)}. */
       Terminal portTerminal;
 
       @Override
@@ -200,49 +187,50 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       }
 
       @Override
-      public void visit(association_list n) {
+      public void visit(named_association_list n) {
+        elementIndex = Integer.MIN_VALUE;
+        super.visit(n);
+      }
+
+      @Override
+      public void visit(positional_association_list n) {
         elementIndex = 0;
         super.visit(n);
       }
 
       @Override
-      public void visit(association_element n) {
-        MissingFeature.throwIf(n.nodeOptional.present(),
-            "Resolving associations is not yet implemented."); // TODO
-        int listIndex = elementIndex;
-        int connPanelIndex = connPanelIndexBase + listIndex;
-        // Resolve port contract.
-        if (ports != null) {
-          PortDeclaration port = ports.get(listIndex);
-          portIsSink = port.direction() == PortDirection.IN;
-        } else if (generics != null) {
-          portIsSink = true;
-        } else {
-          throw new AssertionError();
-        }
-        // Create port.
-        portTerminal = instance.terminals().get(connPanelIndex);
-        // Resolve port assignment (rhs).
+      public void visit(named_association_element n) {
+        IOReference ref = new IOReference(representation(n.formal_part.identifier));
+        listIndex = entity.listIndex().get(ref);
         n.actual_part.accept(this);
-        // If everything went OK, the port context should be zeroed.
-        Verify.verify(portTerminal == null, "Unresolved assignment in entity instantiation");
-        elementIndex++;
+      }
+
+      @Override
+      public void visit(positional_association_element n) {
+        listIndex = elementIndex++;
+        n.actual_part.accept(this);
+      }
+
+      @Override
+      public void visit(actual_part n) {
+        // This follows from the fact that we first emit all generics.
+        int connPanelIndexBase = isGenericAspect ? 0 : entity.generics().size();
+        portTerminal = instance.terminals().get(connPanelIndexBase + listIndex);
+        portIsSink =
+            isGenericAspect || entity.ports().get(listIndex).direction() == PortDirection.IN;
+        super.visit(n);
       }
 
       @Override
       public void visit(generic_map_aspect n) {
-        generics = entity.generics();
-        connPanelIndexBase = 0;
+        isGenericAspect = true;
         super.visit(n);
-        generics = null;
       }
 
       @Override
       public void visit(port_map_aspect n) {
-        ports = entity.ports();
-        connPanelIndexBase = entity.generics().size();
+        isGenericAspect = false;
         super.visit(n);
-        ports = null;
       }
 
       @Override
@@ -290,4 +278,5 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(generate_statement n) {
     // TODO
   }
+
 }

@@ -4,7 +4,7 @@ import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.subtype_indication;
 
-public class TypedReferenceDeclaration<T extends SimpleNode> extends VHDLElement<T> {
+public abstract class TypedReferenceDeclaration<T extends SimpleNode> extends VHDLElement<T> {
   public final TypeIndication type;
   protected final IOReference reference;
 
