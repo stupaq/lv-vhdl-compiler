@@ -452,8 +452,8 @@ void primary() :
       qualified_expression()
   | LOOKAHEAD( function_call() )
       function_call()
-  | LOOKAHEAD( name() )
-      name()
+  | LOOKAHEAD( name_expression() )
+      name_expression()
   | LOOKAHEAD( literal() )
       literal()
   | LOOKAHEAD( aggregate() )
@@ -463,6 +463,12 @@ void primary() :
   | LOOKAHEAD( type_conversion() )
       type_conversion()
   | allocator()
+}
+
+void name_expression() :
+{}
+{
+  name()
 }
 // TODO more non-terminals need to be moved here...
 /** /EXPRESSION */

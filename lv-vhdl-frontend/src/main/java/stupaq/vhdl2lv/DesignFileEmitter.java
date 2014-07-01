@@ -16,7 +16,6 @@ import stupaq.concepts.IOReference;
 import stupaq.concepts.PortDeclaration;
 import stupaq.concepts.PortDeclaration.PortDirection;
 import stupaq.labview.scripting.hierarchy.Control;
-import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Indicator;
 import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
@@ -113,18 +112,13 @@ class DesignFileEmitter extends DepthFirstVisitor {
     }
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
       @Override
-      public void visit(expression n) {
-        // FIXME
-      }
-
-      @Override
       public void visit(constant_declaration n) {
         IOReference ref = new IOReference(n.identifier_list.identifier);
         Verify.verify(n.nodeOptional.present(), "Value is missing for constant: %s",
             ref.toString());
         Verify.verify(!namedSources.containsKey(ref),
             "Constant and data source have the same name: %s", ref.toString());
-        // FIXME
+        throw new MissingFeature("Constants are not implemented (yet).");
       }
 
       @Override
@@ -224,6 +218,23 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(actual_part_open n) {
         // This way we do nothing for <OPEN> which is very appropriate.
+        portTerminal = null;
+      }
+
+      @Override
+      public void visit(expression n) {
+        Terminal source, sink;
+        if (portIsSink) {
+          source = new ExpressionSourceEmitter(currentVi, danglingSinks).emit(n);
+          sink = portTerminal;
+        } else {
+          source = portTerminal;
+          sink = new ExpressionSinkEmitter(currentVi).emit(n);
+        }
+        new Wire(source, sink, "");
+        portTerminal = null;
+        // Note that we do not visit recursively in current setting, so we are sure,
+        // that this is the top-level expression context.
       }
 
       @Override
@@ -236,20 +247,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
       public void visit(port_map_aspect n) {
         isGenericAspect = false;
         super.visit(n);
-      }
-
-      @Override
-      public void visit(expression n) {
-        FormulaNode expression = new FormulaNode(currentVi, representation(n), "");
-        Terminal terminal = expression.addIO(!portIsSink, "<result>");
-        if (portIsSink) {
-          new Wire(terminal, portTerminal, "");
-        } else {
-          new Wire(portTerminal, terminal, "");
-        }
-        portTerminal = null;
-        // Note that we do not visit recursively in current setting, so we are sure,
-        // that this is the top-level expression context.
       }
     });
   }
