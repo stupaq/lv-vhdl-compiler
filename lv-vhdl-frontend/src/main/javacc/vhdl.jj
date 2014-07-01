@@ -243,7 +243,7 @@ TOKEN [IGNORE_CASE] :
 }
 /** /LEXICAL ELEMENTS */
 
-/** PRIMITIVES */
+/** IDENTIFIER, LABEL, NAME */
 void label() :
 {}
 {
@@ -272,6 +272,12 @@ void name_extension() :
   [  LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
+void name_list():
+{}
+{
+  name() ( <COMMA> name() )*
+}
+
 void identifier() :
 {}
 {
@@ -284,7 +290,9 @@ void identifier_list() :
 {
   identifier() ( <COMMA> identifier() )*
 }
+/** /IDENTIFIER, LABEL, NAME */
 
+/** ASSOCIATION */
 void association_list() :
 {}
 {
@@ -328,9 +336,7 @@ void actual_part() :
 {}
 {
     actual_part_open()
-  | LOOKAHEAD( identifier() <COMMA> )
-      identifier()
-  | LOOKAHEAD( identifier() <RPAREN> )
+  | LOOKAHEAD( identifier() ( <COMMA> | <RPAREN> ) )
       identifier()
   | LOOKAHEAD( expression() )
       expression()
@@ -341,9 +347,9 @@ void actual_part_open() :
 {
   <OPEN>
 }
-/** /PRIMITIVES */
+/** /ASSOCIATION */
 
-/** EXPRESSIONS */
+/** EXPRESSION */
 void expression() :
 {}
 {
@@ -459,9 +465,9 @@ void primary() :
   | allocator()
 }
 // TODO more non-terminals need to be moved here...
-/** /EXPRESSIONS */
+/** /EXPRESSION */
 
-/** TYPES */
+/** TYPE */
 void access_type_definition() :
 {}
 {
@@ -537,7 +543,13 @@ void physical_type_definition() :
   <UNITS>
     base_unit_declaration()
     ( secondary_unit_declaration() )*
-  <END> <UNITS> [ physical_type_simple_name() ]
+  <END> <UNITS> [ physical_type_identifier() ]
+}
+
+void physical_type_identifier() :
+{}
+{
+  identifier()
 }
 
 void record_type_definition() :
@@ -545,7 +557,13 @@ void record_type_definition() :
 {
   <RECORD>
     ( element_declaration() )+
-  <END> <RECORD> [ record_type_simple_name() ]
+  <END> <RECORD> [ record_type_identifier() ]
+}
+
+void record_type_identifier() :
+{}
+{
+  identifier()
 }
 
 void scalar_type_definition() :
@@ -566,6 +584,12 @@ void subtype_indication() :
 {}
 {
   [ LOOKAHEAD( resolution_function_name() type_name() ) resolution_function_name() ] type_name() [ constraint() ]
+}
+
+void resolution_function_name() :
+{}
+{
+  name()
 }
 
 void type_conversion() :
@@ -602,7 +626,7 @@ void unconstrained_array_definition() :
 {
   <ARRAY> <LPAREN> index_subtype_definition() ( <COMMA> index_subtype_definition() )* <RPAREN> <OF> element_subtype_indication()
 }
-/** /TYPES */
+/** /TYPE */
 
 /** DESIGN */
 void design_file() :
@@ -634,13 +658,25 @@ void context_item() :
 void library_clause() :
 {}
 {
-  <LIBRARY> logical_name_list() <SEMICOLON>
+  <LIBRARY> library_clause_item() ( <COMMA> library_clause_item() )* <SEMICOLON>
+}
+
+void library_clause_item() :
+{}
+{
+  identifier()
 }
 
 void use_clause() :
 {}
 {
-  <USE> selected_name() ( <COMMA> selected_name() )* <SEMICOLON>
+  <USE> use_clause_item() ( <COMMA> use_clause_item() )* <SEMICOLON>
+}
+
+void use_clause_item() :
+{}
+{
+  name()
 }
 
 void library_unit() :
@@ -811,6 +847,14 @@ void component_instantiation_statement() :
     [ generic_map_aspect() ]
     [ port_map_aspect() ]
   <SEMICOLON>
+}
+
+void instantiated_unit() :
+{}
+{
+    [ <COMPONENT> ] component_name()
+  | <ENTITY> entity_name() [ <LPAREN> architecture_identifier() <RPAREN> ]
+  | <CONFIGURATION> configuration_name()
 }
 
 void generic_map_aspect() :
@@ -1436,14 +1480,6 @@ void indexed_name() :
   prefix() <LPAREN> expression() ( <COMMA> expression() )* <RPAREN>
 }
 
-void instantiated_unit() :
-{}
-{
-    [ <COMPONENT> ] component_name()
-  | <ENTITY> entity_name() [ <LPAREN> architecture_identifier() <RPAREN> ]
-  | <CONFIGURATION> configuration_name()
-}
-
 void instantiation_list() :
 {}
 {
@@ -1517,18 +1553,6 @@ void literal() :
   | <string_literal>
   | <bit_string_literal>
   | <NULL>
-}
-
-void logical_name() :
-{}
-{
-  identifier()
-}
-
-void logical_name_list() :
-{}
-{
-  logical_name() ( <COMMA> logical_name() )*
 }
 
 void loop_statement() :
@@ -1810,24 +1834,6 @@ void secondary_unit_declaration() :
 {}
 {
   identifier() <EQ> physical_literal() <SEMICOLON>
-}
-
-void selected_name() :
-{}
-{
-  /**
-   * prefix() <PERIOD> suffix()
-   * results in left-recursion...
-   * the follwoing does the same ( i hope ... )
-   */
-
-  ( identifier() | operator_symbol() )
-  [ LOOKAHEAD( name_extension() )  name_extension() ]
-
-  /**
-   * semantic analysis has to ensure that last production
-   * was <PERIOD> suffix()
-   */
 }
 
 void selected_signal_assignment() :
@@ -2183,12 +2189,6 @@ void parameter_name() :
   name()
 }
 
-void physical_type_simple_name() :
-{}
-{
-  identifier()
-}
-
 void port_name() :
 {}
 {
@@ -2208,18 +2208,6 @@ void range_attribute_name() :
 }
 
 void signal_name() :
-{}
-{
-  name()
-}
-
-void record_type_simple_name() :
-{}
-{
-  identifier()
-}
-
-void resolution_function_name() :
 {}
 {
   name()
