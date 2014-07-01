@@ -11,12 +11,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
-import stupaq.labview.scripting.hierarchy.Formula;
+import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
+import stupaq.labview.scripting.hierarchy.Indicator;
 import stupaq.labview.scripting.hierarchy.InlineCNode;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
+import stupaq.labview.scripting.tools.ControlCreate;
 import stupaq.vhdl2lv.PortDeclaration.PortDirection;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.association_element;
@@ -84,20 +86,26 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(architecture_declaration n) {
     EntityDeclaration entity = resolveEntity(representation(n.entity_name));
-    LOGGER.debug("Architecture of: " + entity.name());
+    String architecture = representation(n.architecture_identifier.identifier);
+    LOGGER.debug("Architecture: " + architecture + " of: " + entity.name());
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
-    Formula architecture = new InlineCNode(currentVi.generic(), representation(entity.node()),
-        representation(n.architecture_identifier.identifier));
     for (ConstantDeclaration constant : entity.generics()) {
-      Terminal terminal = architecture.addOutput(constant.reference().toString());
+      Terminal terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
+          constant.reference().toString()).terminal();
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
-      Terminal terminal =
-          architecture.addIO(port.direction() == PortDirection.OUT, port.reference().toString());
+      Terminal terminal;
+      if (port.direction() == PortDirection.OUT) {
+        terminal = new Indicator(currentVi.generic(), ControlCreate.NUMERIC,
+            port.reference().toString()).terminal();
+      } else {
+        terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
+            port.reference().toString()).terminal();
+      }
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
       } else {
