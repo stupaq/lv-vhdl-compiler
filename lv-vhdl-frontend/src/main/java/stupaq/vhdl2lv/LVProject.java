@@ -5,8 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import stupaq.labview.VIPath;
-import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.ScriptingTools;
+import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.vhdl93.ast.design_file;
 
 public class LVProject {
@@ -23,7 +23,7 @@ public class LVProject {
   }
 
   public VI create(String name, boolean override) {
-    VIPath path = new VIPath(root, name + ".vi");
+    VIPath path = resolve(name);
     if (override) {
       try {
         Files.deleteIfExists(path.path());
@@ -34,5 +34,9 @@ public class LVProject {
     VI vi = new VI(tools, path);
     vi.create();
     return vi;
+  }
+
+  public VIPath resolve(String name) {
+    return new VIPath(root, name + ".vi");
   }
 }

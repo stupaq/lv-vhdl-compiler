@@ -4,7 +4,7 @@ import stupaq.vhdl93.ast.subtype_indication;
 
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
-public class TypeIndication extends HDLElement<subtype_indication> {
+public class TypeIndication extends VHDLElement<subtype_indication> {
   String identifier;
 
   public TypeIndication(subtype_indication node) {

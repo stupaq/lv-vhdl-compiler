@@ -14,7 +14,7 @@ import stupaq.MissingFeature;
 import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Indicator;
-import stupaq.labview.scripting.hierarchy.InlineCNode;
+import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
@@ -91,21 +91,22 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     currentVi = project.create(entity.name(), true);
-    int connPaneIndex = 0;
+    int connPanelIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
-      Terminal terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
-          constant.reference().toString(), connPaneIndex++).terminal();
+      Terminal terminal =
+          new Control(currentVi, ControlCreate.NUMERIC, constant.reference().toString(),
+              connPanelIndex++).terminal();
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
       Terminal terminal;
       if (port.direction() == PortDirection.OUT) {
-        terminal = new Indicator(currentVi.generic(), ControlCreate.NUMERIC,
-            port.reference().toString(), connPaneIndex++).terminal();
+        terminal = new Indicator(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
+            connPanelIndex++).terminal();
       } else {
-        terminal = new Control(currentVi.generic(), ControlCreate.NUMERIC,
-            port.reference().toString(), connPaneIndex++).terminal();
+        terminal = new Control(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
+            connPanelIndex++).terminal();
       }
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
@@ -172,14 +173,16 @@ public class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(component_instantiation_statement n) {
     final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
-    final InlineCNode instance = new InlineCNode(currentVi.generic(), entity.name(), label);
+    final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), label);
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /** Context of {@link #visit(generic_map_aspect)}. */
       List<ConstantDeclaration> generics;
       /** Context of {@link #visit(port_map_aspect)}. */
       List<PortDeclaration> ports;
       /** Context of {@link #visit(association_list)}. */
-      int index;
+      int elementIndex;
+      /** Context of {@link #visit(association_list)}. */
+      int connPanelIndexBase;
       /** Context of {@link #visit(association_element)}. */
       boolean portIsSink;
       /** Context of {@link #visit(association_element)}. */
@@ -198,38 +201,38 @@ public class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(association_list n) {
-        index = 0;
+        elementIndex = 0;
         super.visit(n);
       }
 
       @Override
       public void visit(association_element n) {
         MissingFeature.throwIf(n.nodeOptional.present(),
-            "Resolving associations is not yet implemented.");
+            "Resolving associations is not yet implemented."); // TODO
+        int listIndex = elementIndex;
+        int connPanelIndex = connPanelIndexBase + listIndex;
         // Resolve port contract.
-        String label;
         if (ports != null) {
-          PortDeclaration port = ports.get(index++);
+          PortDeclaration port = ports.get(listIndex);
           portIsSink = port.direction() == PortDirection.IN;
-          label = port.reference().toString();
         } else if (generics != null) {
-          ConstantDeclaration constant = generics.get(index++);
           portIsSink = true;
-          label = constant.reference().toString();
         } else {
           throw new AssertionError();
         }
         // Create port.
-        portTerminal = instance.addIO(portIsSink, label);
+        portTerminal = instance.terminals().get(connPanelIndex);
         // Resolve port assignment (rhs).
         n.actual_part.accept(this);
         // If everything went OK, the port context should be zeroed.
         Verify.verify(portTerminal == null, "Unresolved assignment in entity instantiation");
+        elementIndex++;
       }
 
       @Override
       public void visit(generic_map_aspect n) {
         generics = entity.generics();
+        connPanelIndexBase = 0;
         super.visit(n);
         generics = null;
       }
@@ -237,13 +240,14 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(port_map_aspect n) {
         ports = entity.ports();
+        connPanelIndexBase = entity.generics().size();
         super.visit(n);
         ports = null;
       }
 
       @Override
       public void visit(expression n) {
-        FormulaNode expression = new FormulaNode(currentVi.generic(), representation(n), "");
+        FormulaNode expression = new FormulaNode(currentVi, representation(n), "");
         Terminal terminal = expression.addIO(!portIsSink, "<result>");
         if (portIsSink) {
           new Wire(terminal, portTerminal, "");
