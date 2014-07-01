@@ -222,6 +222,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
       }
 
       @Override
+      public void visit(actual_part_open n) {
+        // This way we do nothing for <OPEN> which is very appropriate.
+      }
+
+      @Override
       public void visit(generic_map_aspect n) {
         isGenericAspect = true;
         super.visit(n);

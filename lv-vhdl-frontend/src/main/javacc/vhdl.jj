@@ -327,13 +327,19 @@ void formal_part() :
 void actual_part() :
 {}
 {
-    <OPEN>
+    actual_part_open()
   | LOOKAHEAD( identifier() <COMMA> )
       identifier()
   | LOOKAHEAD( identifier() <RPAREN> )
       identifier()
   | LOOKAHEAD( expression() )
       expression()
+}
+
+void actual_part_open() :
+{}
+{
+  <OPEN>
 }
 /** /PRIMITIVES */
 
