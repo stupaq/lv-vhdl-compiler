@@ -1,10 +1,10 @@
-package stupaq.vhdl2lv;
+package stupaq.concepts;
 
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.subtype_indication;
 
-public abstract class TypedReferenceDeclaration<T extends SimpleNode> extends VHDLElement<T> {
+abstract class TypedReferenceDeclaration<T extends SimpleNode> extends VHDLElement<T> {
   public final TypeIndication type;
   protected final IOReference reference;
 

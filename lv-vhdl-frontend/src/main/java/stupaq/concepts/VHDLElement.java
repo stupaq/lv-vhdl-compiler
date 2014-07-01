@@ -1,8 +1,8 @@
-package stupaq.vhdl2lv;
+package stupaq.concepts;
 
 import stupaq.vhdl93.ast.SimpleNode;
 
-public abstract class VHDLElement<T extends SimpleNode> {
+abstract class VHDLElement<T extends SimpleNode> {
   private T node;
 
   protected VHDLElement(T node) {

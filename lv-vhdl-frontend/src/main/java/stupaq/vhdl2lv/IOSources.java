@@ -6,9 +6,10 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
+import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
 
-public class IOSources extends ForwardingMap<IOReference, Terminal> {
+class IOSources extends ForwardingMap<IOReference, Terminal> {
   private final Map<IOReference, Terminal> sources = Maps.newHashMap();
 
   @Override

@@ -10,9 +10,10 @@ import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
 
+import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
 
-public class IOSinks extends ForwardingMultimap<IOReference, Terminal> {
+class IOSinks extends ForwardingMultimap<IOReference, Terminal> {
   private final Multimap<IOReference, Terminal> sinks =
       Multimaps.newSetMultimap(Maps.<IOReference, Collection<Terminal>>newHashMap(),
           new Supplier<Set<Terminal>>() {

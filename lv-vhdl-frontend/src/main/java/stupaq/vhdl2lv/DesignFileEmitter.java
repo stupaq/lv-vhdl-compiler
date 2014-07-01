@@ -10,6 +10,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
+import stupaq.concepts.ConstantDeclaration;
+import stupaq.concepts.EntityDeclaration;
+import stupaq.concepts.IOReference;
+import stupaq.concepts.PortDeclaration;
+import stupaq.concepts.PortDeclaration.PortDirection;
 import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Indicator;
@@ -18,7 +23,6 @@ import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.ControlCreate;
-import stupaq.vhdl2lv.PortDeclaration.PortDirection;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
@@ -27,7 +31,7 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.name;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
-public class DesignFileEmitter extends DepthFirstVisitor {
+class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   /** Context of {@link #visit(design_file)}. */
   private final Map<String, EntityDeclaration> knownEntities = Maps.newHashMap();
@@ -51,10 +55,6 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     }
     Verify.verifyNotNull(entity, "Unknown entity: %s", entityName);
     return entity;
-  }
-
-  private class ExpressionEmitter extends DepthFirstVisitor {
-    // FIXME
   }
 
   @Override

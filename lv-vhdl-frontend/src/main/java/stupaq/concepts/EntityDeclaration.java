@@ -1,4 +1,4 @@
-package stupaq.vhdl2lv;
+package stupaq.concepts;
 
 import com.google.common.base.Verify;
 import com.google.common.collect.Lists;

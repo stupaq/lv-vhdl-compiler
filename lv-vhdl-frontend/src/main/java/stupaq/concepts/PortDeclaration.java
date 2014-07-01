@@ -1,4 +1,4 @@
-package stupaq.vhdl2lv;
+package stupaq.concepts;
 
 import stupaq.MissingFeature;
 import stupaq.vhdl93.VHDL93ParserConstants;
