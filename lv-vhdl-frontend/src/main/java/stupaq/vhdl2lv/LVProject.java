@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import stupaq.concepts.EntityName;
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.labview.scripting.hierarchy.VI;
@@ -22,7 +23,7 @@ public class LVProject {
     n.accept(new DesignFileEmitter(this));
   }
 
-  public VI create(String name, boolean override) {
+  public VI create(EntityName name, boolean override) {
     VIPath path = resolve(name);
     if (override) {
       try {
@@ -36,7 +37,7 @@ public class LVProject {
     return vi;
   }
 
-  public VIPath resolve(String name) {
+  public VIPath resolve(EntityName name) {
     return new VIPath(root, name + ".vi");
   }
 }

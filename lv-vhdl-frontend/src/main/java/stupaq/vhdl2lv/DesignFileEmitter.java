@@ -15,7 +15,9 @@ import java.util.Set;
 import stupaq.MissingFeature;
 import stupaq.concepts.ConstantDeclaration;
 import stupaq.concepts.EntityDeclaration;
+import stupaq.concepts.EntityName;
 import stupaq.concepts.IOReference;
+import stupaq.concepts.Identifier;
 import stupaq.concepts.PortDeclaration;
 import stupaq.concepts.PortDeclaration.PortDirection;
 import stupaq.labview.scripting.hierarchy.Control;
@@ -34,13 +36,12 @@ import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
-import static stupaq.vhdl93.ast.ASTGetters.name;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   /** Context of {@link #visit(design_file)}. */
-  private final Map<String, EntityDeclaration> knownEntities = Maps.newHashMap();
+  private final Map<EntityName, EntityDeclaration> knownEntities = Maps.newHashMap();
   /** Context of {@link #visit(design_file)}. */
   private final LVProject project;
   /** Context of {@link #visit(architecture_declaration)}. */
@@ -58,11 +59,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
     this.project = project;
   }
 
-  private EntityDeclaration resolveEntity(String entityName) {
+  private EntityDeclaration resolveEntity(EntityName entityName) {
     EntityDeclaration entity = knownEntities.get(entityName);
-    if (entity == null) {
-      entity = knownEntities.get(EntityDeclaration.DEFAULT_LIBRARY_PREFIX + entityName);
-    }
     Verify.verifyNotNull(entity, "Unknown entity: %s", entityName);
     return entity;
   }
@@ -81,9 +79,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(architecture_declaration n) {
-    EntityDeclaration entity = resolveEntity(representation(n.entity_name));
-    String archName = representation(n.architecture_identifier.identifier);
-    LOGGER.debug("Architecture: {} of: {}", archName, entity.name());
+    EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
+    Identifier architecture = new Identifier(n.architecture_identifier.identifier);
+    LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
     currentVi = project.create(entity.name(), true);
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
@@ -153,7 +151,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(component_instantiation_statement n) {
-    final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
+    final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
     final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), label);

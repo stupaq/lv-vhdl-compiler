@@ -12,20 +12,15 @@ import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
 public class EntityDeclaration extends VHDLElement<entity_declaration> {
-  public static final String DEFAULT_LIBRARY_PREFIX = "work.";
-  public static final String LIBRARY_SEPARATOR = ".";
-  private final String name;
+  private final EntityName name;
   private final List<ConstantDeclaration> generics = Lists.newArrayList();
   private final List<PortDeclaration> ports = Lists.newArrayList();
   private final Map<IOReference, Integer> listIndex = Maps.newHashMap();
 
   public EntityDeclaration(entity_declaration node) {
     super(node);
-    String id = representation(node().entity_identifier.identifier);
-    name = id.contains(LIBRARY_SEPARATOR) ? id : DEFAULT_LIBRARY_PREFIX + id;
+    name = new EntityName(node);
     node.entity_header.accept(new DepthFirstVisitor() {
       @Override
       public void visit(interface_constant_declaration n) {
@@ -48,7 +43,7 @@ public class EntityDeclaration extends VHDLElement<entity_declaration> {
     });
   }
 
-  public String name() {
+  public EntityName name() {
     return name;
   }
 
