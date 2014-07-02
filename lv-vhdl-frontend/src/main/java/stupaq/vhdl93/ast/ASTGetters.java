@@ -28,7 +28,7 @@ public final class ASTGetters {
         return (name = representation(n));
       }
     });
-    return name == null ? null : name.trim();
+    return name == null ? null : name.toLowerCase().trim();
   }
 
   public static String representation(SimpleNode n) {
@@ -45,10 +45,10 @@ public final class ASTGetters {
     String rep = n.nodeChoice.accept(new GJNoArguDepthFirst<String>() {
       @Override
       public String visit(NodeToken n) {
-        return n.tokenImage.toLowerCase();
+        return n.tokenImage;
       }
     });
-    return rep == null ? null : rep.trim();
+    return rep == null ? null : rep.toLowerCase().trim();
   }
 
   public static String representation(label n) {

@@ -17,20 +17,23 @@ public class IOReference {
     this(representation(n));
   }
 
-  @Override
-  public boolean equals(Object o) {
-    return this == o ||
-        !(o == null || getClass() != o.getClass()) && name.equals(((IOReference) o).name);
-
-  }
-
-  @Override
-  public String toString() {
+  public String name() {
     return name;
   }
 
   @Override
   public int hashCode() {
     return name.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return this == o ||
+        !(o == null || getClass() != o.getClass()) && name.equals(((IOReference) o).name);
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

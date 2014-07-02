@@ -49,6 +49,56 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
+  public final void visit(formal_part n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(actual_part n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(logical_operator n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(relational_operator n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(shift_operator n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(sign n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(adding_operator n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(multiplying_operator n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(factor n) {
+    super.visit(n);
+  }
+
+  @Override
+  public final void visit(primary n) {
+    super.visit(n);
+  }
+
+  @Override
   public final void visit(array_type_definition n) {
     super.visit(n);
   }
@@ -109,22 +159,17 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
+  public final void visit(instantiated_unit n) {
+    super.visit(n);
+  }
+
+  @Override
   public final void visit(abstract_literal n) {
     super.visit(n);
   }
 
   @Override
   public final void visit(actual_parameter_part n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(actual_part n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(adding_operator n) {
     super.visit(n);
   }
 
@@ -209,16 +254,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(factor n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(formal_part n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(generation_scheme n) {
     super.visit(n);
   }
@@ -230,11 +265,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
 
   @Override
   public final void visit(index_specification n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(instantiated_unit n) {
     super.visit(n);
   }
 
@@ -259,22 +289,12 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(logical_operator n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(miscellaneous_operator n) {
     super.visit(n);
   }
 
   @Override
   public final void visit(mode n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(multiplying_operator n) {
     super.visit(n);
   }
 
@@ -299,32 +319,12 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(primary n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(process_declarative_item n) {
     super.visit(n);
   }
 
   @Override
   public final void visit(range n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(relational_operator n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(shift_operator n) {
-    super.visit(n);
-  }
-
-  @Override
-  public final void visit(sign n) {
     super.visit(n);
   }
 
