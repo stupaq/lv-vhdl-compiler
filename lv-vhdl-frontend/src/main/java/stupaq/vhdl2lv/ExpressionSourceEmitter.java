@@ -35,7 +35,7 @@ class ExpressionSourceEmitter extends ExpressionEmitter {
   protected Terminal emit(SimpleNode n) {
     Formula formula = new FormulaNode(owner, representation(n), "");
     emitTerminals(formula, Sets.<IOReference>newHashSet(), n);
-    return formula.addOutput("<rvalue>");
+    return formula.addOutput("RVALUE");
   }
 
   public void emitTerminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
@@ -74,7 +74,6 @@ class ExpressionSourceEmitter extends ExpressionEmitter {
           public void visit(suffix n) {
             // We are not interested in identifiers from some internal scope.
           }
-
         });
       }
     });

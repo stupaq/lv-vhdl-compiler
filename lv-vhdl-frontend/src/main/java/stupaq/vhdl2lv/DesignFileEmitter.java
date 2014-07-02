@@ -142,6 +142,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(component_instantiation_statement n) {
     final EntityDeclaration entity = resolveEntity(name(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
+    LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
     final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), label);
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /**
@@ -160,6 +161,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(identifier n) {
+        LOGGER.debug("\tidentifier={}", representation(n));
         IOReference ref = new IOReference(representation(n));
         if (portIsSink) {
           danglingSinks.put(ref, portTerminal);
@@ -183,6 +185,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(named_association_element n) {
+        LOGGER.debug("Port assignment: {}", representation(n));
         IOReference ref = new IOReference(representation(n.formal_part.identifier));
         listIndex = entity.listIndex().get(ref);
         n.actual_part.accept(this);
@@ -190,6 +193,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(positional_association_element n) {
+        LOGGER.debug("Port assignment: {}", representation(n));
         listIndex = elementIndex++;
         n.actual_part.accept(this);
       }
@@ -201,7 +205,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
         portTerminal = instance.terminals().get(connPanelIndexBase + listIndex);
         portIsSink =
             isGenericAspect || entity.ports().get(listIndex).direction() == PortDirection.IN;
-        super.visit(n);
+        LOGGER.debug("\tlistIndex={}, portIsSink={}, portTerminal", listIndex, portIsSink);
+        n.nodeChoice.accept(this);
       }
 
       @Override
@@ -212,6 +217,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(expression n) {
+        LOGGER.debug("\texpression={}", representation(n));
         Terminal source, sink;
         if (portIsSink) {
           source = new ExpressionSourceEmitter(currentVi, danglingSinks).emit(n);
@@ -269,5 +275,4 @@ class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(generate_statement n) {
     // TODO
   }
-
 }

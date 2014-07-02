@@ -29,7 +29,7 @@ public class WiringRules {
     this.labelling = labelling;
   }
 
-  public void applyInternal(IOReference ref, Optional<String> label) {
+  private void applyInternal(IOReference ref, Optional<String> label) {
     Collection<Terminal> sources = this.sources.get(ref);
     Collection<Terminal> sinks = this.sinks.get(ref);
     if (sources.size() > 0) {
