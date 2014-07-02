@@ -35,9 +35,7 @@ public class EntityDeclaration extends VHDLElement<entity_declaration> {
       private <T extends TypedReferenceDeclaration> void addDeclaration(List<T> list,
           T declaration) {
         Integer previous = listIndex.put(declaration.reference(), list.size());
-        Verify.verify(previous == null,
-            "Declaration of: " + declaration.reference() + " present in the interface of: " +
-                EntityDeclaration.this.name());
+        Verify.verify(previous == null);
         list.add(declaration);
       }
     });

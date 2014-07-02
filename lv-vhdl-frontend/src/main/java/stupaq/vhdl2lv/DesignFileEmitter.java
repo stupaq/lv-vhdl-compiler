@@ -35,6 +35,7 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
+import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
@@ -129,8 +130,24 @@ class DesignFileEmitter extends DepthFirstVisitor {
       public void visit(constant_declaration n) {
         IOReference ref = new IOReference(n.identifier_list.identifier);
         Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
-        throw new MissingFeature("Constants are not implemented (yet).");
-        // TODO create constant after all other connections/terminals
+        // There will be no more dangling sinks than we see right now, we can connect this
+        // constant to every pending sink and forget about it.
+        Terminal terminal = n.nodeOptional.accept(new GJNoArguDepthFirst<Terminal>() {
+          @Override
+          public Terminal visit(NodeSequence n) {
+            return n.nodes.get(1).accept(this);
+          }
+
+          @Override
+          public Terminal visit(expression n) {
+            return sourceEmitter.formula(n);
+          }
+        });
+        Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
+        namedSources.put(ref, terminal);
+        String label = representation(
+            sequence(n.nodeToken, n.identifier_list, n.nodeToken1, n.subtype_indication));
+        wiringRules.applyTo(ref, of(label));
       }
 
       @Override
@@ -138,7 +155,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported");
         IOReference ref = new IOReference(n.identifier_list.identifier);
         String label = representation(n);
-        wiringRules.applyTo(ref, Optional.of(label));
+        wiringRules.applyTo(ref, of(label));
       }
     });
     wiringRules.applyAll();
