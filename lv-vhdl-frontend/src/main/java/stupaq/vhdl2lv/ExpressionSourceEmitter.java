@@ -41,36 +41,36 @@ class ExpressionSourceEmitter extends ExpressionEmitter {
   public void terminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
     n.accept(new DepthFirstVisitor() {
       @Override
-          public void visit(identifier n) {
-            final IOReference ref = new IOReference(representation(n));
-            LOGGER.debug("Possible terminal: {}", ref);
-            if (!blacklist.contains(ref)) {
-              blacklist.add(ref);
-              Terminal<FormulaParameter> terminal =
-                  new LazyTerminal<>(new Supplier<Terminal<FormulaParameter>>() {
-                    @Override
-                    public Terminal<FormulaParameter> get() {
-                      return formula.addInput(ref.name());
-                    }
-                  });
-              danglingSinks.put(ref, terminal);
-            }
-          }
+      public void visit(identifier n) {
+        final IOReference ref = new IOReference(n);
+        LOGGER.debug("Possible terminal: {}", ref);
+        if (!blacklist.contains(ref)) {
+          blacklist.add(ref);
+          Terminal<FormulaParameter> terminal =
+              new LazyTerminal<>(new Supplier<Terminal<FormulaParameter>>() {
+                @Override
+                public Terminal<FormulaParameter> get() {
+                  return formula.addInput(ref.toString());
+                }
+              });
+          danglingSinks.put(ref, terminal);
+        }
+      }
 
-          @Override
-          public void visit(attribute_designator n) {
-            // We are not interested in identifiers from some internal scope.
-          }
+      @Override
+      public void visit(attribute_designator n) {
+        // We are not interested in identifiers from some internal scope.
+      }
 
-          @Override
-          public void visit(signature n) {
-            // We are not interested in identifiers from some internal scope.
-          }
+      @Override
+      public void visit(signature n) {
+        // We are not interested in identifiers from some internal scope.
+      }
 
-          @Override
-          public void visit(suffix n) {
-            // We are not interested in identifiers from some internal scope.
-          }
-        });
+      @Override
+      public void visit(suffix n) {
+        // We are not interested in identifiers from some internal scope.
+      }
+    });
   }
 }

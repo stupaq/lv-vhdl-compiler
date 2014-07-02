@@ -25,14 +25,11 @@ import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class ExpressionSinkEmitter extends ExpressionEmitter {
   /** Context of {@link ExpressionSinkEmitter}. */
-  private final IOSinks danglingSinks;
-  /** Context of {@link ExpressionSinkEmitter}. */
   private final IOSources namedSources;
   private final ExpressionSourceEmitter sourceEmitter;
 
   public ExpressionSinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     super(owner);
-    this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
     this.sourceEmitter = new ExpressionSourceEmitter(owner, danglingSinks);
   }
@@ -53,11 +50,11 @@ class ExpressionSinkEmitter extends ExpressionEmitter {
     final DepthFirstVisitor visitor = new DepthFirstVisitor() {
       @Override
       public void visit(identifier n) {
-        IOReference ref = new IOReference(representation(n));
+        IOReference ref = new IOReference(n);
         LOGGER.debug("Reference: {} as l-value", ref);
         if (!blacklist.contains(ref)) {
           blacklist.add(ref);
-          Terminal terminal = formula.addOutput(ref.name());
+          Terminal terminal = formula.addOutput(ref.toString());
           namedSources.put(ref, terminal);
         }
       }

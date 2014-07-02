@@ -89,20 +89,20 @@ class DesignFileEmitter extends DepthFirstVisitor {
     sourceEmitter = sinkEmitter.sourceEmitter();
     int connPanelIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
-      Terminal terminal = new Control(currentVi, ControlCreate.NUMERIC, constant.reference().name(),
-          connPanelIndex++).terminal();
+      Terminal terminal =
+          new Control(currentVi, ControlCreate.NUMERIC, constant.reference().toString(),
+              connPanelIndex++).terminal();
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
       Terminal terminal;
       if (port.direction() == PortDirection.OUT) {
-        terminal = new Indicator(currentVi, ControlCreate.NUMERIC, port.reference().name(),
+        terminal = new Indicator(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
             connPanelIndex++).terminal();
       } else {
-        terminal =
-            new Control(currentVi, ControlCreate.NUMERIC, port.reference().name(), connPanelIndex++)
-                .terminal();
+        terminal = new Control(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
+            connPanelIndex++).terminal();
       }
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
@@ -127,7 +127,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(constant_declaration n) {
         IOReference ref = new IOReference(n.identifier_list.identifier);
-        Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref.name());
+        Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
         throw new MissingFeature("Constants are not implemented (yet).");
         // TODO create constant after all other connections/terminals
       }
@@ -172,8 +172,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(identifier n) {
-        LOGGER.debug("\tidentifier={}", representation(n));
-        IOReference ref = new IOReference(representation(n));
+        IOReference ref = new IOReference(n);
+        LOGGER.debug("\tidentifier={}", ref);
         if (portIsSink) {
           danglingSinks.put(ref, portTerminal);
         } else {
@@ -197,7 +197,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(named_association_element n) {
         LOGGER.debug("Port assignment: {}", representation(n));
-        IOReference ref = new IOReference(representation(n.formal_part.identifier));
+        IOReference ref = new IOReference(n.formal_part.identifier);
         listIndex = entity.listIndex().get(ref);
         n.actual_part.accept(this);
       }
