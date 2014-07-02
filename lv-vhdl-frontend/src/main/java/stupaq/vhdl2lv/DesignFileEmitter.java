@@ -3,12 +3,14 @@ package stupaq.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import stupaq.MissingFeature;
 import stupaq.concepts.ConstantDeclaration;
@@ -17,6 +19,8 @@ import stupaq.concepts.IOReference;
 import stupaq.concepts.PortDeclaration;
 import stupaq.concepts.PortDeclaration.PortDirection;
 import stupaq.labview.scripting.hierarchy.Control;
+import stupaq.labview.scripting.hierarchy.Formula;
+import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Indicator;
 import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
@@ -27,6 +31,7 @@ import stupaq.vhdl2lv.WiringRules.LabellingAbsent;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
+import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.name;
@@ -44,6 +49,10 @@ class DesignFileEmitter extends DepthFirstVisitor {
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSinks danglingSinks;
+  /** Context of {@link #visit(architecture_declaration)}. */
+  private ExpressionSinkEmitter sinkEmitter;
+  /** Context of {@link #visit(architecture_declaration)}. */
+  private ExpressionSourceEmitter sourceEmitter;
 
   public DesignFileEmitter(LVProject project) {
     this.project = project;
@@ -75,9 +84,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
     EntityDeclaration entity = resolveEntity(representation(n.entity_name));
     String archName = representation(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", archName, entity.name());
+    currentVi = project.create(entity.name(), true);
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
-    currentVi = project.create(entity.name(), true);
+    sinkEmitter = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources);
+    sourceEmitter = sinkEmitter.sourceEmitter();
     int connPanelIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
       Terminal terminal = new Control(currentVi, ControlCreate.NUMERIC, constant.reference().name(),
@@ -133,9 +144,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
     });
     wiringRules.applyAll();
     currentVi.cleanUpDiagram();
+    currentVi = null;
     namedSources = null;
     danglingSinks = null;
-    currentVi = null;
+    sinkEmitter = null;
+    sourceEmitter = null;
   }
 
   @Override
@@ -220,11 +233,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\texpression={}", representation(n));
         Terminal source, sink;
         if (portIsSink) {
-          source = new ExpressionSourceEmitter(currentVi, danglingSinks).emit(n);
+          source = new ExpressionSourceEmitter(currentVi, danglingSinks).formula(n);
           sink = portTerminal;
         } else {
           source = portTerminal;
-          sink = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources).emit(n);
+          sink = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources).formula(n);
         }
         new Wire(source, sink);
         portTerminal = null;
@@ -268,7 +281,44 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(concurrent_signal_assignment_statement n) {
-    // TODO
+    String label = n.accept(new GJNoArguDepthFirst<String>() {
+      @Override
+      public String visit(NodeSequence n) {
+        return n.nodes.get(0).accept(this);
+      }
+
+      @Override
+      public String visit(label n) {
+        return representation(n.identifier);
+      }
+    });
+    final Formula formula =
+        new FormulaNode(currentVi, representation(n), Optional.fromNullable(label));
+    final Set<IOReference> blacklist = Sets.newHashSet();
+    n.accept(new DepthFirstVisitor() {
+      @Override
+      public void visit(selected_signal_assignment n) {
+        n.target.accept(this);
+        sourceEmitter.terminals(formula, blacklist, n.expression);
+        sourceEmitter.terminals(formula, blacklist, n.selected_waveforms);
+      }
+
+      @Override
+      public void visit(conditional_signal_assignment n) {
+        n.target.accept(this);
+        sourceEmitter.terminals(formula, blacklist, n.conditional_waveforms);
+      }
+
+      @Override
+      public void visit(target n) {
+        n.accept(new DepthFirstVisitor() {
+          @Override
+          public void visit(name n) {
+            sinkEmitter.terminals(formula, blacklist, n);
+          }
+        });
+      }
+    });
   }
 
   @Override

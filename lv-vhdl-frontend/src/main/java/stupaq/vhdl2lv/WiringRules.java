@@ -35,9 +35,9 @@ public class WiringRules {
     if (sources.size() > 0) {
       if (sources.size() == 1) {
         Terminal source = sources.iterator().next();
-        LOGGER.debug("Single-source: {}, connects:", ref);
+        LOGGER.debug("Single-source: {} connects: {}", ref, source);
         for (Terminal sink : sinks) {
-          LOGGER.debug("\t{} => {}", source, sink);
+          LOGGER.debug("\t=> {}", sink);
           new Wire(source, sink, label);
         }
       } else {

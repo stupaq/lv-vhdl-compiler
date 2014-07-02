@@ -1,13 +1,17 @@
 package stupaq.vhdl2lv;
 
+import com.google.common.collect.Sets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
+import stupaq.concepts.IOReference;
+import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.vhdl93.ast.SimpleNode;
-import stupaq.vhdl93.ast.expression;
-import stupaq.vhdl93.ast.simple_expression;
 
 abstract class ExpressionEmitter {
   protected static final Logger LOGGER = LoggerFactory.getLogger(ExpressionEmitter.class);
@@ -18,13 +22,11 @@ abstract class ExpressionEmitter {
     this.owner = owner;
   }
 
-  protected abstract Terminal emit(SimpleNode n);
+  public abstract Terminal formula(SimpleNode n);
 
-  public Terminal emit(expression n) {
-    return emit((SimpleNode) n);
-  }
+  public abstract void terminals(Formula formula, Set<IOReference> blacklist, SimpleNode n);
 
-  public Terminal emit(simple_expression n) {
-    return emit((SimpleNode) n);
+  public void terminals(Formula formula, SimpleNode n) {
+    terminals(formula, Sets.<IOReference>newHashSet(), n);
   }
 }

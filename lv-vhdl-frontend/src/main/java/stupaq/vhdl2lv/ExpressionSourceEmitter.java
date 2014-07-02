@@ -1,7 +1,7 @@
 package stupaq.vhdl2lv;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.collect.Sets;
 
 import java.util.Set;
 
@@ -15,7 +15,6 @@ import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.attribute_designator;
 import stupaq.vhdl93.ast.identifier;
-import stupaq.vhdl93.ast.primary;
 import stupaq.vhdl93.ast.signature;
 import stupaq.vhdl93.ast.suffix;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
@@ -32,18 +31,16 @@ class ExpressionSourceEmitter extends ExpressionEmitter {
   }
 
   @Override
-  protected Terminal emit(SimpleNode n) {
-    Formula formula = new FormulaNode(owner, representation(n), "");
-    emitTerminals(formula, Sets.<IOReference>newHashSet(), n);
+  public Terminal formula(SimpleNode n) {
+    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    terminals(formula, n);
     return formula.addOutput("RVALUE");
   }
 
-  public void emitTerminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
+  @Override
+  public void terminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
     n.accept(new DepthFirstVisitor() {
       @Override
-      public void visit(primary n) {
-        n.accept(new DepthFirstVisitor() {
-          @Override
           public void visit(identifier n) {
             final IOReference ref = new IOReference(representation(n));
             LOGGER.debug("Possible terminal: {}", ref);
@@ -75,7 +72,5 @@ class ExpressionSourceEmitter extends ExpressionEmitter {
             // We are not interested in identifiers from some internal scope.
           }
         });
-      }
-    });
   }
 }
