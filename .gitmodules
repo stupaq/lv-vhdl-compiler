@@ -2,7 +2,3 @@
 	path = lv-scripting-java
 	url = git@github.com:stupaq/lv-scripting-java.git
 	branch = master
-[submodule "lv-scripting"]
-	path = lv-scripting
-	url = git@github.com:stupaq/lv-scripting.git
-	branch = master
