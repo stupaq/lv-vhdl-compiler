@@ -12,18 +12,24 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import stupaq.MissingFeature;
 import stupaq.concepts.IOReference;
+import stupaq.labview.scripting.hierarchy.Formula;
+import stupaq.labview.scripting.hierarchy.FormulaNode;
+import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
 
+import static com.google.common.base.Optional.of;
+
 public class WiringRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(WiringRules.class);
+  private final Generic owner;
   private final IOSources sources;
   private final IOSinks sinks;
   private final Labelling labelling;
 
-  public WiringRules(IOSources sources, IOSinks sinks, Labelling labelling) {
+  public WiringRules(Generic owner, IOSources sources, IOSinks sinks, Labelling labelling) {
+    this.owner = owner;
     this.sources = sources;
     this.sinks = sinks;
     this.labelling = labelling;
@@ -32,16 +38,25 @@ public class WiringRules {
   private void applyInternal(IOReference ref, Optional<String> label) {
     Collection<Terminal> sources = this.sources.get(ref);
     Collection<Terminal> sinks = this.sinks.get(ref);
-    if (sources.size() > 0) {
+    if (sources.size() > 0 && sinks.size() > 0) {
+      Terminal source;
       if (sources.size() == 1) {
-        Terminal source = sources.iterator().next();
+        source = sources.iterator().next();
         LOGGER.debug("Single-source: {} connects: {}", ref, source);
-        for (Terminal sink : sinks) {
-          LOGGER.debug("\t=> {}", sink);
-          new Wire(source, sink, label);
-        }
       } else {
-        throw new MissingFeature("Multiple sources for: " + ref);
+        LOGGER.debug("Multi-source: {} merges:", ref);
+        Formula assembly = new FormulaNode(owner, "Merging signal sources", of(ref.toString()));
+        for (Terminal partial : sources) {
+          LOGGER.debug("\t{} =>", partial);
+          Terminal input = assembly.addInput("PART");
+          new Wire(owner, partial, input, Optional.<String>absent());
+        }
+        source = assembly.addOutput("RVALUE");
+        LOGGER.debug("Source {} connects: {}", ref, source);
+      }
+      for (Terminal sink : sinks) {
+        LOGGER.debug("\t=> {}", sink);
+        new Wire(owner, source, sink, label);
       }
     }
   }

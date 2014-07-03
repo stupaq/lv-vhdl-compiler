@@ -121,8 +121,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\t{}", entry);
       }
     }
+    // There will be no more named terminals in this scope.
     final WiringRules wiringRules =
-        new WiringRules(namedSources, danglingSinks, LabellingAbsent.INSTANCE);
+        new WiringRules(currentVi, namedSources, danglingSinks, LabellingAbsent.INSTANCE);
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
       @Override
       public void visit(constant_declaration n) {
@@ -237,7 +238,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
           source = portTerminal;
           sink = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources).formula(n);
         }
-        new Wire(source, sink);
+        new Wire(currentVi, source, sink, Optional.<String>absent());
         portTerminal = null;
         // Note that we do not visit recursively in current setting, so we are sure,
         // that this is the top-level expression context.
