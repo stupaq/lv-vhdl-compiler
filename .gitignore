@@ -1,3 +1,5 @@
 .idea/tasks.xml
 .idea/workspace.xml
 target/
+examples/vhdl2lv/*.vi
+examples/demo/*.vi
