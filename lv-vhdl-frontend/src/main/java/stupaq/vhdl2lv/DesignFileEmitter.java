@@ -28,14 +28,16 @@ import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
-import stupaq.labview.scripting.tools.ControlCreate;
 import stupaq.vhdl2lv.WiringRules.LabellingAbsent;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Optional.of;
+import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
+import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
@@ -90,20 +92,19 @@ class DesignFileEmitter extends DepthFirstVisitor {
     sourceEmitter = sinkEmitter.sourceEmitter();
     int connPanelIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
+      Optional<String> label = of(constant.reference().toString());
       Terminal terminal =
-          new Control(currentVi, ControlCreate.NUMERIC, constant.reference().toString(),
-              connPanelIndex++).terminal();
+          new Control(currentVi, NUMERIC_I32, label, connPanelIndex++).endpoint().get();
       namedSources.put(constant.reference(), terminal);
     }
     for (PortDeclaration port : entity.ports()) {
       // IN and OUT are source and sink when we look from the outside (entity declaration).
       Terminal terminal;
+      Optional<String> label = of(port.reference().toString());
       if (port.direction() == PortDirection.OUT) {
-        terminal = new Indicator(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
-            connPanelIndex++).terminal();
+        terminal = new Indicator(currentVi, NUMERIC_DBL, label, connPanelIndex++).endpoint().get();
       } else {
-        terminal = new Control(currentVi, ControlCreate.NUMERIC, port.reference().toString(),
-            connPanelIndex++).terminal();
+        terminal = new Control(currentVi, NUMERIC_DBL, label, connPanelIndex++).endpoint().get();
       }
       if (port.direction() == PortDirection.OUT) {
         danglingSinks.put(port.reference(), terminal);
@@ -308,8 +309,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         return representation(n.identifier);
       }
     });
-    final Formula formula =
-        new FormulaNode(currentVi, representation(n), Optional.fromNullable(label));
+    final Formula formula = new FormulaNode(currentVi, representation(n), fromNullable(label));
     final Set<IOReference> blacklist = Sets.newHashSet();
     n.accept(new DepthFirstVisitor() {
       @Override
