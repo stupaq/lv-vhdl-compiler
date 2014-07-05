@@ -1,6 +1,10 @@
 package stupaq.vhdl2lv;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
@@ -23,37 +27,35 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
-class ExpressionSinkEmitter extends ExpressionEmitter {
-  /** Context of {@link ExpressionSinkEmitter}. */
+class SinkEmitter {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
+  private final Generic owner;
+  private final IOSinks danglingSinks;
   private final IOSources namedSources;
-  private final ExpressionSourceEmitter sourceEmitter;
+  private final Set<Object> blacklist;
 
-  public ExpressionSinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
-    super(owner);
+  public SinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
+    this.owner = owner;
+    this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
-    this.sourceEmitter = new ExpressionSourceEmitter(owner, danglingSinks);
+    blacklist = Sets.newHashSet();
   }
 
-  public ExpressionSourceEmitter sourceEmitter() {
-    return sourceEmitter;
-  }
-
-  @Override
   public Terminal formula(SimpleNode n) {
     Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
-    terminals(formula, n);
-    return formula.addInput("LVALUE");
+    terminals(formula, new SourceEmitter(owner, danglingSinks), n);
+    return formula.addInput("<assignee>");
   }
 
-  @Override
-  public void terminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
+  public void terminals(final Formula formula, final SourceEmitter sourceEmitter, SimpleNode n) {
     final DepthFirstVisitor visitor = new DepthFirstVisitor() {
       @Override
       public void visit(identifier n) {
         IOReference ref = new IOReference(n);
-        LOGGER.debug("Reference: {} as l-value", ref);
+        LOGGER.debug("Reference: {} occurs as l-value", ref);
         if (!blacklist.contains(ref)) {
           blacklist.add(ref);
+          LOGGER.debug("Reference: {} added as l-value", ref);
           Terminal terminal = formula.addOutput(ref.toString());
           namedSources.put(ref, terminal);
         }
@@ -61,12 +63,12 @@ class ExpressionSinkEmitter extends ExpressionEmitter {
 
       @Override
       public void visit(expression n) {
-        sourceEmitter.terminals(formula, blacklist, n);
+        sourceEmitter.terminals(formula, n);
       }
 
       @Override
       public void visit(simple_expression n) {
-        sourceEmitter.terminals(formula, blacklist, n);
+        sourceEmitter.terminals(formula, n);
       }
 
       @Override

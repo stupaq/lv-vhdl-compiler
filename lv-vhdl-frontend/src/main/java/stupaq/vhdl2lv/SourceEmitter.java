@@ -2,6 +2,10 @@ package stupaq.vhdl2lv;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Sets;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
@@ -21,24 +25,25 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
-class ExpressionSourceEmitter extends ExpressionEmitter {
-  /** Context of {@link ExpressionSourceEmitter}. */
+class SourceEmitter {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
+  private final Generic owner;
   private final IOSinks danglingSinks;
+  private final Set<IOReference> blacklist;
 
-  public ExpressionSourceEmitter(Generic owner, IOSinks danglingSinks) {
-    super(owner);
+  public SourceEmitter(Generic owner, IOSinks danglingSinks) {
+    this.owner = owner;
     this.danglingSinks = danglingSinks;
+    blacklist = Sets.newHashSet();
   }
 
-  @Override
   public Terminal formula(SimpleNode n) {
     Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
     terminals(formula, n);
-    return formula.addOutput("RVALUE");
+    return formula.addOutput("<result>");
   }
 
-  @Override
-  public void terminals(final Formula formula, final Set<IOReference> blacklist, SimpleNode n) {
+  public void terminals(final Formula formula, SimpleNode n) {
     n.accept(new DepthFirstVisitor() {
       @Override
       public void visit(identifier n) {

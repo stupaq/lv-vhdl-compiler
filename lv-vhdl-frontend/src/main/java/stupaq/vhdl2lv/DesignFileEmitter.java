@@ -3,14 +3,12 @@ package stupaq.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import stupaq.MissingFeature;
 import stupaq.concepts.ConstantDeclaration;
@@ -53,10 +51,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSinks danglingSinks;
-  /** Context of {@link #visit(architecture_declaration)}. */
-  private ExpressionSinkEmitter sinkEmitter;
-  /** Context of {@link #visit(architecture_declaration)}. */
-  private ExpressionSourceEmitter sourceEmitter;
 
   public DesignFileEmitter(LVProject project) {
     this.project = project;
@@ -88,8 +82,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
     currentVi = project.create(entity.name(), true);
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
-    sinkEmitter = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources);
-    sourceEmitter = sinkEmitter.sourceEmitter();
     int connPanelIndex = 0;
     for (ConstantDeclaration constant : entity.generics()) {
       Optional<String> label = of(constant.reference().toString());
@@ -141,7 +133,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
           @Override
           public Terminal visit(expression n) {
-            return sourceEmitter.formula(n);
+            return new SourceEmitter(currentVi, danglingSinks).formula(n);
           }
         });
         Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
@@ -164,8 +156,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
     currentVi = null;
     namedSources = null;
     danglingSinks = null;
-    sinkEmitter = null;
-    sourceEmitter = null;
   }
 
   @Override
@@ -250,11 +240,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\texpression={}", representation(n));
         Terminal source, sink;
         if (portIsSink) {
-          source = new ExpressionSourceEmitter(currentVi, danglingSinks).formula(n);
+          source = new SourceEmitter(currentVi, danglingSinks).formula(n);
           sink = portTerminal;
         } else {
           source = portTerminal;
-          sink = new ExpressionSinkEmitter(currentVi, danglingSinks, namedSources).formula(n);
+          sink = new SinkEmitter(currentVi, danglingSinks, namedSources).formula(n);
         }
         new Wire(currentVi, source, sink, Optional.<String>absent());
         portTerminal = null;
@@ -310,19 +300,20 @@ class DesignFileEmitter extends DepthFirstVisitor {
       }
     });
     final Formula formula = new FormulaNode(currentVi, representation(n), fromNullable(label));
-    final Set<IOReference> blacklist = Sets.newHashSet();
+    final SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
+    final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks);
     n.accept(new DepthFirstVisitor() {
       @Override
       public void visit(selected_signal_assignment n) {
         n.target.accept(this);
-        sourceEmitter.terminals(formula, blacklist, n.expression);
-        sourceEmitter.terminals(formula, blacklist, n.selected_waveforms);
+        sourceEmitter.terminals(formula, n.expression);
+        sourceEmitter.terminals(formula, n.selected_waveforms);
       }
 
       @Override
       public void visit(conditional_signal_assignment n) {
         n.target.accept(this);
-        sourceEmitter.terminals(formula, blacklist, n.conditional_waveforms);
+        sourceEmitter.terminals(formula, n.conditional_waveforms);
       }
 
       @Override
@@ -330,7 +321,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         n.accept(new DepthFirstVisitor() {
           @Override
           public void visit(name n) {
-            sinkEmitter.terminals(formula, blacklist, n);
+            sinkEmitter.terminals(formula, sourceEmitter, n);
           }
         });
       }

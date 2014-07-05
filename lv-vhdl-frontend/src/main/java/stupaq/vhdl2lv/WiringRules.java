@@ -19,8 +19,6 @@ import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
 
-import static com.google.common.base.Optional.of;
-
 public class WiringRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(WiringRules.class);
   private final Generic owner;
@@ -45,13 +43,14 @@ public class WiringRules {
         LOGGER.debug("Single-source: {} connects: {}", ref, source);
       } else {
         LOGGER.debug("Multi-source: {} merges:", ref);
-        Formula assembly = new FormulaNode(owner, "Merging signal sources", of(ref.toString()));
+        Formula assembly =
+            new FormulaNode(owner, "merging signal sources", Optional.<String>absent());
         for (Terminal partial : sources) {
           LOGGER.debug("\t{} =>", partial);
-          Terminal input = assembly.addInput("PART");
+          Terminal input = assembly.addInput(ref.toString());
           new Wire(owner, partial, input, Optional.<String>absent());
         }
-        source = assembly.addOutput("RVALUE");
+        source = assembly.addOutput(ref.toString());
         LOGGER.debug("Source {} connects: {}", ref, source);
       }
       for (Terminal sink : sinks) {
