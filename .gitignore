@@ -2,4 +2,6 @@
 .idea/workspace.xml
 target/
 examples/vhdl2lv/*.vi
+examples/vhdl2lv/*.log
 examples/demo/*.vi
+examples/demo/*.log

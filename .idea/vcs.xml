@@ -2,8 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/lv-scripting" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lv-scripting-java" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lv-scripting-java/lv-scripting" vcs="Git" />
   </component>
 </project>
 
