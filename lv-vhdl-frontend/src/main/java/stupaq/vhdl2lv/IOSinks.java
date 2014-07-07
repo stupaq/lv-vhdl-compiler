@@ -36,14 +36,6 @@ class IOSinks extends ForwardingMultimap<IOReference, Endpoint> {
     return put(ref, new Endpoint(terminal));
   }
 
-  public boolean put(IOReference ref, Terminal terminal, String label) {
-    return put(ref, new LabelledEndpoint(terminal, label));
-  }
-
-  public boolean put(IOReference ref, Terminal terminal, SimpleNode node) {
-    return put(ref, new ExpressionEndpoint(terminal, node));
-  }
-
   public boolean put(IOReference ref, Terminal terminal, Optional<SimpleNode> node) {
     return put(ref,
         node.isPresent() ? new ExpressionEndpoint(terminal, node.get()) : new Endpoint(terminal));

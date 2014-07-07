@@ -38,10 +38,6 @@ class IOSources extends ForwardingMultimap<IOReference, Endpoint> {
     return put(ref, new Endpoint.LabelledEndpoint(terminal, label));
   }
 
-  public boolean put(IOReference ref, Terminal terminal, SimpleNode node) {
-    return put(ref, new Endpoint.ExpressionEndpoint(terminal, node));
-  }
-
   public boolean put(IOReference ref, Terminal terminal, Optional<SimpleNode> node) {
     return put(ref, node.isPresent() ? new Endpoint.ExpressionEndpoint(terminal, node.get())
         : new Endpoint(terminal));
