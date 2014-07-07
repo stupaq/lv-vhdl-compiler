@@ -1,9 +1,12 @@
 package stupaq.vhdl2lv;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ForwardingMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,33 +14,43 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Generic;
-import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
+
+import static com.google.common.base.Optional.fromNullable;
 
 public class WiringRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(WiringRules.class);
   private final Generic owner;
   private final IOSources sources;
   private final IOSinks sinks;
-  private final Labelling labelling;
+  private final LabellingRules labelling;
 
-  public WiringRules(Generic owner, IOSources sources, IOSinks sinks, Labelling labelling) {
+  public WiringRules(Generic owner, IOSources sources,
+      IOSinks sinks, LabellingRules labelling) {
     this.owner = owner;
     this.sources = sources;
     this.sinks = sinks;
     this.labelling = labelling;
   }
 
-  private void applyInternal(IOReference ref, Optional<String> label) {
-    Collection<Terminal> sources = this.sources.get(ref);
-    Collection<Terminal> sinks = this.sinks.get(ref);
+  private Wire connect(IOReference ref, Endpoint source, Endpoint sink) {
+    // The label might be different on each invocation.
+    return new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source, sink));
+  }
+
+  private void applyInternal(IOReference ref) {
+    Collection<Endpoint> sources = this.sources.get(ref);
+    Collection<Endpoint> sinks = this.sinks.get(ref);
     if (sources.size() > 0 && sinks.size() > 0) {
-      Terminal source;
+      Endpoint source;
       if (sources.size() == 1) {
         source = sources.iterator().next();
         LOGGER.debug("Single-source: {} connects: {}", ref, source);
@@ -45,17 +58,17 @@ public class WiringRules {
         LOGGER.debug("Multi-source: {} merges:", ref);
         Formula assembly =
             new FormulaNode(owner, "merging signal sources", Optional.<String>absent());
-        for (Terminal partial : sources) {
+        for (Endpoint partial : sources) {
           LOGGER.debug("\t{} =>", partial);
-          Terminal input = assembly.addInput(ref.toString());
-          new Wire(owner, partial, input, Optional.<String>absent());
+          Endpoint input = new Endpoint(assembly.addInput(ref.toString()));
+          connect(ref, partial, input);
         }
-        source = assembly.addOutput(ref.toString());
+        source = new Endpoint(assembly.addOutput(ref.toString()));
         LOGGER.debug("Source {} connects: {}", ref, source);
       }
-      for (Terminal sink : sinks) {
+      for (Endpoint sink : sinks) {
         LOGGER.debug("\t=> {}", sink);
-        new Wire(owner, source, sink, label);
+        connect(ref, source, sink);
       }
     }
   }
@@ -64,32 +77,16 @@ public class WiringRules {
     Iterator<IOReference> iterator = sinks.keySet().iterator();
     while (iterator.hasNext()) {
       IOReference ref = iterator.next();
-      applyInternal(ref, labelling.apply(ref));
+      applyInternal(ref);
       sources.removeAll(ref);
       iterator.remove();
     }
   }
 
-  public void applyTo(IOReference ref, Optional<String> label) {
-    applyInternal(ref, label);
-    sources.removeAll(ref);
-    sinks.removeAll(ref);
-  }
-
-  public static class LabellingAbsent implements Labelling {
-    public static final Labelling INSTANCE = new LabellingAbsent();
-
-    private LabellingAbsent() {
-    }
-
-    @Override
-    public Optional<String> apply(IOReference input) {
-      return Optional.absent();
-    }
-  }
-
-  public static class LabellingMap extends ForwardingMap<IOReference, String> implements Labelling {
-    private Map<IOReference, String> delegate = Maps.newHashMap();
+  public static class FallbackLabels extends ForwardingMap<IOReference, String>
+      implements LabellingRules {
+    private final Map<IOReference, String> delegate = Maps.newHashMap();
+    private final Set<IOReference> labelled = Sets.newHashSet();
 
     @Override
     protected Map<IOReference, String> delegate() {
@@ -97,13 +94,40 @@ public class WiringRules {
     }
 
     @Override
-    public Optional<String> apply(IOReference input) {
-      return Optional.fromNullable(get(input));
+    public String put(IOReference key, String value) {
+      Preconditions.checkArgument(!containsKey(key) || !value.equals(get(key)),
+          "Fallback labels for: {} collide", key);
+      return super.put(key, value);
+    }
+
+    @Override
+    public Optional<String> choose(IOReference ref, Endpoint source, Endpoint sink) {
+      Optional<String> labelSource = source.label(), labelSink = sink.label();
+      if (labelSource.isPresent() && labelSink.isPresent() && !labelSink.equals(labelSource)) {
+        LOGGER.error("Sink-source label conflict: {}", ref);
+      }
+      if (labelSource.isPresent()) {
+        return labelSource;
+      } else if (labelSink.isPresent()) {
+        return labelSink;
+      } else {
+        labelled.add(ref);
+        return fromNullable(get(ref));
+      }
+    }
+
+    public Iterable<Entry<IOReference, String>> remainingLabels() {
+      return FluentIterable.from(delegate.entrySet())
+          .filter(new Predicate<Entry<IOReference, String>>() {
+            @Override
+            public boolean apply(@Nullable Entry<IOReference, String> input) {
+              return !labelled.contains(input.getKey());
+            }
+          });
     }
   }
 
-  public interface Labelling extends Function<IOReference, Optional<String>> {
-    @Override
-    public Optional<String> apply(IOReference input);
+  public interface LabellingRules {
+    public Optional<String> choose(IOReference ref, Endpoint source, Endpoint sink);
   }
 }

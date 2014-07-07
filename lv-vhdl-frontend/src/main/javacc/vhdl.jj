@@ -335,11 +335,42 @@ void formal_part() :
 void actual_part() :
 {}
 {
-    actual_part_open()
-  | LOOKAHEAD( identifier() ( <COMMA> | <RPAREN> ) )
-      identifier()
-  | LOOKAHEAD( expression() )
-      expression()
+    LOOKAHEAD( actual_part_open() ( <COMMA> | <RPAREN> ) )
+      actual_part_open()
+  | LOOKAHEAD( actual_part_static() ( <COMMA> | <RPAREN> ) )
+      actual_part_static()
+  | expression()
+}
+
+void actual_part_static() :
+{}
+{
+    LOOKAHEAD( actual_part_static_expression() )
+      actual_part_static_expression()
+  | actual_part_static_identifier()
+}
+
+void actual_part_static_identifier() :
+{}
+{
+  identifier()
+}
+
+void actual_part_static_expression() :
+{}
+{
+  identifier() <LPAREN> actual_part_static_indices() <RPAREN>
+}
+
+void actual_part_static_indices() :
+{}
+{
+    LOOKAHEAD( constant_expression() <DOWNTO> )
+      constant_expression() <DOWNTO> constant_expression()
+  | LOOKAHEAD( constant_expression() <TO> )
+      constant_expression() <TO> constant_expression()
+  | LOOKAHEAD( constant_expression() )
+    constant_expression()
 }
 
 void actual_part_open() :
@@ -354,6 +385,12 @@ void expression() :
 {}
 {
   relation_expression() ( LOOKAHEAD( 2 ) logical_operator() relation_expression() )*
+}
+
+void constant_expression() :
+{}
+{
+  constant_relation_expression() ( LOOKAHEAD( 2 ) logical_operator() constant_relation_expression() )*
 }
 
 void logical_operator() :
@@ -373,6 +410,12 @@ void relation_expression() :
   shift_expression() [ LOOKAHEAD( 2 ) relational_operator() shift_expression() ]
 }
 
+void constant_relation_expression() :
+{}
+{
+  constant_shift_expression() [ LOOKAHEAD( 2 ) relational_operator() constant_shift_expression() ]
+}
+
 void relational_operator() :
 {}
 {
@@ -390,6 +433,12 @@ void shift_expression() :
   simple_expression() [ LOOKAHEAD( 2 ) shift_operator() simple_expression()  ]
 }
 
+void constant_shift_expression() :
+{}
+{
+  constant_simple_expression() [ LOOKAHEAD( 2 ) shift_operator() constant_simple_expression()  ]
+}
+
 void shift_operator() :
 {}
 {
@@ -405,6 +454,12 @@ void simple_expression() :
 {}
 {
   [ sign() ] term() ( LOOKAHEAD( 2 ) adding_operator() term() )*
+}
+
+void constant_simple_expression() :
+{}
+{
+  [ sign() ] constant_term() ( LOOKAHEAD( 2 ) adding_operator() constant_term() )*
 }
 
 void sign() :
@@ -428,6 +483,12 @@ void term() :
   factor() ( LOOKAHEAD( 2 ) multiplying_operator() factor() )*
 }
 
+void constant_term() :
+{}
+{
+  constant_factor() ( LOOKAHEAD( 2 ) multiplying_operator() constant_factor() )*
+}
+
 void multiplying_operator() :
 {}
 {
@@ -443,6 +504,14 @@ void factor() :
     <ABS> primary()
   | <NOT> primary()
   | primary() [ LOOKAHEAD( <EXP> primary() ) <EXP> primary() ]
+}
+
+void constant_factor() :
+{}
+{
+    <ABS> constant_primary()
+  | <NOT> constant_primary()
+  | constant_primary() [ LOOKAHEAD( <EXP> constant_primary() ) <EXP> constant_primary() ]
 }
 
 void primary() :
@@ -463,6 +532,13 @@ void primary() :
   | LOOKAHEAD( type_conversion() )
       type_conversion()
   | allocator()
+}
+
+void constant_primary() :
+{}
+{
+    <decimal_literal>
+  | <based_literal>
 }
 
 void name_expression() :

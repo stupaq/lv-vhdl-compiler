@@ -29,25 +29,33 @@ import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class SinkEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
+  public static final String LVALUE_LABEL = "ASSIGNEE";
   private final Generic owner;
   private final IOSinks danglingSinks;
   private final IOSources namedSources;
   private final Set<Object> blacklist;
 
-  public SinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
+  public SinkEmitter(Generic owner, IOSinks danglingSinks,
+      IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
     blacklist = Sets.newHashSet();
   }
 
-  public Terminal formula(SimpleNode n) {
-    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
-    terminals(formula, new SourceEmitter(owner, danglingSinks), n);
-    return formula.addInput("<assignee>");
+  public Terminal emitFormula(SimpleNode n) {
+    return emitFormula(n, true);
   }
 
-  public void terminals(final Formula formula, final SourceEmitter sourceEmitter, SimpleNode n) {
+  public Terminal emitFormula(SimpleNode n, boolean emitTerminals) {
+    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    if (emitTerminals) {
+      addTerminals(formula, new SourceEmitter(owner, danglingSinks), n);
+    }
+    return formula.addInput(LVALUE_LABEL);
+  }
+
+  public void addTerminals(final Formula formula, final SourceEmitter sourceEmitter, SimpleNode n) {
     final DepthFirstVisitor visitor = new DepthFirstVisitor() {
       @Override
       public void visit(identifier n) {
@@ -63,12 +71,12 @@ class SinkEmitter {
 
       @Override
       public void visit(expression n) {
-        sourceEmitter.terminals(formula, n);
+        sourceEmitter.addTerminals(formula, n);
       }
 
       @Override
       public void visit(simple_expression n) {
-        sourceEmitter.terminals(formula, n);
+        sourceEmitter.addTerminals(formula, n);
       }
 
       @Override

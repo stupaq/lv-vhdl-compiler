@@ -27,6 +27,7 @@ import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class SourceEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
+  public static final String RVALUE_LABEL = "RESULT";
   private final Generic owner;
   private final IOSinks danglingSinks;
   private final Set<IOReference> blacklist;
@@ -37,13 +38,19 @@ class SourceEmitter {
     blacklist = Sets.newHashSet();
   }
 
-  public Terminal formula(SimpleNode n) {
-    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
-    terminals(formula, n);
-    return formula.addOutput("<result>");
+  public Terminal emitFormula(SimpleNode n) {
+    return emitFormula(n, true);
   }
 
-  public void terminals(final Formula formula, SimpleNode n) {
+  public Terminal emitFormula(SimpleNode n, boolean emitTerminals) {
+    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    if (emitTerminals) {
+      addTerminals(formula, n);
+    }
+    return formula.addOutput(RVALUE_LABEL);
+  }
+
+  public void addTerminals(final Formula formula, SimpleNode n) {
     n.accept(new DepthFirstVisitor() {
       @Override
       public void visit(identifier n) {

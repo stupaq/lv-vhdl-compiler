@@ -26,7 +26,7 @@ import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.Wire;
-import stupaq.vhdl2lv.WiringRules.LabellingAbsent;
+import stupaq.vhdl2lv.WiringRules.FallbackLabels;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
@@ -107,17 +107,16 @@ class DesignFileEmitter extends DepthFirstVisitor {
     n.architecture_statement_part.accept(this);
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug("Named sources:");
-      for (Entry<IOReference, Terminal> entry : namedSources.entries()) {
+      for (Entry<IOReference, Endpoint> entry : namedSources.entries()) {
         LOGGER.debug("\t{}", entry);
       }
       LOGGER.debug("Dangling sinks:");
-      for (Entry<IOReference, Terminal> entry : danglingSinks.entries()) {
+      for (Entry<IOReference, Endpoint> entry : danglingSinks.entries()) {
         LOGGER.debug("\t{}", entry);
       }
     }
     // There will be no more named terminals in this scope.
-    final WiringRules wiringRules =
-        new WiringRules(currentVi, namedSources, danglingSinks, LabellingAbsent.INSTANCE);
+    final FallbackLabels labelling = new FallbackLabels();
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
       @Override
       public void visit(constant_declaration n) {
@@ -133,14 +132,13 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
           @Override
           public Terminal visit(expression n) {
-            return new SourceEmitter(currentVi, danglingSinks).formula(n);
+            return new SourceEmitter(currentVi, danglingSinks).emitFormula(n);
           }
         });
         Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
-        namedSources.put(ref, terminal);
         String label = representation(
             sequence(n.nodeToken, n.identifier_list, n.nodeToken1, n.subtype_indication));
-        wiringRules.applyTo(ref, of(label));
+        namedSources.put(ref, terminal, label);
       }
 
       @Override
@@ -148,10 +146,40 @@ class DesignFileEmitter extends DepthFirstVisitor {
         MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported");
         IOReference ref = new IOReference(n.identifier_list.identifier);
         String label = representation(n);
-        wiringRules.applyTo(ref, of(label));
+        labelling.put(ref, label);
       }
     });
-    wiringRules.applyAll();
+    // All references and labels are resolved now.
+    new WiringRules(currentVi, namedSources, danglingSinks, labelling).applyAll();
+    // Fallback for missing signal declarations and wires.
+    if (!labelling.isEmpty()) {
+      for (Entry<IOReference, String> entry : labelling.remainingLabels()) {
+        LOGGER.warn("Unused label: {} for source: {}", entry.getValue(), entry.getKey());
+        // TODO emit missing signals, so they won't get lost
+      }
+    }
+    SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks);
+    for (Entry<IOReference, Endpoint> entry : danglingSinks.entries()) {
+      // If this sink has an associated node then we have to emmit it.
+      Endpoint sink = entry.getValue();
+      if (sink.node().isPresent()) {
+        Terminal source = sourceEmitter.emitFormula(sink.node().get(), false);
+        new Wire(currentVi, source, sink.terminal(), Optional.<String>absent());
+      } else {
+        LOGGER.error("Dangling sink: {}", entry.getKey());
+      }
+    }
+    SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
+    for (Entry<IOReference, Endpoint> entry : namedSources.entries()) {
+      // If this source has an associated node then we have to emmit it.
+      Endpoint source = entry.getValue();
+      if (source.node().isPresent()) {
+        Terminal sink = sinkEmitter.emitFormula(source.node().get(), false);
+        new Wire(currentVi, source.terminal(), sink, Optional.<String>absent());
+      } else {
+        LOGGER.warn("Unconnected source: {}", entry.getKey());
+      }
+    }
     currentVi.cleanUpDiagram();
     currentVi = null;
     namedSources = null;
@@ -178,15 +206,17 @@ class DesignFileEmitter extends DepthFirstVisitor {
       boolean portIsSink;
       /** Context of {@link #visit(actual_part)}. */
       Terminal portTerminal;
+      /** Context of {@link #visit(actual_part)}. */
+      Optional<SimpleNode> accessorCode;
 
       @Override
       public void visit(identifier n) {
         IOReference ref = new IOReference(n);
         LOGGER.debug("\tidentifier={}", ref);
         if (portIsSink) {
-          danglingSinks.put(ref, portTerminal);
+          danglingSinks.put(ref, portTerminal, accessorCode);
         } else {
-          namedSources.put(ref, portTerminal);
+          namedSources.put(ref, portTerminal, accessorCode);
         }
         portTerminal = null;
       }
@@ -226,7 +256,25 @@ class DesignFileEmitter extends DepthFirstVisitor {
         portIsSink =
             isGenericAspect || entity.ports().get(listIndex).direction() == PortDirection.IN;
         LOGGER.debug("\tlistIndex={}, portIsSink={}, portTerminal", listIndex, portIsSink);
+        accessorCode = Optional.absent();
         n.nodeChoice.accept(this);
+      }
+
+      @Override
+      public void visit(actual_part_static_identifier n) {
+        accessorCode = Optional.absent();
+        super.visit(n);
+      }
+
+      @Override
+      public void visit(actual_part_static_expression n) {
+        accessorCode = Optional.<SimpleNode>of(n);
+        super.visit(n);
+      }
+
+      @Override
+      public void visit(constant_expression n) {
+        // We do not descent into the RHS.
       }
 
       @Override
@@ -240,11 +288,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\texpression={}", representation(n));
         Terminal source, sink;
         if (portIsSink) {
-          source = new SourceEmitter(currentVi, danglingSinks).formula(n);
+          source = new SourceEmitter(currentVi, danglingSinks).emitFormula(n);
           sink = portTerminal;
         } else {
           source = portTerminal;
-          sink = new SinkEmitter(currentVi, danglingSinks, namedSources).formula(n);
+          sink = new SinkEmitter(currentVi, danglingSinks, namedSources).emitFormula(n);
         }
         new Wire(currentVi, source, sink, Optional.<String>absent());
         portTerminal = null;
@@ -306,14 +354,14 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(selected_signal_assignment n) {
         n.target.accept(this);
-        sourceEmitter.terminals(formula, n.expression);
-        sourceEmitter.terminals(formula, n.selected_waveforms);
+        sourceEmitter.addTerminals(formula, n.expression);
+        sourceEmitter.addTerminals(formula, n.selected_waveforms);
       }
 
       @Override
       public void visit(conditional_signal_assignment n) {
         n.target.accept(this);
-        sourceEmitter.terminals(formula, n.conditional_waveforms);
+        sourceEmitter.addTerminals(formula, n.conditional_waveforms);
       }
 
       @Override
@@ -321,7 +369,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         n.accept(new DepthFirstVisitor() {
           @Override
           public void visit(name n) {
-            sinkEmitter.terminals(formula, sourceEmitter, n);
+            sinkEmitter.addTerminals(formula, sourceEmitter, n);
           }
         });
       }
