@@ -1,6 +1,6 @@
 package stupaq.vhdl2lv;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ForwardingMultimap;
 import com.google.common.collect.Lists;
@@ -13,31 +13,42 @@ import java.util.List;
 
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.vhdl2lv.Endpoint.ExpressionEndpoint;
-import stupaq.vhdl2lv.Endpoint.LabelledEndpoint;
-import stupaq.vhdl93.ast.SimpleNode;
+import stupaq.vhdl2lv.IOSinks.Sink;
 
-class IOSinks extends ForwardingMultimap<IOReference, Endpoint> {
-  private final Multimap<IOReference, Endpoint> sinks =
-      Multimaps.newListMultimap(Maps.<IOReference, Collection<Endpoint>>newHashMap(),
-          new Supplier<List<Endpoint>>() {
+class IOSinks extends ForwardingMultimap<IOReference, Sink> {
+  private final Multimap<IOReference, Sink> sinks =
+      Multimaps.newListMultimap(Maps.<IOReference, Collection<Sink>>newHashMap(),
+          new Supplier<List<Sink>>() {
             @Override
-            public List<Endpoint> get() {
+            public List<Sink> get() {
               return Lists.newArrayList();
             }
           });
 
   @Override
-  protected Multimap<IOReference, Endpoint> delegate() {
+  protected Multimap<IOReference, Sink> delegate() {
     return sinks;
   }
 
   public boolean put(IOReference ref, Terminal terminal) {
-    return put(ref, new Endpoint(terminal));
+    return put(ref, new Sink(terminal));
   }
 
-  public boolean put(IOReference ref, Terminal terminal, Optional<SimpleNode> node) {
-    return put(ref,
-        node.isPresent() ? new ExpressionEndpoint(terminal, node.get()) : new Endpoint(terminal));
+  public static class Sink {
+    private final Terminal terminal;
+
+    public Sink(Terminal terminal) {
+      Preconditions.checkNotNull(terminal);
+      this.terminal = terminal;
+    }
+
+    public Terminal terminal() {
+      return terminal;
+    }
+
+    @Override
+    public String toString() {
+      return "Sink{" + terminal + '}';
+    }
   }
 }

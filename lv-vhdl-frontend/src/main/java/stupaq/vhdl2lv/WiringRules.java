@@ -16,16 +16,24 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Wire;
+import stupaq.vhdl2lv.IOSinks.Sink;
+import stupaq.vhdl2lv.IOSources.Source;
 
 import static com.google.common.base.Optional.fromNullable;
 
+/**
+ * The wiring process is source-oriented in the sense that we pick labels (filter nodes) from the
+ * source and in case of multiple sources/sinks, we conduct the wiring process for each signal
+ * starting from source(s). Note that the LabVIEW logic for creating wires works in a very same
+ * way.
+ */
 public class WiringRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(WiringRules.class);
   private final Generic owner;
@@ -33,40 +41,40 @@ public class WiringRules {
   private final IOSinks sinks;
   private final LabellingRules labelling;
 
-  public WiringRules(Generic owner, IOSources sources,
-      IOSinks sinks, LabellingRules labelling) {
+  public WiringRules(Generic owner, IOSources sources, IOSinks sinks, LabellingRules labelling) {
     this.owner = owner;
     this.sources = sources;
     this.sinks = sinks;
     this.labelling = labelling;
   }
 
-  private Wire connect(IOReference ref, Endpoint source, Endpoint sink) {
+  private Wire connect(IOReference ref, Source source, Sink sink) {
     // The label might be different on each invocation.
-    return new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source, sink));
+    return new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source));
   }
 
   private void applyInternal(IOReference ref) {
-    Collection<Endpoint> sources = this.sources.get(ref);
-    Collection<Endpoint> sinks = this.sinks.get(ref);
+    Collection<Source> sources = this.sources.get(ref);
+    Collection<Sink> sinks = this.sinks.get(ref);
     if (sources.size() > 0 && sinks.size() > 0) {
-      Endpoint source;
+      Source source;
       if (sources.size() == 1) {
         source = sources.iterator().next();
         LOGGER.debug("Single-source: {} connects: {}", ref, source);
       } else {
         LOGGER.debug("Multi-source: {} merges:", ref);
+        String refName = ref.toString();
         Formula assembly =
             new FormulaNode(owner, "merging signal sources", Optional.<String>absent());
-        for (Endpoint partial : sources) {
+        for (Source partial : sources) {
           LOGGER.debug("\t{} =>", partial);
-          Endpoint input = new Endpoint(assembly.addInput(ref.toString()));
+          Sink input = new Sink(assembly.addInput(refName));
           connect(ref, partial, input);
         }
-        source = new Endpoint(assembly.addOutput(ref.toString()));
+        source = new Source(assembly.addOutput(refName), refName);
         LOGGER.debug("Source {} connects: {}", ref, source);
       }
-      for (Endpoint sink : sinks) {
+      for (Sink sink : sinks) {
         LOGGER.debug("\t=> {}", sink);
         connect(ref, source, sink);
       }
@@ -94,22 +102,17 @@ public class WiringRules {
     }
 
     @Override
-    public String put(IOReference key, String value) {
+    public String put(@Nonnull IOReference key, @Nonnull String value) {
       Preconditions.checkArgument(!containsKey(key) || !value.equals(get(key)),
           "Fallback labels for: {} collide", key);
       return super.put(key, value);
     }
 
     @Override
-    public Optional<String> choose(IOReference ref, Endpoint source, Endpoint sink) {
-      Optional<String> labelSource = source.label(), labelSink = sink.label();
-      if (labelSource.isPresent() && labelSink.isPresent() && !labelSink.equals(labelSource)) {
-        LOGGER.error("Sink-source label conflict: {}", ref);
-      }
+    public Optional<String> choose(IOReference ref, Source source) {
+      Optional<String> labelSource = source.label();
       if (labelSource.isPresent()) {
         return labelSource;
-      } else if (labelSink.isPresent()) {
-        return labelSink;
       } else {
         labelled.add(ref);
         return fromNullable(get(ref));
@@ -120,7 +123,7 @@ public class WiringRules {
       return FluentIterable.from(delegate.entrySet())
           .filter(new Predicate<Entry<IOReference, String>>() {
             @Override
-            public boolean apply(@Nullable Entry<IOReference, String> input) {
+            public boolean apply(Entry<IOReference, String> input) {
               return !labelled.contains(input.getKey());
             }
           });
@@ -128,6 +131,6 @@ public class WiringRules {
   }
 
   public interface LabellingRules {
-    public Optional<String> choose(IOReference ref, Endpoint source, Endpoint sink);
+    public Optional<String> choose(IOReference ref, Source source);
   }
 }
