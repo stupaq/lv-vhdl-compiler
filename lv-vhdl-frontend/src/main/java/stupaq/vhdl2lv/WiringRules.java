@@ -19,10 +19,10 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import stupaq.concepts.IOReference;
-import stupaq.labview.scripting.hierarchy.Formula;
-import stupaq.labview.scripting.hierarchy.FormulaNode;
+import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Wire;
+import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 
@@ -64,14 +64,15 @@ public class WiringRules {
       } else {
         LOGGER.debug("Multi-source: {} merges:", ref);
         String refName = ref.toString();
-        Formula assembly =
-            new FormulaNode(owner, "merging signal sources", Optional.<String>absent());
+        CompoundArithmetic assembly = mergeNode(owner, sources.size());
+        int index = 0;
         for (Source partial : sources) {
           LOGGER.debug("\t{} =>", partial);
-          Sink input = new Sink(assembly.addInput(refName));
+          Sink input = new Sink(assembly.inputs().get(index));
           connect(ref, partial, input);
+          ++index;
         }
-        source = new Source(assembly.addOutput(refName), refName);
+        source = new Source(assembly.output(), refName);
         LOGGER.debug("Source {} connects: {}", ref, source);
       }
       for (Sink sink : sinks) {
@@ -79,6 +80,15 @@ public class WiringRules {
         connect(ref, source, sink);
       }
     }
+  }
+
+  public static CompoundArithmetic branchNode(Generic owner) {
+    return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
+  }
+
+  public static CompoundArithmetic mergeNode(Generic owner, int inputs) {
+    return new CompoundArithmetic(owner, ArithmeticMode.MULTIPLY, inputs,
+        Optional.<String>absent());
   }
 
   public void applyAll() {

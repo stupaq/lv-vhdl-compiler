@@ -132,11 +132,25 @@ end entity;
 
 architecture behavioral of forktest0 is
   signal aaa : std_logic_vector(7 downto 0);
+  signal bbb : std_logic_vector(7 downto 0);
+  signal ccc : std_logic_vector(7 downto 0);
+  signal ddd : std_logic_vector(7 downto 0);
 begin
   src0 : entity work.source4 port map(aaa(3 downto 0));
   src1 : entity work.source4 port map(aaa(7 downto 4));
   dst0 : entity work.sink4 port map(aaa(3 downto 0));
   dst1 : entity work.sink4 port map(aaa(7 downto 4));
+
+  src2 : entity work.source4 port map(bbb(3));
+  src3 : entity work.source4 port map(bbb(7 downto 4));
+  dst2 : entity work.sink4 port map(bbb(7 downto 0));
+
+  src4 : entity work.source4 port map(ccc(7 downto 0));
+  dst3 : entity work.sink4 port map(ccc(3 downto 0));
+  dst4 : entity work.sink4 port map(ccc(7));
+
+  src5 : entity work.source4 port map(ddd(3 downto 0));
+  dst5 : entity work.sink4 port map(ddd(2 downto 0));
 end behavioral;
 
 library ieee;

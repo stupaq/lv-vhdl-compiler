@@ -18,6 +18,7 @@ import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
 import stupaq.concepts.PortDeclaration;
 import stupaq.concepts.PortDeclaration.PortDirection;
+import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
@@ -183,7 +184,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
-    final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), label);
+    final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), of(label));
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /**
        * Context of {@link #visit(generic_map_aspect)} and {@link
@@ -212,8 +213,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
             danglingSinks.put(ref, portTerminal);
           } else {
             System.out.println(filterLabel);
-            Terminal source = new SourceEmitter(currentVi, danglingSinks).emitFormula(n);
-            new Wire(currentVi, source, portTerminal, of(filterLabel));
+            CompoundArithmetic branch = WiringRules.branchNode(currentVi);
+            new Wire(currentVi, branch.output(), portTerminal, of(filterLabel));
+            danglingSinks.put(ref, branch.inputs().get(0));
           }
         } else {
           namedSources.put(ref, portTerminal, filterLabel);
