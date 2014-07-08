@@ -345,8 +345,8 @@ void actual_part() :
 void actual_part_inline() :
 {}
 {
-    LOOKAHEAD( actual_part_inline_expression() )
-      actual_part_inline_expression()
+    LOOKAHEAD( actual_part_inline_reference() )
+      actual_part_inline_reference()
   | actual_part_inline_identifier()
 }
 
@@ -356,13 +356,13 @@ void actual_part_inline_identifier() :
   identifier()
 }
 
-void actual_part_inline_expression() :
+void actual_part_inline_reference() :
 {}
 {
-  identifier() <LPAREN> actual_part_inline_indices() <RPAREN>
+  identifier() <LPAREN> actual_part_inline_reference_extension() <RPAREN>
 }
 
-void actual_part_inline_indices() :
+void actual_part_inline_reference_extension() :
 {}
 {
     LOOKAHEAD( constant_expression() <DOWNTO> )

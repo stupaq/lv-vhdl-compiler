@@ -269,14 +269,14 @@ class DesignFileEmitter extends DepthFirstVisitor {
       }
 
       @Override
-      public void visit(actual_part_inline_expression n) {
+      public void visit(actual_part_inline_reference n) {
         filter = n;
         super.visit(n);
       }
 
       @Override
-      public void visit(constant_expression n) {
-        // We do not descent into the RHS.
+      public void visit(actual_part_inline_reference_extension n) {
+        // We do not descent into the extension of the reference.
       }
 
       @Override
