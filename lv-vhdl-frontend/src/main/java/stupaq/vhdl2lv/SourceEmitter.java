@@ -7,28 +7,25 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Set;
 
 import stupaq.concepts.IOReference;
+import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.FormulaParameter;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.LazyTerminal;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.vhdl93.ast.NodeSequence;
+import stupaq.labview.scripting.hierarchy.Wire;
+import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
+import stupaq.vhdl2lv.ExpressionClassifier.TopLevelScopeVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
-import stupaq.vhdl93.ast.attribute_designator;
+import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.identifier;
-import stupaq.vhdl93.ast.label;
-import stupaq.vhdl93.ast.name;
-import stupaq.vhdl93.ast.signature;
-import stupaq.vhdl93.ast.suffix;
-import stupaq.vhdl93.visitor.DepthFirstVisitor;
-import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
 import static com.google.common.base.Optional.of;
-import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class SourceEmitter {
@@ -36,31 +33,64 @@ class SourceEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
   private final Generic owner;
   private final IOSinks danglingSinks;
+  private final IOSources namedSources;
   private final Set<IOReference> blacklist;
+  private final ExpressionClassifier classifier;
 
-  public SourceEmitter(Generic owner, IOSinks danglingSinks) {
+  public SourceEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
+    this.namedSources = namedSources;
     blacklist = Sets.newHashSet();
+    classifier = new ExpressionClassifier();
   }
 
-  public Terminal emitFormula(SimpleNode n) {
-    int references = countReferencesInTheScope(n);
-    Terminal result;
-    if (references == 0) {
-      // TODO switch to constant
-      Formula formula = new FormulaNode(owner, representation(n), of("constant!!!"));
-      result = formula.addOutput(RVALUE_LABEL);
+  public static CompoundArithmetic branchNode(Generic owner) {
+    return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
+  }
+
+  public Terminal emitAsConstant(SimpleNode n) {
+    // TODO switch to constant
+    Formula formula = new FormulaNode(owner, representation(n), of("constant!!!"));
+    return formula.addOutput(RVALUE_LABEL);
+  }
+
+  public void emitAsIdentifier(IOReference ref, Terminal sink) {
+    danglingSinks.put(ref, sink);
+  }
+
+  public void emitAsReference(IOReference ref, SimpleNode n, Terminal sink) {
+    CompoundArithmetic branch = branchNode(owner);
+    new Wire(owner, branch.output(), sink, of(representation(n)));
+    danglingSinks.put(ref, branch.inputs().get(0));
+  }
+
+  public void emitWithSink(expression n, Terminal sink) {
+    List<identifier> identifiers = classifier.topLevelScopeIdentifiers(n);
+    if (identifiers.isEmpty()) {
+      Terminal source = emitAsConstant(n);
+      new Wire(owner, source, sink, Optional.<String>absent());
+    } else if (identifiers.size() == 1) {
+      IOReference ref = new IOReference(identifiers.get(0));
+      if (classifier.isIdentifier(n)) {
+        emitAsIdentifier(ref, sink);
+      } else {
+        emitAsReference(ref, n, sink);
+      }
     } else {
-      Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
-      addTerminals(formula, n);
-      result = formula.addOutput(RVALUE_LABEL);
+      Terminal source = emitAsExpression(n);
+      new Wire(owner, source, sink, Optional.<String>absent());
     }
-    return result;
+  }
+
+  public Terminal<FormulaParameter> emitAsExpression(SimpleNode n) {
+    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    addTerminals(formula, n);
+    return formula.addOutput(RVALUE_LABEL);
   }
 
   public void addTerminals(final Formula formula, SimpleNode n) {
-    n.accept(new DepthFirstVisitor() {
+    n.accept(new TopLevelScopeVisitor() {
       @Override
       public void visit(identifier n) {
         final IOReference ref = new IOReference(n);
@@ -76,65 +106,6 @@ class SourceEmitter {
               });
           danglingSinks.put(ref, terminal);
         }
-      }
-
-      @Override
-      public void visit(attribute_designator n) {
-        // We are not interested in identifiers from some internal scope.
-      }
-
-      @Override
-      public void visit(signature n) {
-        // We are not interested in identifiers from some internal scope.
-      }
-
-      @Override
-      public void visit(suffix n) {
-        // We are not interested in identifiers from some internal scope.
-      }
-    });
-  }
-
-  private int countReferencesInTheScope(SimpleNode n) {
-    return sequence(n).accept(new GJNoArguDepthFirst<Integer>() {
-      int referenceCount = 0;
-
-      @Override
-      public Integer visit(NodeSequence n) {
-        return referenceCount;
-      }
-
-      @Override
-      public Integer visit(label n) {
-        return ++referenceCount;
-      }
-
-      @Override
-      public Integer visit(name n) {
-        return super.visit(n);
-      }
-
-      @Override
-      public Integer visit(identifier n) {
-        return ++referenceCount;
-      }
-
-      @Override
-      public Integer visit(attribute_designator n) {
-        // We are not interested in identifiers from some internal scope.
-        return referenceCount;
-      }
-
-      @Override
-      public Integer visit(signature n) {
-        // We are not interested in identifiers from some internal scope.
-        return referenceCount;
-      }
-
-      @Override
-      public Integer visit(suffix n) {
-        // We are not interested in identifiers from some internal scope.
-        return referenceCount;
       }
     });
   }

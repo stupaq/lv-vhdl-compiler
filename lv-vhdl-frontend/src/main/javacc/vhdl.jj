@@ -243,6 +243,14 @@ TOKEN [IGNORE_CASE] :
 }
 /** /LEXICAL ELEMENTS */
 
+/** LEXICAL PODUCTIONS */
+void eof() :
+{}
+{
+  <EOF>
+}
+/** /LEXICAL PODUCTIONS */
+
 /** IDENTIFIER, LABEL, NAME */
 void label() :
 {}
@@ -337,40 +345,7 @@ void actual_part() :
 {
     LOOKAHEAD( actual_part_open() ( <COMMA> | <RPAREN> ) )
       actual_part_open()
-  | LOOKAHEAD( actual_part_inline() ( <COMMA> | <RPAREN> ) )
-      actual_part_inline()
   | expression()
-}
-
-void actual_part_inline() :
-{}
-{
-    LOOKAHEAD( actual_part_inline_reference() )
-      actual_part_inline_reference()
-  | actual_part_inline_identifier()
-}
-
-void actual_part_inline_identifier() :
-{}
-{
-  identifier()
-}
-
-void actual_part_inline_reference() :
-{}
-{
-  identifier() <LPAREN> actual_part_inline_reference_extension() <RPAREN>
-}
-
-void actual_part_inline_reference_extension() :
-{}
-{
-    LOOKAHEAD( constant_expression() <DOWNTO> )
-      constant_expression() <DOWNTO> constant_expression()
-  | LOOKAHEAD( constant_expression() <TO> )
-      constant_expression() <TO> constant_expression()
-  | LOOKAHEAD( constant_expression() )
-    constant_expression()
 }
 
 void actual_part_open() :

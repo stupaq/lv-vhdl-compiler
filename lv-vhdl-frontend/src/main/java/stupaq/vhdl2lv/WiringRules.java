@@ -82,10 +82,6 @@ public class WiringRules {
     }
   }
 
-  public static CompoundArithmetic branchNode(Generic owner) {
-    return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
-  }
-
   public static CompoundArithmetic mergeNode(Generic owner, int inputs) {
     return new CompoundArithmetic(owner, ArithmeticMode.MULTIPLY, inputs,
         Optional.<String>absent());

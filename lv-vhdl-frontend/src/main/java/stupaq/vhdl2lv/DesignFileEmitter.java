@@ -1,6 +1,7 @@
 package stupaq.vhdl2lv;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 
@@ -18,7 +19,6 @@ import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
 import stupaq.concepts.PortDeclaration;
 import stupaq.concepts.PortDeclaration.PortDirection;
-import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
@@ -26,7 +26,6 @@ import stupaq.labview.scripting.hierarchy.Indicator;
 import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 import stupaq.vhdl2lv.WiringRules.FallbackLabels;
@@ -135,7 +134,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
           @Override
           public Terminal visit(expression n) {
-            return new SourceEmitter(currentVi, danglingSinks).emitFormula(n);
+            return new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n);
           }
         });
         Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
@@ -199,29 +198,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
       boolean portIsSink;
       /** Context of {@link #visit(actual_part)}. */
       Terminal portTerminal;
-      /** Context of {@link #visit(actual_part)}. */
-      SimpleNode filter;
-
-      @Override
-      public void visit(identifier n) {
-        Verify.verifyNotNull(filter);
-        IOReference ref = new IOReference(n);
-        LOGGER.debug("\tidentifier={}", ref);
-        String filterLabel = representation(filter);
-        if (portIsSink) {
-          if (filter instanceof identifier) {
-            danglingSinks.put(ref, portTerminal);
-          } else {
-            System.out.println(filterLabel);
-            CompoundArithmetic branch = WiringRules.branchNode(currentVi);
-            new Wire(currentVi, branch.output(), portTerminal, of(filterLabel));
-            danglingSinks.put(ref, branch.inputs().get(0));
-          }
-        } else {
-          namedSources.put(ref, portTerminal, filterLabel);
-        }
-        portTerminal = null;
-      }
 
       @Override
       public void visit(named_association_list n) {
@@ -258,25 +234,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         portIsSink =
             isGenericAspect || entity.ports().get(listIndex).direction() == PortDirection.IN;
         LOGGER.debug("\tlistIndex={}, portIsSink={}, portTerminal", listIndex, portIsSink);
-        filter = null;
         n.nodeChoice.accept(this);
-      }
-
-      @Override
-      public void visit(actual_part_inline_identifier n) {
-        filter = n.identifier;
-        super.visit(n);
-      }
-
-      @Override
-      public void visit(actual_part_inline_reference n) {
-        filter = n;
-        super.visit(n);
-      }
-
-      @Override
-      public void visit(actual_part_inline_reference_extension n) {
-        // We do not descent into the extension of the reference.
       }
 
       @Override
@@ -287,16 +245,12 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(expression n) {
-        LOGGER.debug("\texpression={}", representation(n));
-        Terminal source, sink;
+        Preconditions.checkState(portTerminal != null);
         if (portIsSink) {
-          source = new SourceEmitter(currentVi, danglingSinks).emitFormula(n);
-          sink = portTerminal;
+          new SourceEmitter(currentVi, danglingSinks, namedSources).emitWithSink(n, portTerminal);
         } else {
-          source = portTerminal;
-          sink = new SinkEmitter(currentVi, danglingSinks, namedSources).emitFormula(n);
+          new SinkEmitter(currentVi, danglingSinks, namedSources).emitWithSource(portTerminal, n);
         }
-        new Wire(currentVi, source, sink, Optional.<String>absent());
         portTerminal = null;
         // Note that we do not visit recursively in current setting, so we are sure,
         // that this is the top-level expression context.
@@ -351,7 +305,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     });
     final Formula formula = new FormulaNode(currentVi, representation(n), fromNullable(label));
     final SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
-    final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks);
+    final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
     n.accept(new DepthFirstVisitor() {
       @Override
       public void visit(selected_signal_assignment n) {
