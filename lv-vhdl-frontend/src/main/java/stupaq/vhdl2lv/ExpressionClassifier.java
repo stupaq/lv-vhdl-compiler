@@ -30,8 +30,7 @@ public class ExpressionClassifier {
   }
 
   public boolean isIdentifier(SimpleNode n) {
-    // TODO can be made a tad more robust
-    String rep = representation(n);
+    String rep = unwrapParentheses(representation(n));
     try {
       VHDL93Parser parser = new VHDL93Parser(new StringReader(rep));
       parser.identifier();
@@ -39,6 +38,14 @@ public class ExpressionClassifier {
       return true;
     } catch (ParseException ignored) {
       return false;
+    }
+  }
+
+  private static String unwrapParentheses(String expression) {
+    if (expression.startsWith("(") && expression.endsWith(")")) {
+      return unwrapParentheses(expression.substring(1, expression.length() - 1));
+    } else {
+      return expression;
     }
   }
 

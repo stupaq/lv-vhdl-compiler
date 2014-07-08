@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -17,9 +18,11 @@ import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.FormulaParameter;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.LazyTerminal;
+import stupaq.labview.scripting.hierarchy.RingConstant;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
+import stupaq.labview.scripting.tools.DataRepresentation;
 import stupaq.vhdl2lv.ExpressionClassifier.TopLevelScopeVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
@@ -33,14 +36,12 @@ class SourceEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
   private final Generic owner;
   private final IOSinks danglingSinks;
-  private final IOSources namedSources;
   private final Set<IOReference> blacklist;
   private final ExpressionClassifier classifier;
 
   public SourceEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
-    this.namedSources = namedSources;
     blacklist = Sets.newHashSet();
     classifier = new ExpressionClassifier();
   }
@@ -50,9 +51,9 @@ class SourceEmitter {
   }
 
   public Terminal emitAsConstant(SimpleNode n) {
-    // TODO switch to constant
-    Formula formula = new FormulaNode(owner, representation(n), of("constant!!!"));
-    return formula.addOutput(RVALUE_LABEL);
+    RingConstant constant = new RingConstant(owner, Collections.singletonMap(representation(n), 0),
+        DataRepresentation.I32, Optional.<String>absent());
+    return constant.endpoint().get();
   }
 
   public void emitAsIdentifier(IOReference ref, Terminal sink) {
