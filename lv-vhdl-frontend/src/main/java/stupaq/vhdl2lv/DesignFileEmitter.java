@@ -261,13 +261,13 @@ class DesignFileEmitter extends DepthFirstVisitor {
       }
 
       @Override
-      public void visit(actual_part_static_identifier n) {
+      public void visit(actual_part_inline_identifier n) {
         accessorCode = Optional.absent();
         super.visit(n);
       }
 
       @Override
-      public void visit(actual_part_static_expression n) {
+      public void visit(actual_part_inline_expression n) {
         accessorCode = Optional.<SimpleNode>of(n);
         super.visit(n);
       }

@@ -337,32 +337,32 @@ void actual_part() :
 {
     LOOKAHEAD( actual_part_open() ( <COMMA> | <RPAREN> ) )
       actual_part_open()
-  | LOOKAHEAD( actual_part_static() ( <COMMA> | <RPAREN> ) )
-      actual_part_static()
+  | LOOKAHEAD( actual_part_inline() ( <COMMA> | <RPAREN> ) )
+      actual_part_inline()
   | expression()
 }
 
-void actual_part_static() :
+void actual_part_inline() :
 {}
 {
-    LOOKAHEAD( actual_part_static_expression() )
-      actual_part_static_expression()
-  | actual_part_static_identifier()
+    LOOKAHEAD( actual_part_inline_expression() )
+      actual_part_inline_expression()
+  | actual_part_inline_identifier()
 }
 
-void actual_part_static_identifier() :
+void actual_part_inline_identifier() :
 {}
 {
   identifier()
 }
 
-void actual_part_static_expression() :
+void actual_part_inline_expression() :
 {}
 {
-  identifier() <LPAREN> actual_part_static_indices() <RPAREN>
+  identifier() <LPAREN> actual_part_inline_indices() <RPAREN>
 }
 
-void actual_part_static_indices() :
+void actual_part_inline_indices() :
 {}
 {
     LOOKAHEAD( constant_expression() <DOWNTO> )
@@ -537,8 +537,10 @@ void primary() :
 void constant_primary() :
 {}
 {
-    <decimal_literal>
-  | <based_literal>
+    LOOKAHEAD( abstract_literal() )
+      abstract_literal()
+  | LOOKAHEAD( <LPAREN> constant_expression() <RPAREN> )
+      <LPAREN> constant_expression() <RPAREN>
 }
 
 void name_expression() :
