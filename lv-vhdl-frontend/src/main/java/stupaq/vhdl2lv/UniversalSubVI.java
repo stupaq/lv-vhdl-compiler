@@ -28,8 +28,8 @@ public class UniversalSubVI extends SubVI {
     if (clustered) {
       Bundler inputs = new Bundler(owner, entity.inputs(), of("inputs"));
       Unbundler outputs = new Unbundler(owner, entity.outputs(), of("outputs"));
-      new Wire(owner, inputs.output(), super.terminal(0));
-      new Wire(owner, super.terminal(1), outputs.input());
+      new Wire(owner, inputs.output(), super.terminal(1));
+      new Wire(owner, super.terminal(0), outputs.input());
       terminals.addAll(inputs.inputs());
       terminals.addAll(outputs.outputs());
     }

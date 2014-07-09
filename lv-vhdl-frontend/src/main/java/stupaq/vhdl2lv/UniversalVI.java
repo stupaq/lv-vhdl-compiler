@@ -31,8 +31,8 @@ public class UniversalVI extends VI {
         choosePattern(entity.inputs(), entity.outputs()));
     boolean clustered = isClusteredVI(entity.inputs(), entity.outputs());
     if (clustered) {
-      ControlCluster controlOwner = new ControlCluster(this, of("inputs"), 0);
-      IndicatorCluster indicatorOwner = new IndicatorCluster(this, of("outputs"), 1);
+      ControlCluster controlOwner = new ControlCluster(this, of("inputs"), 1);
+      IndicatorCluster indicatorOwner = new IndicatorCluster(this, of("outputs"), 0);
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {
         IOReference ref = connector.reference();
         Optional<String> label = of(ref.toString());
