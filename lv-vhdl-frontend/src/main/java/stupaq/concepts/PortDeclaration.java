@@ -1,14 +1,18 @@
 package stupaq.concepts;
 
+import com.google.common.base.Predicate;
+
 import stupaq.MissingFeature;
+import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-public class PortDeclaration extends SignalDeclaration {
+public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private PortDirection direction;
+  private int connectorIndex;
 
   public PortDeclaration(interface_signal_declaration node) {
     super(node);
@@ -35,8 +39,41 @@ public class PortDeclaration extends SignalDeclaration {
     return direction;
   }
 
+  @Override
+  public boolean isInput() {
+    return direction == PortDirection.IN;
+  }
+
+  @Override
+  public boolean isConstant() {
+    return false;
+  }
+
+  @Override
+  public int connectorIndex() {
+    return connectorIndex;
+  }
+
+  @Override
+  public void connectorIndex(int index) {
+    this.connectorIndex = index;
+  }
+
   public static enum PortDirection {
     IN,
     OUT
+  }
+
+  public static class DirectionPredicate implements Predicate<PortDeclaration> {
+    private final PortDirection direction;
+
+    public DirectionPredicate(PortDirection direction) {
+      this.direction = direction;
+    }
+
+    @Override
+    public boolean apply(PortDeclaration input) {
+      return direction == input.direction();
+    }
   }
 }

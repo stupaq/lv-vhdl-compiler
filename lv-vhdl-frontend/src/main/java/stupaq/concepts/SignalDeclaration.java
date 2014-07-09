@@ -13,6 +13,6 @@ public abstract class SignalDeclaration
 
   @Override
   public String toString() {
-    return "SignalDeclaration{" + "reference=" + reference + ", type=" + type + '}';
+    return getClass().getSimpleName() + "{reference=" + reference() + ", type=" + type() + '}';
   }
 }

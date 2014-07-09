@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import stupaq.concepts.EntityName;
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
-import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.vhdl93.ast.design_file;
 
 public class LVProject {
@@ -23,7 +22,11 @@ public class LVProject {
     n.accept(new DesignFileEmitter(this));
   }
 
-  public VI create(EntityName name, boolean override) {
+  public VIPath resolve(EntityName name) {
+    return new VIPath(root, name + ".vi");
+  }
+
+  public VIPath allocate(EntityName name, boolean override) {
     VIPath path = resolve(name);
     if (override) {
       try {
@@ -32,12 +35,10 @@ public class LVProject {
         throw new RuntimeException(e);
       }
     }
-    VI vi = new VI(tools, path);
-    vi.create();
-    return vi;
+    return path;
   }
 
-  public VIPath resolve(EntityName name) {
-    return new VIPath(root, name + ".vi");
+  public ScriptingTools tools() {
+    return tools;
   }
 }

@@ -12,6 +12,6 @@ public class ConstantDeclaration extends TypedReferenceDeclaration<interface_con
 
   @Override
   public String toString() {
-    return "ConstantDeclaration{" + "reference=" + reference + ", type=" + type + '}';
+    return getClass().getSimpleName() + "{reference=" + reference() + ", type=" + type() + '}';
   }
 }

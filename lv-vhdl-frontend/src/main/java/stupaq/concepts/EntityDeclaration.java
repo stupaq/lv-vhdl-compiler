@@ -1,12 +1,16 @@
 package stupaq.concepts;
 
-import com.google.common.base.Verify;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import java.util.List;
 import java.util.Map;
 
+import stupaq.concepts.PortDeclaration.DirectionPredicate;
+import stupaq.concepts.PortDeclaration.PortDirection;
+import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
@@ -14,9 +18,12 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 public class EntityDeclaration extends VHDLElement<entity_declaration> {
   private final EntityName name;
-  private final List<ConstantDeclaration> generics = Lists.newArrayList();
+  private final List<GenericDeclaration> generics = Lists.newArrayList();
+  private final Map<IOReference, GenericDeclaration> genericsMap = Maps.newHashMap();
   private final List<PortDeclaration> ports = Lists.newArrayList();
-  private final Map<IOReference, Integer> listIndex = Maps.newHashMap();
+  private final Map<IOReference, PortDeclaration> portsMap = Maps.newHashMap();
+  private int inputs;
+  private int outputs;
 
   public EntityDeclaration(entity_declaration node) {
     super(node);
@@ -24,41 +31,71 @@ public class EntityDeclaration extends VHDLElement<entity_declaration> {
     node.entity_header.accept(new DepthFirstVisitor() {
       @Override
       public void visit(interface_constant_declaration n) {
-        addDeclaration(generics, new ConstantDeclaration(n));
+        GenericDeclaration generic = new GenericDeclaration(n);
+        generics.add(generic);
+        genericsMap.put(generic.reference(), generic);
       }
 
       @Override
       public void visit(interface_signal_declaration n) {
-        addDeclaration(ports, new PortDeclaration(n));
-      }
-
-      private <T extends TypedReferenceDeclaration> void addDeclaration(List<T> list,
-          T declaration) {
-        Integer previous = listIndex.put(declaration.reference(), list.size());
-        Verify.verify(previous == null);
-        list.add(declaration);
+        PortDeclaration port = new PortDeclaration(n);
+        ports.add(port);
+        portsMap.put(port.reference(), port);
       }
     });
+    // Now, that we are aware of all inputs/outputs...
+    int index = 0;
+    for (ConnectorPaneTerminal terminal : allTerminals()) {
+      terminal.connectorIndex(index++);
+      if (terminal.isInput()) {
+        ++inputs;
+      } else {
+        ++outputs;
+      }
+    }
   }
 
   public EntityName name() {
     return name;
   }
 
-  public List<ConstantDeclaration> generics() {
+  public Iterable<GenericDeclaration> generics() {
     return generics;
   }
 
-  public List<PortDeclaration> ports() {
-    return ports;
+  public Iterable<PortDeclaration> portsIn() {
+    return FluentIterable.from(ports).filter(new DirectionPredicate(PortDirection.IN));
   }
 
-  public Map<IOReference, Integer> listIndex() {
-    return listIndex;
+  public Iterable<PortDeclaration> portsOut() {
+    return FluentIterable.from(ports).filter(new DirectionPredicate(PortDirection.OUT));
   }
 
-  @Override
-  public String toString() {
-    return "EntityDeclaration{" + "generics=" + generics + ", ports=" + ports + '}';
+  public Iterable<ConnectorPaneTerminal> allTerminals() {
+    return Iterables.<ConnectorPaneTerminal>concat(generics(), portsIn(), portsOut());
+  }
+
+  public GenericDeclaration resolveGeneric(int index) {
+    return generics.get(index);
+  }
+
+  public GenericDeclaration resolveGeneric(IOReference ref) {
+    return genericsMap.get(ref);
+  }
+
+  public PortDeclaration resolvePort(int index) {
+    return ports.get(index);
+  }
+
+  public PortDeclaration resolvePort(IOReference ref) {
+    return portsMap.get(ref);
+  }
+
+  public int inputs() {
+    return inputs;
+  }
+
+  public int outputs() {
+    return outputs;
   }
 }

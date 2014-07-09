@@ -1,5 +1,117 @@
 library ieee;
 use ieee.std_logic_1164.all;
+
+entity sink is
+  generic(n   : in  integer := 4);
+  port(input  : in  std_logic_vector(n downto 0));
+end entity sink;
+
+architecture behavioral of sink is
+begin
+end behavioral;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity source is
+  generic(n   : in  integer := 4);
+  port(output : out std_logic_vector(n downto 0));
+end entity source;
+
+architecture behavioral of source is
+begin
+end behavioral;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity branch_and_merge is
+end entity;
+
+architecture behavioral of branch_and_merge is
+  signal aaa : std_logic_vector(7 downto 0);
+  signal bbb : std_logic_vector(7 downto 0);
+  signal ccc : std_logic_vector(7 downto 0);
+  signal ddd : std_logic_vector(7 downto 0);
+begin
+  src0 : entity work.source port map(aaa(3 downto 0));
+  src1 : entity work.source port map(aaa(7 downto 4));
+  dst0 : entity work.sink port map(aaa(3 downto 0));
+  dst1 : entity work.sink port map(aaa(7 downto 4));
+
+  src2 : entity work.source port map(bbb(3 downto 0));
+  src3 : entity work.source port map(bbb(7 downto 4));
+  dst2 : entity work.sink generic map(7) port map(bbb(7 downto 0));
+
+  src4 : entity work.source generic map(7) port map(ccc(7 downto 0));
+  dst3 : entity work.sink port map(ccc(3 downto 0));
+  dst4 : entity work.sink port map(ccc(7 downto 4));
+
+  src5 : entity work.source generic map(7) port map(ddd(7 downto 0));
+  dst5 : entity work.sink generic map(7) port map(ddd(7 downto 0));
+end behavioral;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity many_ports is
+  port(
+    in0 : in std_logic;
+    in1 : in std_logic;
+    in2 : in std_logic;
+    in3 : in std_logic;
+    in4 : in std_logic;
+    in5 : in std_logic;
+    in6 : in std_logic;
+    in7 : in std_logic;
+    in8 : in std_logic;
+    in9 : in std_logic;
+    in10 : in std_logic;
+    in11 : in std_logic;
+    in12 : in std_logic;
+    in13 : in std_logic;
+    in14 : in std_logic;
+    in15 : in std_logic;
+    in16 : in std_logic;
+    in17 : in std_logic;
+    in18 : in std_logic;
+    in19 : in std_logic;
+    in20 : in std_logic;
+    in21 : in std_logic;
+    in22 : in std_logic;
+    in23 : in std_logic;
+    in24 : in std_logic;
+    in25 : in std_logic;
+    in26 : in std_logic;
+    extra_in : in std_logic;
+    extra_out : out std_logic);
+end entity;
+
+architecture behavioral of many_ports is
+begin
+  extra_out <= extra_in;
+end behavioral;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity many_ports_outer is
+  port(
+    input    : in  std_logic;
+    in0   : in  std_logic;
+    out0  : out std_logic);
+end entity;
+
+architecture behavioral of many_ports_outer is
+begin
+  many_ports : entity work.many_ports port map(in0, in0, in0, in0, in0, in0, in0, in0,
+   in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0,
+    in0, in0, input, out0);
+end behavioral;
+
+-- FIXME needs total cleanup
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity divider is
@@ -91,66 +203,15 @@ entity stopwatch is
   port(input  : std_logic_vector(n - 1 downto 0);
        clk    : in  std_logic;
        rst    : in  std_logic;
-       toggle : in  std_logic;
-       dir    : in  std_logic;
        output : out std_logic_vector(n - 1 downto 0);
        active : out std_logic;
+       toggle : in  std_logic;
+       dir    : in  std_logic;
        ovf    : out std_logic);
 end stopwatch;
 
 architecture behavioral of stopwatch is
 begin
-end behavioral;
-
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity sink4 is
-  port(input : in std_logic_vector(3 downto 0));
-end entity sink4;
-
-architecture behavioral of sink4 is
-begin
-end behavioral;
-
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity source4 is
-  port(output : out std_logic_vector(3 downto 0));
-end entity source4;
-
-architecture behavioral of source4 is
-begin
-end behavioral;
-
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity forktest0 is
-end entity;
-
-architecture behavioral of forktest0 is
-  signal aaa : std_logic_vector(7 downto 0);
-  signal bbb : std_logic_vector(7 downto 0);
-  signal ccc : std_logic_vector(7 downto 0);
-  signal ddd : std_logic_vector(7 downto 0);
-begin
-  src0 : entity work.source4 port map(aaa(3 downto 0));
-  src1 : entity work.source4 port map(aaa(7 downto 4));
-  dst0 : entity work.sink4 port map(aaa(3 downto 0));
-  dst1 : entity work.sink4 port map(aaa(7 downto 4));
-
-  src2 : entity work.source4 port map(bbb(3));
-  src3 : entity work.source4 port map(bbb(7 downto 4));
-  dst2 : entity work.sink4 port map(bbb(7 downto 0));
-
-  src4 : entity work.source4 port map(ccc(7 downto 0));
-  dst3 : entity work.sink4 port map(ccc(3 downto 0));
-  dst4 : entity work.sink4 port map(ccc(7));
-
-  src5 : entity work.source4 port map(ddd(3 downto 0));
-  dst5 : entity work.sink4 port map(ddd(2 downto 0));
 end behavioral;
 
 library ieee;
@@ -185,7 +246,7 @@ begin
 
   watch : entity work.stopwatch
   generic map(COUNTER_WIDTH)
-  port map(input, dclk, btn(3), toggle, sw(0), output, active, led(7));
+  port map(input, dclk, btn(3), output, active, led(7));
 
   conv : entity work.bin2dec port map(input => output, output => disp);
 

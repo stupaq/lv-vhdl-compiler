@@ -1,6 +1,5 @@
 package stupaq.vhdl2lv;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
@@ -12,20 +11,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
-import stupaq.concepts.ConstantDeclaration;
 import stupaq.concepts.EntityDeclaration;
 import stupaq.concepts.EntityName;
 import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
-import stupaq.concepts.PortDeclaration;
-import stupaq.concepts.PortDeclaration.PortDirection;
-import stupaq.labview.scripting.hierarchy.Control;
+import stupaq.labview.VIPath;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
-import stupaq.labview.scripting.hierarchy.Indicator;
-import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.hierarchy.VI;
+import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 import stupaq.vhdl2lv.WiringRules.FallbackLabels;
@@ -36,8 +30,6 @@ import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Optional.of;
-import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
-import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
@@ -48,7 +40,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   /** Context of {@link #visit(design_file)}. */
   private final LVProject project;
   /** Context of {@link #visit(architecture_declaration)}. */
-  private VI currentVi;
+  private UniversalVI currentVi;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
@@ -78,34 +70,15 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(architecture_declaration n) {
+    namedSources = new IOSources();
+    danglingSinks = new IOSinks();
     EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
     Identifier architecture = new Identifier(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
-    currentVi = project.create(entity.name(), true);
-    namedSources = new IOSources();
-    danglingSinks = new IOSinks();
-    int connPanelIndex = 0;
-    for (ConstantDeclaration constant : entity.generics()) {
-      Optional<String> label = of(constant.reference().toString());
-      Terminal terminal =
-          new Control(currentVi, NUMERIC_I32, label, connPanelIndex++).endpoint().get();
-      namedSources.put(constant.reference(), terminal);
-    }
-    for (PortDeclaration port : entity.ports()) {
-      // IN and OUT are source and sink when we look from the outside (entity declaration).
-      Terminal terminal;
-      Optional<String> label = of(port.reference().toString());
-      if (port.direction() == PortDirection.OUT) {
-        terminal = new Indicator(currentVi, NUMERIC_DBL, label, connPanelIndex++).endpoint().get();
-      } else {
-        terminal = new Control(currentVi, NUMERIC_DBL, label, connPanelIndex++).endpoint().get();
-      }
-      if (port.direction() == PortDirection.OUT) {
-        danglingSinks.put(port.reference(), terminal);
-      } else {
-        namedSources.put(port.reference(), terminal);
-      }
-    }
+    VIPath viPath = project.allocate(entity.name(), true);
+    // Create all generics, ports and eventually the VI itself.
+    currentVi = new UniversalVI(project, entity, namedSources, danglingSinks);
+    // Emit architecture body.
     n.architecture_statement_part.accept(this);
     if (LOGGER.isDebugEnabled()) {
       LOGGER.debug("Named sources:");
@@ -117,7 +90,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\t{}", entry);
       }
     }
-    // There will be no more named terminals in this scope.
+    // Fill in signal labels from architecture declarative part.
     final FallbackLabels labelling = new FallbackLabels();
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
       @Override
@@ -157,7 +130,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
     if (!labelling.isEmpty()) {
       for (Entry<IOReference, String> entry : labelling.remainingLabels()) {
         LOGGER.warn("Unused label: {} for source: {}", entry.getValue(), entry.getKey());
-        // TODO emit missing signals, so they won't get lost
       }
     }
     for (Entry<IOReference, Source> entry : namedSources.entries()) {
@@ -183,7 +155,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
     String label = representation(n.instantiation_label.label);
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
-    final SubVI instance = new SubVI(currentVi, project.resolve(entity.name()), of(label));
+    final UniversalSubVI instance = new UniversalSubVI(currentVi, project, entity, of(label));
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /**
        * Context of {@link #visit(generic_map_aspect)} and {@link
@@ -192,8 +164,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
       boolean isGenericAspect;
       /** Context of {@link #visit(positional_association_list)}. */
       int elementIndex;
-      /** Context of {@link #visit(actual_part)}. */
-      int listIndex;
       /** Context of {@link #visit(actual_part)}. */
       boolean portIsSink;
       /** Context of {@link #visit(actual_part)}. */
@@ -213,33 +183,33 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(named_association_element n) {
+        Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
         LOGGER.debug("Port assignment: {}", representation(n));
         IOReference ref = new IOReference(n.formal_part.identifier);
-        listIndex = entity.listIndex().get(ref);
+        ConnectorPaneTerminal terminal =
+            isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
+        portIsSink = terminal.isInput();
+        portTerminal = instance.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
+        Verify.verify(portTerminal == null);
       }
 
       @Override
       public void visit(positional_association_element n) {
+        Preconditions.checkState(elementIndex >= 0);
         LOGGER.debug("Port assignment: {}", representation(n));
-        listIndex = elementIndex++;
+        ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
+            : entity.resolvePort(elementIndex);
+        portIsSink = terminal.isInput();
+        portTerminal = instance.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
-      }
-
-      @Override
-      public void visit(actual_part n) {
-        // This follows from the fact that we first emit all generics.
-        int connPanelIndexBase = isGenericAspect ? 0 : entity.generics().size();
-        portTerminal = instance.terminals().get(connPanelIndexBase + listIndex);
-        portIsSink =
-            isGenericAspect || entity.ports().get(listIndex).direction() == PortDirection.IN;
-        LOGGER.debug("\tlistIndex={}, portIsSink={}, portTerminal", listIndex, portIsSink);
-        n.nodeChoice.accept(this);
+        Verify.verify(portTerminal == null);
+        ++elementIndex;
       }
 
       @Override
       public void visit(actual_part_open n) {
-        // This way we do nothing for <OPEN> which is very appropriate.
+        // This way we do nothing for <OPEN> ports which is very appropriate.
         portTerminal = null;
       }
 
