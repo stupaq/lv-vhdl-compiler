@@ -18,6 +18,14 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 public class ExpressionClassifier {
+  private static String unwrapParentheses(String expression) {
+    if (expression.startsWith("(") && expression.endsWith(")")) {
+      return unwrapParentheses(expression.substring(1, expression.length() - 1));
+    } else {
+      return expression;
+    }
+  }
+
   public List<identifier> topLevelScopeIdentifiers(SimpleNode n) {
     final List<identifier> identifiers = Lists.newArrayList();
     sequence(n).accept(new TopLevelScopeVisitor() {
@@ -38,14 +46,6 @@ public class ExpressionClassifier {
       return true;
     } catch (ParseException ignored) {
       return false;
-    }
-  }
-
-  private static String unwrapParentheses(String expression) {
-    if (expression.startsWith("(") && expression.endsWith(")")) {
-      return unwrapParentheses(expression.substring(1, expression.length() - 1));
-    } else {
-      return expression;
     }
   }
 

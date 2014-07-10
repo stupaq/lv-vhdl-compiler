@@ -28,16 +28,15 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class SinkEmitter {
-  private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
   public static final String LVALUE_LABEL = "ASSIGNEE";
+  private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
   private final Generic owner;
   private final IOSinks danglingSinks;
   private final IOSources namedSources;
   private final Set<Object> blacklist;
   private final ExpressionClassifier classifier;
 
-  public SinkEmitter(Generic owner, IOSinks danglingSinks,
-      IOSources namedSources) {
+  public SinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
@@ -103,17 +102,17 @@ class SinkEmitter {
     // We wait until we descent into an l-value, emit it, and then proceed into any found r-value.
     n.accept(new DepthFirstVisitor() {
       @Override
+      public void visit(name n) {
+        n.accept(visitor);
+      }
+
+      @Override
       public void visit(primary n) {
         n.accept(visitor);
       }
 
       @Override
       public void visit(target n) {
-        n.accept(visitor);
-      }
-
-      @Override
-      public void visit(name n) {
         n.accept(visitor);
       }
 

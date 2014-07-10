@@ -48,6 +48,11 @@ public class WiringRules {
     this.labelling = labelling;
   }
 
+  public static CompoundArithmetic mergeNode(Generic owner, int inputs) {
+    return new CompoundArithmetic(owner, ArithmeticMode.MULTIPLY, inputs,
+        Optional.<String>absent());
+  }
+
   private Wire connect(IOReference ref, Source source, Sink sink) {
     // The label might be different on each invocation.
     return new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source));
@@ -80,11 +85,6 @@ public class WiringRules {
         connect(ref, source, sink);
       }
     }
-  }
-
-  public static CompoundArithmetic mergeNode(Generic owner, int inputs) {
-    return new CompoundArithmetic(owner, ArithmeticMode.MULTIPLY, inputs,
-        Optional.<String>absent());
   }
 
   public void applyAll() {

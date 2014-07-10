@@ -50,9 +50,9 @@ class SourceEmitter {
     return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
   }
 
-  public Terminal emitAsConstant(SimpleNode n) {
+  public Terminal emitAsConstant(SimpleNode n, Optional<String> label) {
     RingConstant constant = new RingConstant(owner, Collections.singletonMap(representation(n), 0),
-        DataRepresentation.I32, Optional.<String>absent());
+        DataRepresentation.I32, label);
     return constant.endpoint().get();
   }
 
@@ -69,7 +69,7 @@ class SourceEmitter {
   public void emitWithSink(expression n, Terminal sink) {
     List<identifier> identifiers = classifier.topLevelScopeIdentifiers(n);
     if (identifiers.isEmpty()) {
-      Terminal source = emitAsConstant(n);
+      Terminal source = emitAsConstant(n, Optional.<String>absent());
       new Wire(owner, source, sink, Optional.<String>absent());
     } else if (identifiers.size() == 1) {
       IOReference ref = new IOReference(identifiers.get(0));

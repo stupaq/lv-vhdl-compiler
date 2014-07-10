@@ -1,5 +1,6 @@
 package stupaq.vhdl2lv;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
@@ -15,7 +16,6 @@ import stupaq.concepts.EntityDeclaration;
 import stupaq.concepts.EntityName;
 import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
-import stupaq.labview.VIPath;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Terminal;
@@ -28,7 +28,6 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
-import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 import static stupaq.vhdl93.ast.ASTGetters.representation;
@@ -75,7 +74,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
     EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
     Identifier architecture = new Identifier(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
-    VIPath viPath = project.allocate(entity.name(), true);
     // Create all generics, ports and eventually the VI itself.
     currentVi = new UniversalVI(project, entity, namedSources, danglingSinks);
     // Emit architecture body.
@@ -99,6 +97,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
         Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
         // There will be no more dangling sinks than we see right now, we can connect this
         // constant to every pending sink and forget about it.
+        final String label = representation(
+            sequence(n.nodeToken, n.identifier_list, n.nodeToken1, n.subtype_indication));
         Terminal terminal = n.nodeOptional.accept(new GJNoArguDepthFirst<Terminal>() {
           @Override
           public Terminal visit(NodeSequence n) {
@@ -107,13 +107,12 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
           @Override
           public Terminal visit(expression n) {
-            return new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n);
+            return new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n,
+                of(label));
           }
         });
         Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
-        String filter = representation(
-            sequence(n.nodeToken, n.identifier_list, n.nodeToken1, n.subtype_indication));
-        namedSources.put(ref, terminal, filter);
+        namedSources.put(ref, terminal);
       }
 
       @Override
@@ -257,23 +256,22 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(concurrent_assertion_statement n) {
-    // TODO
+    final Formula formula =
+        new FormulaNode(currentVi, representation(n), Optional.<String>absent());
+    final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
+    n.accept(new DepthFirstVisitor() {
+      @Override
+      public void visit(expression n) {
+        // Note that sine we do not descend recursively, we will cover each expression once.
+        sourceEmitter.addTerminals(formula, n);
+      }
+    });
   }
 
   @Override
   public void visit(concurrent_signal_assignment_statement n) {
-    String label = n.accept(new GJNoArguDepthFirst<String>() {
-      @Override
-      public String visit(NodeSequence n) {
-        return n.nodes.get(0).accept(this);
-      }
-
-      @Override
-      public String visit(label n) {
-        return representation(n.identifier);
-      }
-    });
-    final Formula formula = new FormulaNode(currentVi, representation(n), fromNullable(label));
+    final Formula formula =
+        new FormulaNode(currentVi, representation(n), Optional.<String>absent());
     final SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
     final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
     n.accept(new DepthFirstVisitor() {

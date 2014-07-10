@@ -27,7 +27,7 @@ public class UniversalVI extends VI {
 
   public UniversalVI(LVProject project, EntityDeclaration entity, IOSources namedSources,
       IOSinks danglingSinks) {
-    super(project.tools(), project.resolve(entity.name()),
+    super(project.tools(), project.allocate(entity.name(), true),
         choosePattern(entity.inputs(), entity.outputs()));
     boolean clustered = isClusteredVI(entity.inputs(), entity.outputs());
     if (clustered) {
