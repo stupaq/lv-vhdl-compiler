@@ -22,7 +22,7 @@ import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
-import stupaq.vhdl2lv.WiringRules.FallbackLabels;
+import stupaq.vhdl2lv.WiringRules.PassLabels;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
@@ -33,6 +33,9 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
+  private static final String ARCHITECTURE_DECLARATIVE_PART_LABEL =
+      "ARCHITECTURE EXTRA DECLARATIONS";
+  private static final String ARCHITECTURE_BODY_LABEL = "ARCHITECTURE EXTRA BODY STATEMENTS";
   /** Context of {@link #visit(design_file)}. */
   private final Map<EntityName, EntityDeclaration> knownEntities = Maps.newHashMap();
   /** Context of {@link #visit(design_file)}. */
@@ -43,6 +46,10 @@ class DesignFileEmitter extends DepthFirstVisitor {
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSinks danglingSinks;
+  /** Context of {@link #visit(architecture_declaration)}. */
+  private StringBuilder concurrentStatementFallbacked;
+  /** Context of {@link #visit(concurrent_statement)}. */
+  private boolean concurrentStatementFallback;
 
   public DesignFileEmitter(LVProject project) {
     this.project = project;
@@ -68,10 +75,11 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(architecture_declaration n) {
+    concurrentStatementFallbacked = new StringBuilder();
     namedSources = new IOSources();
     danglingSinks = new IOSinks();
     EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
-    Identifier architecture = new Identifier(n.architecture_identifier.identifier);
+    final Identifier architecture = new Identifier(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
     // Create all generics, ports and eventually the VI itself.
     currentVi = new UniversalVI(project, entity, namedSources, danglingSinks);
@@ -87,11 +95,15 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\t{}", entry);
       }
     }
-    // Fill in signal labels from architecture declarative part.
-    final FallbackLabels labelling = new FallbackLabels();
+    // Emit entries from architecture declarative part.
+    final StringBuilder declarativePartFallbacked = new StringBuilder();
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
+      /** Context of {@link #visit(block_declarative_item)}. */
+      boolean declarativePartFallback;
+
       @Override
       public void visit(constant_declaration n) {
+        declarativePartFallback = false;
         IOReference ref = new IOReference(n.identifier_list.identifier);
         Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
         // There will be no more dangling sinks than we see right now, we can connect this
@@ -115,21 +127,27 @@ class DesignFileEmitter extends DepthFirstVisitor {
       }
 
       @Override
-      public void visit(signal_declaration n) {
-        MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported", n);
-        IOReference ref = new IOReference(n.identifier_list.identifier);
-        String label = n.representation();
-        labelling.put(ref, label);
+      public void visit(block_declarative_item n) {
+        declarativePartFallback = true;
+        super.visit(n);
+        if (declarativePartFallback) {
+          declarativePartFallbacked.append(n.representation()).append(System.lineSeparator());
+        }
       }
     });
-    // All references and labels are resolved now.
-    new WiringRules(currentVi, namedSources, danglingSinks, labelling).applyAll();
-    // Fallback for missing signal declarations and wires.
-    if (!labelling.isEmpty()) {
-      for (Entry<IOReference, String> entry : labelling.remainingLabels()) {
-        LOGGER.warn("Unused label: {} for source: {}", entry.getValue(), entry.getKey());
-      }
+    // Emit declarative part leftovers.
+    if (declarativePartFallbacked.length() > 0) {
+      new FormulaNode(currentVi, declarativePartFallbacked.toString(),
+          of(ARCHITECTURE_DECLARATIVE_PART_LABEL));
     }
+    // Emit statement part leftovers.
+    if (concurrentStatementFallbacked.length() > 0) {
+      new FormulaNode(currentVi, concurrentStatementFallbacked.toString(),
+          of(ARCHITECTURE_BODY_LABEL));
+    }
+    // All references and labels are resolved now.
+    new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels()).applyAll();
+    // Fallback for missing signal declarations and wires.
     for (Entry<IOReference, Source> entry : namedSources.entries()) {
       IOReference ref = entry.getKey();
       Source source = entry.getValue();
@@ -146,10 +164,12 @@ class DesignFileEmitter extends DepthFirstVisitor {
     currentVi = null;
     namedSources = null;
     danglingSinks = null;
+    concurrentStatementFallbacked = null;
   }
 
   @Override
   public void visit(component_instantiation_statement n) {
+    concurrentStatementFallback = false;
     final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
@@ -240,7 +260,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(block_statement n) {
-    throw new MissingFeature("Blocks are not supported at this time.", n.position());
+    concurrentStatementFallback = false;
+    MissingFeature.missing("Blocks are not supported at this time.", n);
   }
 
   @Override
@@ -255,6 +276,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(concurrent_assertion_statement n) {
+    concurrentStatementFallback = false;
     final Formula formula =
         new FormulaNode(currentVi, n.representation(), Optional.<String>absent());
     final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
@@ -269,6 +291,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(concurrent_signal_assignment_statement n) {
+    concurrentStatementFallback = false;
     final Formula formula =
         new FormulaNode(currentVi, n.representation(), Optional.<String>absent());
     final SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
@@ -302,5 +325,14 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(generate_statement n) {
     // TODO
+  }
+
+  @Override
+  public void visit(concurrent_statement n) {
+    concurrentStatementFallback = true;
+    super.visit(n);
+    if (concurrentStatementFallback) {
+      concurrentStatementFallbacked.append(n.representation()).append(System.lineSeparator());
+    }
   }
 }

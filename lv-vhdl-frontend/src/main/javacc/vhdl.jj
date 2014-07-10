@@ -898,6 +898,51 @@ void port_map_aspect() :
 }
 /** /COMPONENT INSTANTIATION */
 
+/** PROCESS/ */
+void process_statement() :
+{}
+{
+  [ process_label() <COLON> ] [ <POSTPONED> ] <PROCESS> [ <LPAREN> sensitivity_list() <RPAREN> ] [ <IS> ]
+    process_declarative_part()
+  <BEGIN>
+    process_statement_part()
+  <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] <SEMICOLON>
+}
+
+void process_statement_part() :
+{}
+{
+  ( sequential_statement() )*
+}
+
+void process_declarative_item() :
+{}
+{
+    LOOKAHEAD( subprogram_declaration() )
+    subprogram_declaration()
+  | subprogram_body()
+  | type_declaration()
+  | subtype_declaration()
+  | constant_declaration()
+  | variable_declaration()
+  | file_declaration()
+  | alias_declaration()
+  | LOOKAHEAD( attribute_declaration() )
+    attribute_declaration()
+  | attribute_specification()
+  | use_clause()
+  | LOOKAHEAD( <GROUP> identifier() <IS> )
+    group_template_declaration()
+  | group_declaration()
+}
+
+void process_declarative_part() :
+{}
+{
+  ( process_declarative_item() )*
+}
+/** /PROCESS */
+
 void abstract_literal() :
 {}
 {
@@ -1770,49 +1815,6 @@ void procedure_call_statement() :
 {
    [ LOOKAHEAD( label() <SEMICOLON> ) label() <COLON> ]
    procedure_call() <SEMICOLON>
-}
-
-void process_declarative_item() :
-{}
-{
-    LOOKAHEAD( subprogram_declaration() )
-    subprogram_declaration()
-  | subprogram_body()
-  | type_declaration()
-  | subtype_declaration()
-  | constant_declaration()
-  | variable_declaration()
-  | file_declaration()
-  | alias_declaration()
-  | LOOKAHEAD( attribute_declaration() )
-    attribute_declaration()
-  | attribute_specification()
-  | use_clause()
-  | LOOKAHEAD( <GROUP> identifier() <IS> )
-    group_template_declaration()
-  | group_declaration()
-}
-
-void process_declarative_part() :
-{}
-{
-  ( process_declarative_item() )*
-}
-
-void process_statement() :
-{}
-{
-  [ process_label() <COLON> ] [ <POSTPONED> ] <PROCESS> [ <LPAREN> sensitivity_list() <RPAREN> ] [ <IS> ]
-    process_declarative_part()
-  <BEGIN>
-    process_statement_part()
-  <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] <SEMICOLON>
-}
-
-void process_statement_part() :
-{}
-{
-  ( sequential_statement() )*
 }
 
 void qualified_expression() :

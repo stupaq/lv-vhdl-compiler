@@ -97,6 +97,13 @@ public class WiringRules {
     }
   }
 
+  public static class PassLabels implements LabellingRules {
+    @Override
+    public Optional<String> choose(IOReference ref, Source source) {
+      return source.label();
+    }
+  }
+
   public static class FallbackLabels extends ForwardingMap<IOReference, String>
       implements LabellingRules {
     private final Map<IOReference, String> delegate = Maps.newHashMap();
@@ -114,6 +121,16 @@ public class WiringRules {
       return super.put(key, value);
     }
 
+    public Iterable<Entry<IOReference, String>> remainingLabels() {
+      return FluentIterable.from(delegate.entrySet())
+          .filter(new Predicate<Entry<IOReference, String>>() {
+            @Override
+            public boolean apply(Entry<IOReference, String> input) {
+              return !labelled.contains(input.getKey());
+            }
+          });
+    }
+
     @Override
     public Optional<String> choose(IOReference ref, Source source) {
       Optional<String> labelSource = source.label();
@@ -125,15 +142,6 @@ public class WiringRules {
       }
     }
 
-    public Iterable<Entry<IOReference, String>> remainingLabels() {
-      return FluentIterable.from(delegate.entrySet())
-          .filter(new Predicate<Entry<IOReference, String>>() {
-            @Override
-            public boolean apply(Entry<IOReference, String> input) {
-              return !labelled.contains(input.getKey());
-            }
-          });
-    }
   }
 
   public interface LabellingRules {
