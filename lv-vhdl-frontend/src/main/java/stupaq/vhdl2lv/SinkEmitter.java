@@ -25,8 +25,6 @@ import stupaq.vhdl93.ast.simple_expression;
 import stupaq.vhdl93.ast.target;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
 class SinkEmitter {
   public static final String LVALUE_LABEL = "ASSIGNEE";
   private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
@@ -45,7 +43,7 @@ class SinkEmitter {
   }
 
   public Terminal emitAsLValue(SimpleNode n) {
-    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, new SourceEmitter(owner, danglingSinks, namedSources), n);
     return formula.addInput(LVALUE_LABEL);
   }
@@ -55,13 +53,13 @@ class SinkEmitter {
   }
 
   public void emitAsReference(Terminal source, IOReference ref, SimpleNode n) {
-    namedSources.put(ref, source, representation(n));
+    namedSources.put(ref, source, n.representation());
   }
 
   public void emitWithSource(Terminal source, expression n) {
     List<identifier> identifiers = classifier.topLevelScopeIdentifiers(n);
     if (identifiers.isEmpty()) {
-      LOGGER.error("Sink expression: {} is a constant", representation(n));
+      LOGGER.error("Sink expression: {} is a constant", n.representation());
     } else if (identifiers.size() == 1) {
       IOReference ref = new IOReference(identifiers.get(0));
       if (classifier.isIdentifier(n)) {

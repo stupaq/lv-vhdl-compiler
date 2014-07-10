@@ -2,14 +2,12 @@ package stupaq.concepts;
 
 import stupaq.vhdl93.ast.subtype_indication;
 
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
 public class TypeIndication extends VHDLElement<subtype_indication> {
   String identifier;
 
   public TypeIndication(subtype_indication node) {
     super(node);
-    identifier = representation(node);
+    identifier = node.representation();
   }
 
   public String identifier() {

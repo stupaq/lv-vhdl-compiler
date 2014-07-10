@@ -30,7 +30,6 @@ import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
-import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
@@ -97,8 +96,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
         Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
         // There will be no more dangling sinks than we see right now, we can connect this
         // constant to every pending sink and forget about it.
-        final String label = representation(
-            sequence(n.nodeToken, n.identifier_list, n.nodeToken1, n.subtype_indication));
+        final String label = sequence(n.nodeToken, n.identifier_list, n.nodeToken1,
+            n.subtype_indication).representation();
         Terminal terminal = n.nodeOptional.accept(new GJNoArguDepthFirst<Terminal>() {
           @Override
           public Terminal visit(NodeSequence n) {
@@ -117,9 +116,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(signal_declaration n) {
-        MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported");
+        MissingFeature.throwIf(n.nodeOptional1.present(), "Signal default is not supported", n);
         IOReference ref = new IOReference(n.identifier_list.identifier);
-        String label = representation(n);
+        String label = n.representation();
         labelling.put(ref, label);
       }
     });
@@ -152,7 +151,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(component_instantiation_statement n) {
     final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
-    String label = representation(n.instantiation_label.label);
+    String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
     final UniversalSubVI instance = new UniversalSubVI(currentVi, project, entity, of(label));
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
@@ -183,7 +182,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(named_association_element n) {
         Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
-        LOGGER.debug("Port assignment: {}", representation(n));
+        LOGGER.debug("Port assignment: {}", n.representation());
         IOReference ref = new IOReference(n.formal_part.identifier);
         ConnectorPaneTerminal terminal =
             isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
@@ -196,7 +195,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(positional_association_element n) {
         Preconditions.checkState(elementIndex >= 0);
-        LOGGER.debug("Port assignment: {}", representation(n));
+        LOGGER.debug("Port assignment: {}", n.representation());
         ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
             : entity.resolvePort(elementIndex);
         portIsSink = terminal.isInput();
@@ -241,7 +240,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(block_statement n) {
-    // TODO
+    throw new MissingFeature("Blocks are not supported at this time.", n.position());
   }
 
   @Override
@@ -257,7 +256,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(concurrent_assertion_statement n) {
     final Formula formula =
-        new FormulaNode(currentVi, representation(n), Optional.<String>absent());
+        new FormulaNode(currentVi, n.representation(), Optional.<String>absent());
     final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
     n.accept(new DepthFirstVisitor() {
       @Override
@@ -271,7 +270,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(concurrent_signal_assignment_statement n) {
     final Formula formula =
-        new FormulaNode(currentVi, representation(n), Optional.<String>absent());
+        new FormulaNode(currentVi, n.representation(), Optional.<String>absent());
     final SinkEmitter sinkEmitter = new SinkEmitter(currentVi, danglingSinks, namedSources);
     final SourceEmitter sourceEmitter = new SourceEmitter(currentVi, danglingSinks, namedSources);
     n.accept(new DepthFirstVisitor() {

@@ -4,9 +4,6 @@ import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.entity_name;
 import stupaq.vhdl93.ast.instantiated_unit;
 
-import static stupaq.vhdl93.ast.ASTGetters.name;
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
 public class EntityName extends Identifier {
   private static final String DEFAULT_LIBRARY_PREFIX = "work.";
   private static final String LIBRARY_SEPARATOR = ".";
@@ -16,14 +13,14 @@ public class EntityName extends Identifier {
   }
 
   public EntityName(entity_declaration node) {
-    this(representation(node.entity_identifier.identifier));
+    this(node.entity_identifier.identifier.representation());
   }
 
   public EntityName(entity_name node) {
-    this(representation(node.name));
+    this(node.name.representation());
   }
 
   public EntityName(instantiated_unit node) {
-    this(name(node));
+    this(node.firstName());
   }
 }

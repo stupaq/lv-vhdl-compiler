@@ -5,8 +5,6 @@ import com.google.common.base.Preconditions;
 
 import stupaq.vhdl93.ast.identifier;
 
-import static stupaq.vhdl93.ast.ASTGetters.representation;
-
 public class Identifier {
   private final String string;
 
@@ -18,18 +16,18 @@ public class Identifier {
   }
 
   public Identifier(identifier node) {
-    this(representation(node));
+    this(node.representation());
+  }
+
+  @Override
+  public int hashCode() {
+    return string.hashCode();
   }
 
   @Override
   public boolean equals(Object o) {
     return this == o ||
         !(o == null || getClass() != o.getClass()) && string.equals(((Identifier) o).string);
-  }
-
-  @Override
-  public int hashCode() {
-    return string.hashCode();
   }
 
   @Override

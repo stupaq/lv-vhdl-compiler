@@ -15,7 +15,6 @@ import stupaq.vhdl93.ast.suffix;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
-import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 public class ExpressionClassifier {
   private static String unwrapParentheses(String expression) {
@@ -38,7 +37,7 @@ public class ExpressionClassifier {
   }
 
   public boolean isIdentifier(SimpleNode n) {
-    String rep = unwrapParentheses(representation(n));
+    String rep = unwrapParentheses(n.representation());
     try {
       VHDL93Parser parser = new VHDL93Parser(new StringReader(rep));
       parser.identifier();

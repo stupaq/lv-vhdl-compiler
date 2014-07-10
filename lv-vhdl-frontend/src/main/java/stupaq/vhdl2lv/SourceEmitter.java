@@ -29,7 +29,6 @@ import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.identifier;
 
 import static com.google.common.base.Optional.of;
-import static stupaq.vhdl93.ast.ASTGetters.representation;
 
 class SourceEmitter {
   public static final String RVALUE_LABEL = "RESULT";
@@ -51,7 +50,7 @@ class SourceEmitter {
   }
 
   public Terminal emitAsConstant(SimpleNode n, Optional<String> label) {
-    RingConstant constant = new RingConstant(owner, Collections.singletonMap(representation(n), 0),
+    RingConstant constant = new RingConstant(owner, Collections.singletonMap(n.representation(), 0),
         DataRepresentation.I32, label);
     return constant.endpoint().get();
   }
@@ -62,7 +61,7 @@ class SourceEmitter {
 
   public void emitAsReference(IOReference ref, SimpleNode n, Terminal sink) {
     CompoundArithmetic branch = branchNode(owner);
-    new Wire(owner, branch.output(), sink, of(representation(n)));
+    new Wire(owner, branch.output(), sink, of(n.representation()));
     danglingSinks.put(ref, branch.inputs().get(0));
   }
 
@@ -85,7 +84,7 @@ class SourceEmitter {
   }
 
   public Terminal<FormulaParameter> emitAsExpression(SimpleNode n) {
-    Formula formula = new FormulaNode(owner, representation(n), Optional.<String>absent());
+    Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, n);
     return formula.addOutput(RVALUE_LABEL);
   }

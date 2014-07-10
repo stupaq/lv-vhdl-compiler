@@ -4,11 +4,14 @@ import com.google.common.base.Predicate;
 
 import stupaq.MissingFeature;
 import stupaq.metadata.ConnectorPaneTerminal;
-import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
+
+import static stupaq.vhdl93.VHDL93ParserConstants.IN;
+import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
+import static stupaq.vhdl93.VHDL93ParserConstants.tokenImage;
 
 public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private PortDirection direction;
@@ -21,15 +24,15 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
       public void visit(mode n) {
         int mode = ((NodeToken) n.nodeChoice.choice).kind;
         switch (mode) {
-          case VHDL93ParserConstants.IN:
+          case IN:
             direction = PortDirection.IN;
             break;
-          case VHDL93ParserConstants.OUT:
+          case OUT:
             direction = PortDirection.OUT;
             break;
           default:
-            throw new MissingFeature("Mode: " + VHDL93ParserConstants.tokenImage[mode] +
-                " is not supported for ports.");
+            throw new MissingFeature("Port direction: " + tokenImage[mode] + " is not supported.",
+                n.position());
         }
       }
     });
