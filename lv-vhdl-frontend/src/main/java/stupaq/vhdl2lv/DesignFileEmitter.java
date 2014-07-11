@@ -51,6 +51,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSinks danglingSinks;
   /** Context of {@link #visit(architecture_declaration)}. */
+  private WiresBlacklist wiresBlacklist;
+  /** Context of {@link #visit(architecture_declaration)}. */
   private StringBuilder concurrentStatementFallbacked;
   /** Context of {@link #visit(concurrent_statement)}. */
   private boolean concurrentStatementFallback;
@@ -80,8 +82,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(architecture_declaration n) {
     concurrentStatementFallbacked = new StringBuilder();
-    namedSources = new IOSources();
+    wiresBlacklist = new WiresBlacklist();
     danglingSinks = new IOSinks();
+    namedSources = new IOSources();
     EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
     final Identifier architecture = new Identifier(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
@@ -150,7 +153,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
           ARCHITECTURE_STATEMENT_PART_LABEL);
     }
     // All references and labels are resolved now.
-    new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels()).applyAll();
+    new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels(),
+        wiresBlacklist).applyAll();
     // Fallback for missing signal declarations and wires.
     for (Entry<IOReference, Source> entry : namedSources.entries()) {
       IOReference ref = entry.getKey();
@@ -168,6 +172,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     currentVi = null;
     namedSources = null;
     danglingSinks = null;
+    wiresBlacklist = null;
     concurrentStatementFallbacked = null;
   }
 
@@ -276,7 +281,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     Formula formula =
         new FormulaNode(loop.diagram(), n.representation(), PROCESS_STATEMENT_PART_LABEL);
     // Connect wires.
-    new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources).visit(n);
+    new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources, wiresBlacklist).visit(n);
   }
 
   @Override

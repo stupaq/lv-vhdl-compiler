@@ -22,6 +22,7 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   private final Formula formula;
   private final IOSinks danglingSinks;
   private final IOSources namedSources;
+  private final WiresBlacklist blacklist;
   private final RValueVisitor rvalueVisitor = new RValueVisitor() {
     @Override
     public void topLevelScope(IOReference ref) {
@@ -47,11 +48,12 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   private Set<IOReference> latched;
 
   public ProcessSignalsEmitter(Loop loop, Formula formula, IOSinks danglingSinks,
-      IOSources namedSources) {
+      IOSources namedSources, WiresBlacklist blacklist) {
     this.loop = loop;
     this.formula = formula;
     this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
+    this.blacklist = blacklist;
   }
 
   private void signalsRead(SimpleNode root) {
@@ -106,6 +108,8 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
       new Wire(loop.diagram(), out, right.inner());
       namedSources.put(latch, right.outer());
       danglingSinks.put(latch, left.outer());
+      // Otherwise we will have a meaningless cycle.
+      blacklist.add(right.outer(), left.outer());
       // Exclude from normal signals.
       allReads.remove(latch);
       allWrites.remove(latch);
@@ -139,13 +143,13 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   }
 
   @Override
-  public void visit(wait_statement n) {
-    signalsRead(n);
+  public void visit(assertion_statement n) {
+    signalsRead(n.assertion);
   }
 
   @Override
-  public void visit(assertion_statement n) {
-    signalsRead(n.assertion);
+  public void visit(wait_statement n) {
+    signalsRead(n);
   }
 
   @Override
@@ -170,6 +174,8 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
       }
     });
   }
+
+
 
   @Override
   public void visit(report_statement n) {

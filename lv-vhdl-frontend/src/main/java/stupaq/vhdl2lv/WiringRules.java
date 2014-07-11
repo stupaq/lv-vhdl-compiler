@@ -40,12 +40,15 @@ public class WiringRules {
   private final IOSources sources;
   private final IOSinks sinks;
   private final LabellingRules labelling;
+  private final WiresBlacklist blacklist;
 
-  public WiringRules(Generic owner, IOSources sources, IOSinks sinks, LabellingRules labelling) {
+  public WiringRules(Generic owner, IOSources sources, IOSinks sinks, LabellingRules labelling,
+      WiresBlacklist blacklist) {
     this.owner = owner;
     this.sources = sources;
     this.sinks = sinks;
     this.labelling = labelling;
+    this.blacklist = blacklist;
   }
 
   public static CompoundArithmetic mergeNode(Generic owner, int inputs) {
@@ -53,9 +56,11 @@ public class WiringRules {
         Optional.<String>absent());
   }
 
-  private Wire connect(IOReference ref, Source source, Sink sink) {
-    // The label might be different on each invocation.
-    return new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source));
+  private void connect(IOReference ref, Source source, Sink sink) {
+    if (!blacklist.contains(source.terminal(), sink.terminal())) {
+      // The label might be different on each invocation.
+      new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source));
+    }
   }
 
   private void applyInternal(IOReference ref) {
