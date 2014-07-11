@@ -23,10 +23,8 @@ import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
-import stupaq.vhdl2lv.ExpressionClassifier.TopLevelScopeVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
-import stupaq.vhdl93.ast.identifier;
 
 import static com.google.common.base.Optional.of;
 
@@ -45,7 +43,7 @@ class SourceEmitter {
     classifier = new ExpressionClassifier();
   }
 
-  public static CompoundArithmetic branchNode(Generic owner) {
+  private static CompoundArithmetic branchNode(Generic owner) {
     return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
   }
 
@@ -55,23 +53,23 @@ class SourceEmitter {
     return constant.endpoint().get();
   }
 
-  public void emitAsIdentifier(IOReference ref, Terminal sink) {
+  private void emitAsIdentifier(IOReference ref, Terminal sink) {
     danglingSinks.put(ref, sink);
   }
 
-  public void emitAsReference(IOReference ref, SimpleNode n, Terminal sink) {
+  private void emitAsReference(IOReference ref, SimpleNode n, Terminal sink) {
     CompoundArithmetic branch = branchNode(owner);
     new Wire(owner, branch.output(), sink, of(n.representation()));
     danglingSinks.put(ref, branch.inputs().get(0));
   }
 
   public void emitWithSink(expression n, Terminal sink) {
-    List<identifier> identifiers = classifier.topLevelScopeIdentifiers(n);
-    if (identifiers.isEmpty()) {
+    List<IOReference> references = classifier.topLevelScopeReferences(n);
+    if (references.isEmpty()) {
       Terminal source = emitAsConstant(n, Optional.<String>absent());
       new Wire(owner, source, sink, Optional.<String>absent());
-    } else if (identifiers.size() == 1) {
-      IOReference ref = new IOReference(identifiers.get(0));
+    } else if (references.size() == 1) {
+      IOReference ref = references.get(0);
       if (classifier.isIdentifier(n)) {
         emitAsIdentifier(ref, sink);
       } else {
@@ -83,17 +81,20 @@ class SourceEmitter {
     }
   }
 
-  public Terminal<FormulaParameter> emitAsExpression(SimpleNode n) {
+  private Terminal<FormulaParameter> emitAsExpression(SimpleNode n) {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, n);
     return formula.addOutput(RVALUE_LABEL);
   }
 
   public void addTerminals(final Formula formula, SimpleNode n) {
-    n.accept(new TopLevelScopeVisitor() {
+    n.accept(addTerminalsVisitor(formula));
+  }
+
+  public RValueVisitor addTerminalsVisitor(final Formula formula) {
+    return new RValueVisitor() {
       @Override
-      public void visit(identifier n) {
-        final IOReference ref = new IOReference(n);
+      public void topLevelScope(final IOReference ref) {
         LOGGER.debug("Possible terminal: {}", ref);
         if (!blacklist.contains(ref)) {
           blacklist.add(ref);
@@ -107,6 +108,6 @@ class SourceEmitter {
           danglingSinks.put(ref, terminal);
         }
       }
-    });
+    };
   }
 }

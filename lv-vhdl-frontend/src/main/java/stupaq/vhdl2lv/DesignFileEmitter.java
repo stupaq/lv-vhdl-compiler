@@ -18,7 +18,9 @@ import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
+import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.scripting.hierarchy.WhileLoop;
 import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
@@ -33,9 +35,11 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
-  private static final String ARCHITECTURE_DECLARATIVE_PART_LABEL =
-      "ARCHITECTURE EXTRA DECLARATIONS";
-  private static final String ARCHITECTURE_BODY_LABEL = "ARCHITECTURE EXTRA BODY STATEMENTS";
+  private static final Optional<String> ARCHITECTURE_DECLARATIVE_PART_LABEL =
+      of("ARCHITECTURE EXTRA DECLARATIONS");
+  private static final Optional<String> ARCHITECTURE_STATEMENT_PART_LABEL =
+      of("ARCHITECTURE EXTRA BODY STATEMENTS");
+  private static final Optional<String> PROCESS_STATEMENT_PART_LABEL = of("PROCESS");
   /** Context of {@link #visit(design_file)}. */
   private final Map<EntityName, EntityDeclaration> knownEntities = Maps.newHashMap();
   /** Context of {@link #visit(design_file)}. */
@@ -138,12 +142,12 @@ class DesignFileEmitter extends DepthFirstVisitor {
     // Emit declarative part leftovers.
     if (declarativePartFallbacked.length() > 0) {
       new FormulaNode(currentVi, declarativePartFallbacked.toString(),
-          of(ARCHITECTURE_DECLARATIVE_PART_LABEL));
+          ARCHITECTURE_DECLARATIVE_PART_LABEL);
     }
     // Emit statement part leftovers.
     if (concurrentStatementFallbacked.length() > 0) {
       new FormulaNode(currentVi, concurrentStatementFallbacked.toString(),
-          of(ARCHITECTURE_BODY_LABEL));
+          ARCHITECTURE_STATEMENT_PART_LABEL);
     }
     // All references and labels are resolved now.
     new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels()).applyAll();
@@ -266,7 +270,13 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(process_statement n) {
-    // TODO
+    concurrentStatementFallback = false;
+    Loop loop = new WhileLoop(currentVi, Optional.<String>absent());
+    // Emit process body AND declarations.
+    Formula formula =
+        new FormulaNode(loop.diagram(), n.representation(), PROCESS_STATEMENT_PART_LABEL);
+    // Connect wires.
+    new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources).visit(n);
   }
 
   @Override

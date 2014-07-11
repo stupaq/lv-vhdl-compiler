@@ -15,15 +15,8 @@ import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
-import stupaq.vhdl2lv.ExpressionClassifier.TopLevelScopeVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
-import stupaq.vhdl93.ast.identifier;
-import stupaq.vhdl93.ast.name;
-import stupaq.vhdl93.ast.primary;
-import stupaq.vhdl93.ast.simple_expression;
-import stupaq.vhdl93.ast.target;
-import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 class SinkEmitter {
   public static final String LVALUE_LABEL = "ASSIGNEE";
@@ -42,26 +35,26 @@ class SinkEmitter {
     classifier = new ExpressionClassifier();
   }
 
-  public Terminal emitAsLValue(SimpleNode n) {
+  private Terminal emitAsLValue(SimpleNode n) {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, new SourceEmitter(owner, danglingSinks, namedSources), n);
     return formula.addInput(LVALUE_LABEL);
   }
 
-  public void emitAsIdentifier(Terminal source, IOReference ref) {
+  private void emitAsIdentifier(Terminal source, IOReference ref) {
     namedSources.put(ref, source, ref.toString());
   }
 
-  public void emitAsReference(Terminal source, IOReference ref, SimpleNode n) {
+  private void emitAsReference(Terminal source, IOReference ref, SimpleNode n) {
     namedSources.put(ref, source, n.representation());
   }
 
   public void emitWithSource(Terminal source, expression n) {
-    List<identifier> identifiers = classifier.topLevelScopeIdentifiers(n);
-    if (identifiers.isEmpty()) {
+    List<IOReference> references = classifier.topLevelScopeReferences(n);
+    if (references.isEmpty()) {
       LOGGER.error("Sink expression: {} is a constant", n.representation());
-    } else if (identifiers.size() == 1) {
-      IOReference ref = new IOReference(identifiers.get(0));
+    } else if (references.size() == 1) {
+      IOReference ref = references.get(0);
       if (classifier.isIdentifier(n)) {
         emitAsIdentifier(source, ref);
       } else {
@@ -74,10 +67,9 @@ class SinkEmitter {
   }
 
   public void addTerminals(final Formula formula, final SourceEmitter sourceEmitter, SimpleNode n) {
-    final DepthFirstVisitor visitor = new TopLevelScopeVisitor() {
+    n.accept(new LValueVisitor(sourceEmitter.addTerminalsVisitor(formula)) {
       @Override
-      public void visit(identifier n) {
-        IOReference ref = new IOReference(n);
+      protected void topLevel(final IOReference ref) {
         LOGGER.debug("Reference: {} occurs as l-value", ref);
         if (!blacklist.contains(ref)) {
           blacklist.add(ref);
@@ -85,38 +77,6 @@ class SinkEmitter {
           Terminal terminal = formula.addOutput(ref.toString());
           namedSources.put(ref, terminal);
         }
-      }
-
-      @Override
-      public void visit(expression n) {
-        sourceEmitter.addTerminals(formula, n);
-      }
-
-      @Override
-      public void visit(simple_expression n) {
-        sourceEmitter.addTerminals(formula, n);
-      }
-    };
-    // We wait until we descent into an l-value, emit it, and then proceed into any found r-value.
-    n.accept(new DepthFirstVisitor() {
-      @Override
-      public void visit(name n) {
-        n.accept(visitor);
-      }
-
-      @Override
-      public void visit(primary n) {
-        n.accept(visitor);
-      }
-
-      @Override
-      public void visit(target n) {
-        n.accept(visitor);
-      }
-
-      @Override
-      public void visit(identifier n) {
-        n.accept(visitor);
       }
     });
   }

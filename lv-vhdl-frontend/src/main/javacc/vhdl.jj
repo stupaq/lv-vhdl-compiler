@@ -249,12 +249,6 @@ void name_extension() :
   [  LOOKAHEAD( name_extension() ) name_extension() ]
 }
 
-void name_list():
-{}
-{
-  name() ( <COMMA> name() )*
-}
-
 void identifier() :
 {}
 {
@@ -909,17 +903,23 @@ void process_statement() :
   <END> [ <POSTPONED> ] <PROCESS> [ process_label() ] <SEMICOLON>
 }
 
-void process_statement_part() :
+void sensitivity_list() :
 {}
 {
-  ( sequential_statement() )*
+  signal_name() ( <COMMA> signal_name() )*
+}
+
+void process_declarative_part() :
+{}
+{
+  ( process_declarative_item() )*
 }
 
 void process_declarative_item() :
 {}
 {
     LOOKAHEAD( subprogram_declaration() )
-    subprogram_declaration()
+      subprogram_declaration()
   | subprogram_body()
   | type_declaration()
   | subtype_declaration()
@@ -928,18 +928,58 @@ void process_declarative_item() :
   | file_declaration()
   | alias_declaration()
   | LOOKAHEAD( attribute_declaration() )
-    attribute_declaration()
+      attribute_declaration()
   | attribute_specification()
   | use_clause()
   | LOOKAHEAD( <GROUP> identifier() <IS> )
-    group_template_declaration()
+      group_template_declaration()
   | group_declaration()
 }
 
-void process_declarative_part() :
+void process_statement_part() :
 {}
 {
-  ( process_declarative_item() )*
+  ( sequential_statement() )*
+}
+
+void sequential_statement() :
+{}
+{
+  // TODO error recovery to next SEMICOLON
+  (
+    LOOKAHEAD( wait_statement() )
+      wait_statement()
+  | LOOKAHEAD( assertion_statement() )
+      assertion_statement()
+  | LOOKAHEAD( report_statement() )
+      report_statement()
+  | LOOKAHEAD( [ label() <COLON> ] target() <LE> )
+      signal_assignment_statement()
+  | LOOKAHEAD(  [ label() <COLON> ] target() <ASSIGN> )
+      variable_assignment_statement()
+  | LOOKAHEAD( 3 )
+      procedure_call_statement()
+  | LOOKAHEAD( 3 )
+      if_statement()
+  | LOOKAHEAD( 3 )
+      case_statement()
+  | LOOKAHEAD( 3 )
+      loop_statement()
+  | LOOKAHEAD( 3 )
+      next_statement()
+  | LOOKAHEAD( exit_statement() )
+      exit_statement()
+  | LOOKAHEAD( return_statement() )
+      return_statement()
+  | LOOKAHEAD( null_statement() )
+      null_statement()
+  )
+}
+
+void null_statement() :
+{}
+{
+  [ label() <COLON> ] <NULL> <SEMICOLON>
 }
 /** /PROCESS */
 
@@ -1416,8 +1456,7 @@ void enumeration_literal() :
 void exit_statement() :
 {}
 {
-  [ label() <COLON> ] <EXIT> [ loop_label() ]
-    [ <WHEN> condition() ] <SEMICOLON>
+  [ label() <COLON> ] <EXIT> [ loop_label() ] [ <WHEN> condition() ] <SEMICOLON>
 }
 
 void file_declaration() :
@@ -1523,9 +1562,8 @@ void guarded_signal_specification() :
 void if_statement() :
 {}
 {
-  [ if_label() <COLON> ]
-  <IF> condition() <THEN>
-  sequence_of_statements()
+  [ if_label() <COLON> ] <IF> condition() <THEN>
+    sequence_of_statements()
   ( <ELSIF> condition() <THEN>
     sequence_of_statements() )*
   [ <ELSE>
@@ -1631,9 +1669,8 @@ void literal() :
 void loop_statement() :
 {}
 {
-  [ loop_label() <COLON> ]
-  [ iteration_scheme() ] <LOOP>
-                        sequence_of_statements()
+  [ loop_label() <COLON> ] [ iteration_scheme() ] <LOOP>
+    sequence_of_statements()
   <END> <LOOP> [ loop_label() ] <SEMICOLON>
 }
 
@@ -1659,12 +1696,6 @@ void next_statement() :
 {}
 {
   [ label() <COLON> ] <NEXT> [ loop_label() ] [ <WHEN> condition() ] <SEMICOLON>
-}
-
-void null_statement() :
-{}
-{
-  [ label() <COLON> ] <NULL> <SEMICOLON>
 }
 
 void numeric_literal() :
@@ -1850,8 +1881,7 @@ void range_constraint() :
 void report_statement() :
 {}
 {
-  [ label() <COLON> ]  <REPORT> expression()
-  [ <SEVERITY> expression() ] <SEMICOLON>
+  [ label() <COLON> ]  <REPORT> expression() [ <SEVERITY> expression() ] <SEMICOLON>
 }
 
 void return_statement() :
@@ -1884,50 +1914,10 @@ void sensitivity_clause() :
   <ON> sensitivity_list()
 }
 
-void sensitivity_list() :
-{}
-{
-  signal_name() ( <COMMA> signal_name() )*
-}
-
 void sequence_of_statements() :
 {}
 {
   ( sequential_statement() )*
-}
-
-void sequential_statement() :
-{}
-{
-  // TODO error recovery to next SEMICOLON
-  (
-    LOOKAHEAD( 3 )
-    wait_statement()
-  | LOOKAHEAD( 3 )
-    assertion_statement()
-  | LOOKAHEAD( 3 )
-    report_statement()
-  | LOOKAHEAD(  [ label() <COLON> ] target() <LE> )
-    signal_assignment_statement()
-  | LOOKAHEAD(  [ label() <COLON> ] target() <ASSIGN> )
-    variable_assignment_statement()
-  | LOOKAHEAD( 3 )
-    procedure_call_statement()
-  | LOOKAHEAD( 3 )
-    if_statement()
-  | LOOKAHEAD( 3 )
-    case_statement()
-  | LOOKAHEAD( 3 )
-    loop_statement()
-  | LOOKAHEAD( 3 )
-    next_statement()
-  | LOOKAHEAD( 3 )
-    exit_statement()
-  | LOOKAHEAD( 3 )
-    return_statement()
-  | LOOKAHEAD( 3 )
-    null_statement()
-  )
 }
 
 void signal_assignment_statement() :

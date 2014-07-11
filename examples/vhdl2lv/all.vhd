@@ -41,14 +41,14 @@ begin
 
   src2 : entity work.source port map(bbb(3 downto 0));
   src3 : entity work.source port map(bbb(7 downto 4));
-  dst2 : entity work.sink generic map(7) port map(bbb(7 downto 0));
+  dst2 : entity work.sink generic map(7) port map(bbb);
 
-  src4 : entity work.source generic map(7) port map(ccc(7 downto 0));
+  src4 : entity work.source generic map(7) port map(ccc);
   dst3 : entity work.sink port map(ccc(3 downto 0));
   dst4 : entity work.sink port map(ccc(7 downto 4));
 
-  src5 : entity work.source generic map(7) port map(ddd(7 downto 0));
-  dst5 : entity work.sink generic map(7) port map(ddd(7 downto 0));
+  src5 : entity work.source generic map(7) port map(ddd);
+  dst5 : entity work.sink generic map(7) port map(ddd);
 end behavioral;
 
 library ieee;
@@ -107,6 +107,32 @@ begin
   many_ports : entity work.many_ports port map(in0, in0, in0, in0, in0, in0, in0, in0,
    in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0,
     in0, in0, input, out0);
+end behavioral;
+
+entity process_outer is
+  port(
+    clk   : in  std_logic;
+    in1   : in  std_logic;
+    in2   : in  std_logic;
+    out1  : out std_logic;
+    out2  : out std_logic;
+    out3  : out std_logic
+    );
+end entity;
+
+architecture behavioral of process_outer is
+begin
+  process (clk, rst) is
+  begin
+    if clk'event and clk = '1' then
+      if in1 = '1' then
+        out1 <= in2;
+      end if;
+      out2 <= not out2;
+      out3 <= in1 and in2;
+    end if;
+  end process;
+  rst <= '1';
 end behavioral;
 
 -- FIXME needs total cleanup
