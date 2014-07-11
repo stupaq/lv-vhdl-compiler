@@ -9,6 +9,7 @@ import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.entity_declarative_part;
 import stupaq.vhdl93.ast.entity_header;
 import stupaq.vhdl93.ast.port_clause;
+import stupaq.vhdl93.ast.process_statement;
 import stupaq.vhdl93.ast.selected_signal_assignment;
 
 public class VHDLTreeFormatter extends LineBreakingTreeFormatter {
@@ -152,5 +153,41 @@ public class VHDLTreeFormatter extends LineBreakingTreeFormatter {
     n.options_.accept(this);
     n.selected_waveforms.accept(this);
     n.nodeToken3.accept(this);
+  }
+
+  @Override
+  public void visit(process_statement n) {
+    if (n.nodeOptional.present()) {
+      n.nodeOptional.accept(this);
+    }
+    if (n.nodeOptional1.present()) {
+      n.nodeOptional1.accept(this);
+    }
+    n.nodeToken.accept(this);
+    if (n.nodeOptional2.present()) {
+      n.nodeOptional2.accept(this);
+    }
+    if (n.nodeOptional3.present()) {
+      add(space());
+      n.nodeOptional3.accept(this);
+    }
+    add(indent());
+    add(force());
+    n.process_declarative_part.accept(this);
+    add(outdent());
+    n.nodeToken1.accept(this);
+    add(indent());
+    add(force());
+    n.process_statement_part.accept(this);
+    add(outdent());
+    n.nodeToken2.accept(this);
+    if (n.nodeOptional4.present()) {
+      n.nodeOptional4.accept(this);
+    }
+    n.nodeToken3.accept(this);
+    if (n.nodeOptional5.present()) {
+      n.nodeOptional5.accept(this);
+    }
+    n.nodeToken4.accept(this);
   }
 }
