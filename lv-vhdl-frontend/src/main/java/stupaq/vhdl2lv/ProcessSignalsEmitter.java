@@ -23,25 +23,8 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   private final IOSinks danglingSinks;
   private final IOSources namedSources;
   private final WiresBlacklist blacklist;
-  private final RValueVisitor rvalueVisitor = new RValueVisitor() {
-    @Override
-    public void topLevelScope(IOReference ref) {
-      // Not much of a logic over here.
-      allReads.add(ref);
-    }
-  };
-  private final LValueVisitor lvalueVisitor = new LValueVisitor(rvalueVisitor) {
-    @Override
-    public void topLevel(IOReference ref) {
-      if (!allWrites.contains(ref)) {
-        if (allReads.contains(ref)) {
-          latched.add(ref);
-        }
-        allWrites.add(ref);
-      }
-      nestedWrites.add(ref);
-    }
-  };
+  private final RValueVisitor rvalueVisitor;
+  private final LValueVisitor lvalueVisitor;
   private Set<IOReference> allReads;
   private Set<IOReference> allWrites;
   private Set<IOReference> nestedWrites;
@@ -54,6 +37,25 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
     this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
     this.blacklist = blacklist;
+    rvalueVisitor = new RValueVisitor() {
+      @Override
+      public void topLevelScope(IOReference ref) {
+        // Not much of a logic over here.
+        allReads.add(ref);
+      }
+    };
+    lvalueVisitor = new LValueVisitor(rvalueVisitor) {
+      @Override
+      public void topLevel(IOReference ref) {
+        if (!allWrites.contains(ref)) {
+          if (allReads.contains(ref)) {
+            latched.add(ref);
+          }
+          allWrites.add(ref);
+        }
+        nestedWrites.add(ref);
+      }
+    };
   }
 
   private void signalsRead(SimpleNode root) {

@@ -1,16 +1,52 @@
 package stupaq.vhdl93.visitor;
 
-import com.google.common.collect.Sets;
-
-import java.util.Set;
-
+import stupaq.formatting.TokenMatchingActionExecutor;
+import stupaq.formatting.TokenMatchingActionExecutor.Action;
+import stupaq.formatting.TokenMatchingActionExecutor.TokenPairMatcher;
 import stupaq.vhdl93.ast.NodeToken;
 
 public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
-  private static final Set<String> BREAK_AFTER = Sets.newHashSet(";");
+  private final TokenMatchingActionExecutor preExecutor = new TokenMatchingActionExecutor();
 
   public LineBreakingTreeFormatter(int indentAmt, int wrapWidth) {
     super(indentAmt, wrapWidth);
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (l == SEMICOLON) || (l == IS) || (l == BEGIN);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        ensureLineBreak();
+      }
+    });
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (l == IS) || (l == BEGIN) || (l == THEN) || (l == ELSE);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        add(indent());
+        add(force());
+      }
+    });
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (r == END) || (r == BEGIN) || (l == ELSE) || (l == ELSIF);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        add(outdent());
+      }
+    });
   }
 
   @Override
@@ -30,11 +66,25 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
     super.add(cmd);
   }
 
+  protected final void ensureLineBreak() {
+    for (int i = cmdQueue.size() - 1; i >= 0; --i) {
+      switch (cmdQueue.get(i).getCommand()) {
+        case FormatCommand.FORCE:
+          return;
+        case FormatCommand.INDENT:
+        case FormatCommand.OUTDENT:
+        case FormatCommand.SPACE:
+          break;
+        default:
+          i = -1;
+      }
+    }
+    add(force());
+  }
+
   @Override
   public void visit(NodeToken n) {
+    preExecutor.nextToken(n);
     super.visit(n);
-    if (BREAK_AFTER.contains(n.tokenImage)) {
-      add(force());
-    }
   }
 }

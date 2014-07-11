@@ -129,11 +129,6 @@ public abstract class UserDefinedTreeFormatter extends TreeFormatter {
   }
 
   @Override
-  public final void visit(context_item n) {
-    super.visit(n);
-  }
-
-  @Override
   public final void visit(library_unit n) {
     super.visit(n);
   }
