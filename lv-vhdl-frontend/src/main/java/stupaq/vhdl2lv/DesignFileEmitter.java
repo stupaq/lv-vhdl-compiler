@@ -286,7 +286,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(concurrent_procedure_call_statement n) {
-    // TODO
+    // TODO for now we can rely on fallback
   }
 
   @Override
@@ -339,7 +339,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(generate_statement n) {
-    // TODO
+    // TODO for now we can rely on fallback
   }
 
   @Override

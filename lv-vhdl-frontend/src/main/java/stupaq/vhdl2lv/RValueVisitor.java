@@ -32,7 +32,7 @@ public abstract class RValueVisitor extends DepthFirstVisitor {
   }
 
   /*
-  TODO We cannot differentiate between no-arg function and signal based on syntax.
+  TODO we cannot differentiate between no-arg function and signal based on syntax.
   @Override
   public void visit(function_name n) {
     // We are not interested in function or procedure names.

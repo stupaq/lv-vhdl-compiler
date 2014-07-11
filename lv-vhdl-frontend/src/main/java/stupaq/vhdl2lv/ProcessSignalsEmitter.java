@@ -1,7 +1,10 @@
 package stupaq.vhdl2lv;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import stupaq.concepts.IOReference;
@@ -12,8 +15,10 @@ import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.RightShiftRegister;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Wire;
+import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
+import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
@@ -29,6 +34,7 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   private Set<IOReference> allWrites;
   private Set<IOReference> nestedWrites;
   private Set<IOReference> latched;
+  private int sequentialStatementLevel;
 
   public ProcessSignalsEmitter(Loop loop, Formula formula, IOSinks danglingSinks,
       IOSources namedSources, WiresBlacklist blacklist) {
@@ -66,12 +72,46 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
     root.accept(lvalueVisitor);
   }
 
+  private void processBranches(SimpleNode n, boolean hasElse) {
+    final List<Set<IOReference>> branchWrites = Lists.newArrayList();
+    n.accept(new DepthFirstVisitor() {
+      @Override
+      public void visit(sequence_of_statements n) {
+        Set<IOReference> nested = nestedWrites;
+        nestedWrites = Sets.newHashSet();
+        n.accept(ProcessSignalsEmitter.this);
+        branchWrites.add(nestedWrites);
+        nested.addAll(nestedWrites);
+        nestedWrites = nested;
+      }
+    });
+    if (sequentialStatementLevel <= 1) {
+      // We do not emit latches for top level ifs.
+      return;
+    }
+    if (!branchWrites.isEmpty()) {
+      Set<IOReference> latched = Collections.emptySet();
+      for (Set<IOReference> branch : branchWrites) {
+        latched = Sets.union(latched, branch);
+      }
+      if (hasElse) {
+        Set<IOReference> intersect = branchWrites.get(0);
+        for (Set<IOReference> branch : branchWrites) {
+          intersect = Sets.intersection(intersect, branch);
+        }
+        latched = Sets.difference(latched, intersect);
+      }
+      this.latched.addAll(latched);
+    }
+  }
+
   @Override
   public void visit(process_statement n) {
     allReads = Sets.newHashSet();
     allWrites = Sets.newHashSet();
     nestedWrites = Sets.newHashSet();
     latched = Sets.newHashSet();
+    sequentialStatementLevel = 0;
     // Harvest all signals in the process body.
     n.process_statement_part.accept(this);
     // Include signals from sensitivity list.
@@ -136,7 +176,9 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   @Override
   public void visit(sequential_statement n) {
     // We handle each of them individually. See below.
+    sequentialStatementLevel++;
     super.visit(n);
+    sequentialStatementLevel--;
   }
 
   @Override
@@ -168,16 +210,39 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
       }
     });
     signalsRead(n.expression);
-    n.nodeList.accept(new DepthFirstVisitor() {
+    boolean hasElse = (new NonTerminalsNoOpVisitor<Boolean>() {
+      boolean hasElse = false;
+
       @Override
-      public void visit(sequence_of_statements n) {
-        // TODO collect writes and compare among branches
-        n.accept(ProcessSignalsEmitter.this);
+      public Boolean apply(SimpleNode n) {
+        super.apply(n);
+        return hasElse;
       }
-    });
+
+      @Override
+      public void visit(case_statement_alternative n) {
+        n.choices.accept(this);
+      }
+
+      @Override
+      public void visit(choices n) {
+        n.nodeListOptional.accept(this);
+      }
+
+      @Override
+      public void visit(choice n) {
+        n.nodeChoice.accept(this);
+      }
+
+      @Override
+      public void visit(NodeToken n) {
+        if (n.kind == VHDL93ParserConstants.OTHERS) {
+          hasElse = true;
+        }
+      }
+    }).apply(sequence(n.nodeList));
+    processBranches(n.nodeList, hasElse);
   }
-
-
 
   @Override
   public void visit(report_statement n) {
@@ -215,14 +280,8 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
         // Do not descend any further.
       }
     });
-    // Process branches.
-    sequence(n).accept(new DepthFirstVisitor() {
-      @Override
-      public void visit(sequence_of_statements n) {
-        // TODO collect writes and compare among branches
-        n.accept(ProcessSignalsEmitter.this);
-      }
-    });
+    boolean hasElse = n.nodeOptional1.present();
+    processBranches(sequence(n), hasElse);
   }
 
   @Override
