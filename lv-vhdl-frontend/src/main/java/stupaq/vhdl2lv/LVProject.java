@@ -6,6 +6,7 @@ import java.nio.file.Path;
 
 import stupaq.concepts.EntityName;
 import stupaq.labview.VIPath;
+import stupaq.labview.scripting.tools.activex.ActiveXScriptingTools;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.vhdl93.ast.design_file;
 
@@ -15,7 +16,7 @@ public class LVProject {
 
   public LVProject(Path root) {
     this.root = root;
-    tools = new ScriptingTools();
+    tools = new ActiveXScriptingTools();
   }
 
   public void update(design_file n) {

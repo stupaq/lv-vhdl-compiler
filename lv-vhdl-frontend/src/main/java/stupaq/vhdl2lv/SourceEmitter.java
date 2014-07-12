@@ -20,7 +20,7 @@ import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.LazyTerminal;
 import stupaq.labview.scripting.hierarchy.RingConstant;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
+import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;

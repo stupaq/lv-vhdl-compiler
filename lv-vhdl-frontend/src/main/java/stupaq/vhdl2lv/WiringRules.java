@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Generic;
-import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
+import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 
