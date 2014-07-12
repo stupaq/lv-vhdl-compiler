@@ -21,7 +21,6 @@ import javax.annotation.Nonnull;
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Generic;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
@@ -59,7 +58,7 @@ public class WiringRules {
   private void connect(IOReference ref, Source source, Sink sink) {
     if (!blacklist.contains(source.terminal(), sink.terminal())) {
       // The label might be different on each invocation.
-      new Wire(owner, source.terminal(), sink.terminal(), labelling.choose(ref, source));
+      source.terminal().connectTo(sink.terminal(), labelling.choose(ref, source));
     }
   }
 
@@ -70,7 +69,7 @@ public class WiringRules {
       Source source;
       if (sources.size() == 1) {
         source = sources.iterator().next();
-        LOGGER.debug("Single-source: {} connects: {}", ref, source);
+        LOGGER.debug("Single-source: {}", ref);
       } else {
         LOGGER.debug("Multi-source: {} merges:", ref);
         String refName = ref.toString();
@@ -83,8 +82,9 @@ public class WiringRules {
           ++index;
         }
         source = new Source(assembly.output(), refName);
-        LOGGER.debug("Source {} connects: {}", ref, source);
+        LOGGER.debug("Merged-source: {}", ref);
       }
+      LOGGER.debug("Connections: {}", source);
       for (Sink sink : sinks) {
         LOGGER.debug("\t=> {}", sink);
         connect(ref, source, sink);

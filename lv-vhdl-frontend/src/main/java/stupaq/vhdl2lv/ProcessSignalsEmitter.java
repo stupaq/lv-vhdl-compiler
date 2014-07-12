@@ -14,7 +14,6 @@ import stupaq.labview.scripting.hierarchy.LeftShiftRegister;
 import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.RightShiftRegister;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
@@ -145,9 +144,9 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
       RightShiftRegister right = loop.addShiftRegister();
       LeftShiftRegister left = right.left(0);
       Terminal<FormulaParameter> in = formula.addInput(latch.toString());
-      new Wire(loop.diagram(), left.inner(), in);
+      left.inner().connectTo(in);
       Terminal<FormulaParameter> out = formula.addOutput(latch.toString());
-      new Wire(loop.diagram(), out, right.inner());
+      out.connectTo(right.inner());
       namedSources.put(latch, right.outer());
       danglingSinks.put(latch, left.outer());
       // Otherwise we will have a meaningless cycle.

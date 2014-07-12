@@ -12,7 +12,6 @@ import stupaq.labview.scripting.hierarchy.Indicator;
 import stupaq.labview.scripting.hierarchy.IndicatorCluster;
 import stupaq.labview.scripting.hierarchy.Unbundler;
 import stupaq.labview.scripting.hierarchy.VI;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.metadata.ConnectorPaneTerminal;
@@ -44,9 +43,9 @@ public class UniversalVI extends VI {
         }
       }
       Unbundler unbundler = new Unbundler(this, entity.inputs(), of("inputs"));
-      new Wire(this, controlOwner.endpoint().get(), unbundler.input(), Optional.<String>absent());
+      controlOwner.terminal().connectTo(unbundler.input(), Optional.<String>absent());
       Bundler bundler = new Bundler(this, entity.outputs(), of("outputs"));
-      new Wire(this, bundler.output(), indicatorOwner.endpoint().get(), Optional.<String>absent());
+      bundler.output().connectTo(indicatorOwner.terminal(), Optional.<String>absent());
       int index = 0;
       int inputIndex = 0;
       int outputIndex = 0;
@@ -66,9 +65,9 @@ public class UniversalVI extends VI {
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
         int index = connector.connectorIndex();
         if (connector.isInput()) {
-          namedSources.put(ref, new Control(this, style, label, index).endpoint().get());
+          namedSources.put(ref, new Control(this, style, label, index).terminal());
         } else {
-          danglingSinks.put(ref, new Indicator(this, style, label, index).endpoint().get());
+          danglingSinks.put(ref, new Indicator(this, style, label, index).terminal());
         }
       }
     }

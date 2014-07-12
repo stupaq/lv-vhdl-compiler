@@ -14,7 +14,6 @@ import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
 
@@ -62,7 +61,7 @@ class SinkEmitter {
       }
     } else {
       Terminal sink = emitAsLValue(n);
-      new Wire(owner, source, sink, Optional.<String>absent());
+      source.connectTo(sink, Optional.<String>absent());
     }
   }
 

@@ -12,7 +12,6 @@ import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Unbundler;
-import stupaq.labview.scripting.hierarchy.Wire;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl2lv.UniversalVI.isClusteredVI;
@@ -28,8 +27,8 @@ public class UniversalSubVI extends SubVI {
     if (clustered) {
       Bundler inputs = new Bundler(owner, entity.inputs(), of("inputs"));
       Unbundler outputs = new Unbundler(owner, entity.outputs(), of("outputs"));
-      new Wire(owner, inputs.output(), super.terminal(1));
-      new Wire(owner, super.terminal(0), outputs.input());
+      inputs.output().connectTo(super.terminal(1));
+      super.terminal(0).connectTo(outputs.input());
       terminals.addAll(inputs.inputs());
       terminals.addAll(outputs.outputs());
     }

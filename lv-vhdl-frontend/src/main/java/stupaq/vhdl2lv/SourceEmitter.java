@@ -20,7 +20,6 @@ import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.LazyTerminal;
 import stupaq.labview.scripting.hierarchy.RingConstant;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.hierarchy.Wire;
 import stupaq.labview.scripting.tools.CompoundArithmeticCreate.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
 import stupaq.vhdl93.ast.SimpleNode;
@@ -50,7 +49,7 @@ class SourceEmitter {
   public Terminal emitAsConstant(SimpleNode n, Optional<String> label) {
     RingConstant constant = new RingConstant(owner, Collections.singletonMap(n.representation(), 0),
         DataRepresentation.I32, label);
-    return constant.endpoint().get();
+    return constant.terminal();
   }
 
   private void emitAsIdentifier(IOReference ref, Terminal sink) {
@@ -59,7 +58,7 @@ class SourceEmitter {
 
   private void emitAsReference(IOReference ref, SimpleNode n, Terminal sink) {
     CompoundArithmetic branch = branchNode(owner);
-    new Wire(owner, branch.output(), sink, of(n.representation()));
+    branch.output().connectTo(sink, of(n.representation()));
     danglingSinks.put(ref, branch.inputs().get(0));
   }
 
@@ -67,7 +66,7 @@ class SourceEmitter {
     List<IOReference> references = classifier.topLevelScopeReferences(n);
     if (references.isEmpty()) {
       Terminal source = emitAsConstant(n, Optional.<String>absent());
-      new Wire(owner, source, sink, Optional.<String>absent());
+      source.connectTo(sink, Optional.<String>absent());
     } else if (references.size() == 1) {
       IOReference ref = references.get(0);
       if (classifier.isIdentifier(n)) {
@@ -77,7 +76,7 @@ class SourceEmitter {
       }
     } else {
       Terminal source = emitAsExpression(n);
-      new Wire(owner, source, sink, Optional.<String>absent());
+      source.connectTo(sink, Optional.<String>absent());
     }
   }
 
