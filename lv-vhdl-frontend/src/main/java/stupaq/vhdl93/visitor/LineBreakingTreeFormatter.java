@@ -13,8 +13,8 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
-        int l = left.kind, r = right.kind;
-        return (l == SEMICOLON) || (l == IS) || (l == BEGIN);
+        int l = left.kind;
+        return (l == SEMICOLON);
       }
     }, new Action() {
       @Override
@@ -25,7 +25,19 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
-        int l = left.kind, r = right.kind;
+        int r = right.kind;
+        return (r == ARCHITECTURE) || (r == ENTITY) || (r == LIBRARY);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        add(force());
+      }
+    });
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind;
         return (l == IS) || (l == BEGIN) || (l == THEN) || (l == ELSE);
       }
     }, new Action() {

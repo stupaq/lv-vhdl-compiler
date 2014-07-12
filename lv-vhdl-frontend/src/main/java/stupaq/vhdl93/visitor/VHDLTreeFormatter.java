@@ -1,8 +1,8 @@
 package stupaq.vhdl93.visitor;
 
 import stupaq.vhdl93.ast.component_instantiation_statement;
-import stupaq.vhdl93.ast.context_item;
 import stupaq.vhdl93.ast.design_file;
+import stupaq.vhdl93.ast.design_unit;
 import stupaq.vhdl93.ast.entity_declarative_part;
 import stupaq.vhdl93.ast.generic_clause;
 import stupaq.vhdl93.ast.port_clause;
@@ -21,10 +21,9 @@ public class VHDLTreeFormatter extends LineBreakingTreeFormatter {
   }
 
   @Override
-  public void visit(context_item n) {
-    super.visit(n);
-    add(force());
-    add(force());
+  public void visit(design_unit n) {
+    n.context_clause.accept(this);
+    n.library_unit.accept(this);
   }
 
   @Override

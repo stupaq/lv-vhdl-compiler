@@ -16,8 +16,7 @@ import stupaq.vhdl93.ast.NodeToken;
 
 public class TokenMatchingActionExecutor extends ForwardingMultimap<TokenPairMatcher, Action> {
   private final Multimap<TokenPairMatcher, Action> delegate =
-      Multimaps.newListMultimap(Maps.<TokenPairMatcher, Collection<Action>>newHashMap(),
-          new Supplier<List<Action>>() {
+      Multimaps.newListMultimap(Maps.<TokenPairMatcher, Collection<Action>>newLinkedHashMap(), new Supplier<List<Action>>() {
             @Override
             public List<Action> get() {
               return Lists.newArrayList();
