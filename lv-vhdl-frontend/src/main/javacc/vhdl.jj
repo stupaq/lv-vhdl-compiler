@@ -803,6 +803,43 @@ void entity_name() :
 }
 /** /ENTITY */
 
+/** COMPONENT/ */
+void component_configuration() :
+{}
+{
+  <FOR> component_specification() [ binding_indication() <SEMICOLON> ]
+    [ block_configuration() ]
+  <END> <FOR> <SEMICOLON>
+}
+
+void component_declaration() :
+{}
+{
+  <COMPONENT> component_identifier() [ <IS> ]
+    component_header()
+  <END> <COMPONENT> [ component_simple_name() ] <SEMICOLON>
+}
+
+void component_identifier() :
+{}
+{
+  identifier()
+}
+
+void component_header() :
+{}
+{
+  [ local_generic_clause() ]
+  [ local_port_clause() ]
+}
+
+void component_specification() :
+{}
+{
+  instantiation_list() <COLON> component_name()
+}
+/** /COMPONENT */
+
 /** ARCHITECTURE */
 void architecture_declaration() :
 {}
@@ -1181,30 +1218,6 @@ void choices() :
 {}
 {
   choice() ( <PIPE> choice() )*
-}
-
-void component_configuration() :
-{}
-{
-  <FOR> component_specification()
-                [ binding_indication() <SEMICOLON> ]
-                [ block_configuration() ]
-  <END> <FOR> <SEMICOLON>
-}
-
-void component_declaration() :
-{}
-{
-  <COMPONENT> identifier() [ <IS> ]
-      [ local_generic_clause() ]
-      [ local_port_clause() ]
-  <END> <COMPONENT> [ component_simple_name() ] <SEMICOLON>
-}
-
-void component_specification() :
-{}
-{
-  instantiation_list() <COLON> component_name()
 }
 
 void concurrent_assertion_statement() :

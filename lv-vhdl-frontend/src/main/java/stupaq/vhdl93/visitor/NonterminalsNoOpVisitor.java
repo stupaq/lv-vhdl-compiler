@@ -533,6 +533,14 @@ public class NonTerminalsNoOpVisitor<T> implements Visitor {
   }
 
   @Override
+  public void visit(component_identifier n) {
+  }
+
+  @Override
+  public void visit(component_header n) {
+  }
+
+  @Override
   public void visit(component_specification n) {
   }
 

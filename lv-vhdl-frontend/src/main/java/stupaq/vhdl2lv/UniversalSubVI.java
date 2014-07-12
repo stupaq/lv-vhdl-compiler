@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-import stupaq.concepts.EntityDeclaration;
+import stupaq.concepts.ComponentDeclaration;
 import stupaq.labview.VIErrorException;
 import stupaq.labview.scripting.hierarchy.Bundler;
 import stupaq.labview.scripting.hierarchy.Generic;
@@ -20,7 +20,7 @@ public class UniversalSubVI extends SubVI {
   private final List<Terminal> terminals = Lists.newArrayList();
   private final boolean clustered;
 
-  public UniversalSubVI(Generic owner, LVProject project, EntityDeclaration entity,
+  public UniversalSubVI(Generic owner, LVProject project, ComponentDeclaration entity,
       Optional<String> description) {
     super(owner, project.resolve(entity.name()), description);
     clustered = isClusteredVI(entity.inputs(), entity.outputs());

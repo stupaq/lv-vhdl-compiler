@@ -109,6 +109,9 @@ begin
     in0, in0, input, out0);
 end behavioral;
 
+library ieee;
+use ieee.std_logic_1164.all;
+
 entity process_outer is
   port(
     clk   : in  std_logic;

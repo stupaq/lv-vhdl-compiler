@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import stupaq.MissingFeature;
+import stupaq.concepts.ComponentName;
 import stupaq.concepts.EntityDeclaration;
-import stupaq.concepts.EntityName;
 import stupaq.concepts.IOReference;
 import stupaq.concepts.Identifier;
 import stupaq.labview.scripting.hierarchy.Formula;
@@ -35,15 +35,19 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
+  private static final Optional<String> ENTITY_CONTEXT = of("ENTITY CONTEXT");
+  private static final Optional<String> ARCHITECTURE_CONTEXT = of("ARCHITECTURE CONTEXT");
   private static final Optional<String> ARCHITECTURE_DECLARATIVE_PART_LABEL =
       of("ARCHITECTURE EXTRA DECLARATIONS");
   private static final Optional<String> ARCHITECTURE_STATEMENT_PART_LABEL =
       of("ARCHITECTURE EXTRA BODY STATEMENTS");
   private static final Optional<String> PROCESS_STATEMENT_PART_LABEL = of("PROCESS");
   /** Context of {@link #visit(design_file)}. */
-  private final Map<EntityName, EntityDeclaration> knownEntities = Maps.newHashMap();
+  private final Map<ComponentName, EntityDeclaration> knownEntities = Maps.newHashMap();
   /** Context of {@link #visit(design_file)}. */
   private final LVProject project;
+  /** Context of {@link #visit(design_unit)}. */
+  private context_clause lastContext;
   /** Context of {@link #visit(architecture_declaration)}. */
   private UniversalVI currentVi;
   /** Context of {@link #visit(architecture_declaration)}. */
@@ -61,9 +65,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
     this.project = project;
   }
 
-  private EntityDeclaration resolveEntity(EntityName entityName) {
-    EntityDeclaration entity = knownEntities.get(entityName);
-    Verify.verifyNotNull(entity, "Unknown entity: %s", entityName);
+  private EntityDeclaration resolveEntity(ComponentName name) {
+    EntityDeclaration entity = knownEntities.get(name);
+    Verify.verifyNotNull(entity, "Unknown entity: %s", name);
     return entity;
   }
 
@@ -74,8 +78,13 @@ class DesignFileEmitter extends DepthFirstVisitor {
   }
 
   @Override
+  public void visit(context_clause n) {
+    lastContext = n;
+  }
+
+  @Override
   public void visit(entity_declaration n) {
-    EntityDeclaration entity = new EntityDeclaration(n);
+    EntityDeclaration entity = new EntityDeclaration(n, lastContext);
     knownEntities.put(entity.name(), entity);
   }
 
@@ -85,7 +94,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     wiresBlacklist = new WiresBlacklist();
     danglingSinks = new IOSinks();
     namedSources = new IOSources();
-    EntityDeclaration entity = resolveEntity(new EntityName(n.entity_name));
+    EntityDeclaration entity = resolveEntity(new ComponentName(n.entity_name));
     final Identifier architecture = new Identifier(n.architecture_identifier.identifier);
     LOGGER.debug("Architecture: {} of: {}", architecture, entity.name());
     // Create all generics, ports and eventually the VI itself.
@@ -142,6 +151,19 @@ class DesignFileEmitter extends DepthFirstVisitor {
         }
       }
     });
+    // Emit contexts.
+    if (entity.context() != null) {
+      String rep = entity.context().representation();
+      if (!rep.isEmpty()) {
+        new FormulaNode(currentVi, rep, ENTITY_CONTEXT);
+      }
+    }
+    if (lastContext != null) {
+      String rep = lastContext.representation();
+      if (!rep.isEmpty()) {
+        new FormulaNode(currentVi, rep, ARCHITECTURE_CONTEXT);
+      }
+    }
     // Emit declarative part leftovers.
     if (declarativePartFallbacked.length() > 0) {
       new FormulaNode(currentVi, declarativePartFallbacked.toString(),
@@ -179,7 +201,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   @Override
   public void visit(component_instantiation_statement n) {
     concurrentStatementFallback = false;
-    final EntityDeclaration entity = resolveEntity(new EntityName(n.instantiated_unit));
+    final EntityDeclaration entity = resolveEntity(new ComponentName(n.instantiated_unit));
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
     final UniversalSubVI instance = new UniversalSubVI(currentVi, project, entity, of(label));
