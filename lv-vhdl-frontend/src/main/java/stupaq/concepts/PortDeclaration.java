@@ -6,7 +6,7 @@ import stupaq.MissingFeatureException;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
-import stupaq.vhdl93.visitor.DepthFirstVisitor;
+import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.VHDL93ParserConstants.IN;
 import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
@@ -19,7 +19,7 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
   public PortDeclaration(interface_signal_declaration node) {
     super(node);
     direction = PortDirection.IN;
-    node.accept(new DepthFirstVisitor() {
+    node.nodeOptional1.accept(new NonTerminalsNoOpVisitor() {
       public void visit(mode n) {
         int mode = ((NodeToken) n.nodeChoice.choice).kind;
         switch (mode) {

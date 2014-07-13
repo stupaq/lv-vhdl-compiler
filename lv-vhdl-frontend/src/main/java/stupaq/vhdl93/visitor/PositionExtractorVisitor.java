@@ -11,12 +11,21 @@ public class PositionExtractorVisitor extends DepthFirstVisitor {
 
   public Optional<Position> extract(Node n) {
     position = Optional.absent();
-    n.accept(this);
+    try {
+      n.accept(this);
+    } catch (VisitorBreakException ignored) {
+    }
     return position;
   }
 
   @Override
   public void visit(NodeToken n) {
-    position = position.or(Position.extract(n));
+    position = Position.extract(n);
+    if (position.isPresent()) {
+      throw new VisitorBreakException();
+    }
+  }
+
+  private class VisitorBreakException extends RuntimeException {
   }
 }
