@@ -26,12 +26,12 @@ begin
 
   src2 : source port map(bbb(3 downto 0));
   src3 : source port map(bbb(7 downto 4));
-  dst2 : sink generic map(7) port map(bbb);
+  dst2 : sink generic map(7) port map(input => bbb);
 
-  src4 : source generic map(7) port map(ccc);
+  src4 : source generic map(7) port map(output => ccc);
   dst3 : sink port map(ccc(3 downto 0));
   dst4 : sink port map(ccc(7 downto 4));
 
-  src5 : source generic map(7) port map(ddd);
-  dst5 : sink generic map(7) port map(ddd);
+  src5 : source generic map(n => 7) port map(ddd);
+  dst5 : sink generic map(n => 7) port map(ddd);
 end behavioral;
