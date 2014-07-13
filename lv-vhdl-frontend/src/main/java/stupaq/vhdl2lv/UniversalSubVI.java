@@ -12,8 +12,8 @@ import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.hierarchy.SubVI;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.Unbundler;
-import stupaq.lvproject.InstanceName;
-import stupaq.lvproject.LVProject;
+import stupaq.naming.InstanceName;
+import stupaq.project.LVProject;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl2lv.UniversalVI.isClusteredVI;

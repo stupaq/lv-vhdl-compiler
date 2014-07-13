@@ -1,7 +1,5 @@
 package stupaq.naming;
 
-import stupaq.lvproject.InstanceName;
-
 public class ComponentName implements InterfaceName, InstanceName {
   private final ArchitectureName arch;
   private final Identifier component;
@@ -36,7 +34,7 @@ public class ComponentName implements InterfaceName, InstanceName {
   }
 
   @Override
-  public String projectPathPart() {
+  public String projectInstanceName() {
     return toString();
   }
 

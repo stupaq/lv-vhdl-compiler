@@ -1,6 +1,6 @@
 package stupaq.concepts;
 
-import stupaq.lvproject.LVProject;
+import stupaq.project.LVProject;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
 import stupaq.naming.Identifier;

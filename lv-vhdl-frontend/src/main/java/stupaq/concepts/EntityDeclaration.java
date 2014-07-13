@@ -1,6 +1,6 @@
 package stupaq.concepts;
 
-import stupaq.MissingFeature;
+import stupaq.MissingFeatureException;
 import stupaq.naming.EntityName;
 import stupaq.naming.Identifier;
 import stupaq.vhdl93.ast.context_clause;
@@ -15,7 +15,7 @@ public class EntityDeclaration extends InterfaceDeclaration {
     super(Identifier.entity(node), node.entity_header);
     this.node = node;
     this.context = context;
-    MissingFeature.missingIf(node.nodeOptional.present(),
+    MissingFeatureException.throwIf(node.nodeOptional.present(),
         "Entities with statements are not supported.", node.nodeOptional);
   }
 

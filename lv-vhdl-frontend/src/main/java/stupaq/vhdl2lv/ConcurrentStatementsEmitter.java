@@ -7,7 +7,8 @@ import com.google.common.base.Verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import stupaq.MissingFeature;
+import stupaq.MissingFeatureException;
+import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.scripting.hierarchy.Formula;
@@ -16,9 +17,9 @@ import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.WhileLoop;
-import stupaq.lvproject.InstanceName;
-import stupaq.lvproject.LVProject;
-import stupaq.metadata.ConnectorPaneTerminal;
+import stupaq.naming.InstanceName;
+import stupaq.project.LVProject;
+import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.IOReference;
 import stupaq.naming.Identifier;
@@ -75,7 +76,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     InstanceName instance = Identifier.instantiation(resolver, architecture,  n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
     entity.materialiseVI(project, namedSources, danglingSinks);
-    Verify.verifyNotNull(entity, "Missing component or entity declaration: %s",
+    SemanticException.checkNotNull(entity, n, "Missing component or entity declaration: %s",
         instance.interfaceName());
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
@@ -115,7 +116,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         portIsSink = terminal.isInput();
         portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
-        Verify.verify(portTerminal == null);
+        Verify.verify(portTerminal == null, "Omitted port association.");
       }
 
       @Override
@@ -127,7 +128,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         portIsSink = terminal.isInput();
         portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
-        Verify.verify(portTerminal == null);
+        Verify.verify(portTerminal == null, "Omitted port association.");
         ++elementIndex;
       }
 
@@ -167,7 +168,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   @Override
   public void visit(block_statement n) {
     applyFallback = false;
-    MissingFeature.missing("Blocks are not supported at this time.", n);
+    throw new MissingFeatureException("Blocks are not supported at this time.", n);
   }
 
   @Override

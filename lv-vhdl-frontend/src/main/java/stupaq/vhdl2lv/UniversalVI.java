@@ -13,9 +13,9 @@ import stupaq.labview.scripting.hierarchy.Unbundler;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
-import stupaq.lvproject.InstanceName;
-import stupaq.lvproject.LVProject;
-import stupaq.metadata.ConnectorPaneTerminal;
+import stupaq.naming.InstanceName;
+import stupaq.project.LVProject;
+import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.naming.IOReference;
 
 import static com.google.common.base.Optional.of;
@@ -58,7 +58,7 @@ public class UniversalVI extends VI {
         } else {
           danglingSinks.put(ref, bundler.inputs().get(outputIndex++));
         }
-        Verify.verify(index++ == connector.connectorIndex());
+        Verify.verify(index++ == connector.connectorIndex(), "All terminals given out of order.");
       }
     } else {
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {

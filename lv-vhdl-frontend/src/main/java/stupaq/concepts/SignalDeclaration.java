@@ -8,7 +8,7 @@ public abstract class SignalDeclaration
     extends TypedReferenceDeclaration<interface_signal_declaration> {
   public SignalDeclaration(interface_signal_declaration node) {
     super(node, node.identifier_list.identifier, node.subtype_indication);
-    Verify.verify(!node.identifier_list.nodeListOptional.present());
+    Verify.verify(!node.identifier_list.nodeListOptional.present(), "List not flattened.");
   }
 
   @Override

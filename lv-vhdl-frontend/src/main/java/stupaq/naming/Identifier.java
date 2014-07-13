@@ -4,9 +4,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 
-import stupaq.MissingFeature;
+import stupaq.MissingFeatureException;
+import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
-import stupaq.lvproject.InstanceName;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.component_declaration;
@@ -88,12 +88,12 @@ public class Identifier {
       public void visit(entity_name n) {
         EntityName entity = entity(n);
         name = resolver.defaultArchitecture(entity);
-        Verify.verifyNotNull(name, "Could not find default architecture for: %s", entity);
+        SemanticException.checkNotNull(name, n, "Missing default architecture for: %s", entity);
       }
 
       @Override
       public void visit(configuration_name n) {
-        MissingFeature.missing("Configurations are not supported.", n);
+        throw new MissingFeatureException("Configurations are not supported.", n);
       }
     }).apply(n.nodeChoice.choice);
   }

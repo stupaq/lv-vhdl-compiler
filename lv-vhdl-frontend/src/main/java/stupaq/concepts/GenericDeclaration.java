@@ -1,6 +1,5 @@
 package stupaq.concepts;
 
-import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 
 public class GenericDeclaration extends ConstantDeclaration implements ConnectorPaneTerminal {

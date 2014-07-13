@@ -1,4 +1,4 @@
-package stupaq.metadata;
+package stupaq.concepts;
 
 import stupaq.naming.IOReference;
 

@@ -1,4 +1,4 @@
-package stupaq.lvproject;
+package stupaq.project;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +23,7 @@ public class LVProject {
     n.accept(new DesignFileEmitter(this));
   }
 
-  public VIPath allocate(InstanceName name, boolean override) {
+  public VIPath allocate(LVProjectInstance name, boolean override) {
     VIPath path = resolve(name);
     if (override) {
       try {
@@ -35,11 +35,11 @@ public class LVProject {
     return path;
   }
 
-  public ScriptingTools tools() {
-    return tools;
+  public VIPath resolve(LVProjectInstance lvName) {
+    return new VIPath(root, lvName.projectInstanceName() + ".vi");
   }
 
-  public VIPath resolve(InstanceName lvName) {
-    return new VIPath(root, lvName.projectPathPart() + ".vi");
+  public ScriptingTools tools() {
+    return tools;
   }
 }

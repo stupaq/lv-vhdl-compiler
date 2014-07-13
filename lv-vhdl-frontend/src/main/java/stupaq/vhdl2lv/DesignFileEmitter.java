@@ -1,18 +1,18 @@
 package stupaq.vhdl2lv;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Verify;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
 
+import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.EntityDeclaration;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.lvproject.LVProject;
+import stupaq.project.LVProject;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.IOReference;
 import stupaq.naming.Identifier;
@@ -115,7 +115,7 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       public void visit(constant_declaration n) {
         declarativePartFallback = false;
         IOReference ref = new IOReference(n.identifier_list.identifier);
-        Verify.verify(n.nodeOptional.present(), "Missing value for constant: %s", ref);
+        SemanticException.check(n.nodeOptional.present(), n, "Missing value for constant: %s.", ref);
         // There will be no more dangling sinks than we see right now, we can connect this
         // constant to every pending sink and forget about it.
         final String label = sequence(n.nodeToken, n.identifier_list, n.nodeToken1,
@@ -132,7 +132,8 @@ public class DesignFileEmitter extends DepthFirstVisitor {
                 of(label));
           }
         });
-        Verify.verify(!namedSources.containsKey(ref), "Constant: %s has other sources", ref);
+        SemanticException.check(!namedSources.containsKey(ref), n,
+            "Constant: %s has multiple definitions.", ref);
         namedSources.put(ref, terminal);
       }
 

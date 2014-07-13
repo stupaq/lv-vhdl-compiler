@@ -1,25 +1,46 @@
-import java.io.FileInputStream;
-import java.nio.file.Paths;
+import com.google.common.base.Function;
 
-import stupaq.lvproject.LVProject;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
+import stupaq.project.LVProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.design_file;
 
+import static com.google.common.collect.FluentIterable.from;
+import static java.util.Collections.enumeration;
+
 public class vhdl2lv {
   public static void main(String args[]) throws Exception {
-    if (args.length == 2) {
-      FileInputStream file = new FileInputStream(args[0]);
-      VHDL93Parser parser = new VHDL93Parser(file);
+    if (args.length >= 2) {
+      InputStream source = new SequenceInputStream(enumeration(
+          from(Arrays.asList(args)).limit(args.length - 1)
+              .transform(new Function<String, InputStream>() {
+                @Override
+                public InputStream apply(String input) {
+                  try {
+                    return new FileInputStream(input);
+                  } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                  }
+                }
+              })
+              .toList()));
+      VHDL93Parser parser = new VHDL93Parser(source);
       try {
         design_file root = parser.design_file();
-        LVProject project = new LVProject(Paths.get(args[1]));
+        LVProject project = new LVProject(Paths.get(args[args.length - 1]));
         project.update(root);
       } catch (Exception e) {
         e.printStackTrace();
         throw e;
       }
     } else {
-      System.out.println("usage: filename");
+      System.out.println("usage: <filename1> <filename2>...");
     }
   }
 }

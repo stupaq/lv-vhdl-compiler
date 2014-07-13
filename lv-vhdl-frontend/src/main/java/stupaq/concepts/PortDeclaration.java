@@ -2,8 +2,7 @@ package stupaq.concepts;
 
 import com.google.common.base.Predicate;
 
-import stupaq.MissingFeature;
-import stupaq.metadata.ConnectorPaneTerminal;
+import stupaq.MissingFeatureException;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
@@ -31,7 +30,8 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
             direction = PortDirection.OUT;
             break;
           default:
-            MissingFeature.missing("Port direction: " + tokenImage[mode] + " is not supported.", n);
+            throw new MissingFeatureException(
+                "Port direction: " + tokenImage[mode] + " is not supported.", n);
         }
       }
     });
