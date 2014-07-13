@@ -5,7 +5,7 @@ import java.util.Enumeration;
 import stupaq.vhdl93.ast.*;
 
 public class NonTerminalsNoOpVisitor<T> implements Visitor {
-  public T apply(SimpleNode n) {
+  public T apply(Node n) {
     n.accept(this);
     return null;
   }

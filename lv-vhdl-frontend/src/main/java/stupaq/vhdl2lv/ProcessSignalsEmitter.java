@@ -7,13 +7,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaParameter;
 import stupaq.labview.scripting.hierarchy.LeftShiftRegister;
 import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.RightShiftRegister;
 import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
@@ -213,7 +213,7 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
       boolean hasElse = false;
 
       @Override
-      public Boolean apply(SimpleNode n) {
+      public Boolean apply(Node n) {
         super.apply(n);
         return hasElse;
       }

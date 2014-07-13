@@ -1,6 +1,6 @@
 package stupaq.vhdl2lv;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.ast.attribute_designator;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.procedure_name;

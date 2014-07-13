@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import java.io.StringReader;
 import java.util.List;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;

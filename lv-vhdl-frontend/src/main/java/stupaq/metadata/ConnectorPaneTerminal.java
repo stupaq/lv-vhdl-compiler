@@ -1,6 +1,6 @@
 package stupaq.metadata;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 
 public interface ConnectorPaneTerminal {
   public boolean isInput();

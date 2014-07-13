@@ -1,5 +1,6 @@
 package stupaq.concepts;
 
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.subtype_indication;

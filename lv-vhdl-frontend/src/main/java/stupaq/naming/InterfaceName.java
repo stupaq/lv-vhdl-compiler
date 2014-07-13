@@ -1,4 +1,4 @@
 package stupaq.naming;
 
-public class InterfaceName {
+public interface InterfaceName {
 }

@@ -2,7 +2,7 @@ package stupaq.vhdl2lv;
 
 import com.google.common.base.Optional;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.name;

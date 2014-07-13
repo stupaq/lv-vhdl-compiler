@@ -1,10 +1,10 @@
 package stupaq.naming;
 
-public class LibraryName {
-  static final String DEFAULT_LIBRARY_PREFIX = "work.";
-  static final String LIBRARY_SEPARATOR = ".";
+public class LibraryName extends Identifier {
+  static final LibraryName DEFAULT_LIBRARY = new LibraryName("work");
+  static final char LIBRARY_SEPARATOR = '.';
 
-  LibraryName(String string) {
+  private LibraryName(String string) {
     super(string);
   }
 }

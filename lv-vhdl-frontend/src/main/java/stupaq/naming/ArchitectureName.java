@@ -1,14 +1,14 @@
 package stupaq.naming;
 
-import stupaq.vhdl93.ast.identifier;
+import stupaq.lvproject.InstanceName;
 
-public class ArchitectureName {
-  private final EntityName name;
+public class ArchitectureName implements InstanceName {
+  private final EntityName entity;
   private final Identifier arch;
 
-  public ArchitectureName(EntityName name, identifier arch) {
-    this.name = name;
-    this.arch = new Identifier(arch);
+  ArchitectureName(EntityName entity, Identifier arch) {
+    this.entity = entity;
+    this.arch = arch;
   }
 
   @Override
@@ -20,18 +20,32 @@ public class ArchitectureName {
       return false;
     }
     ArchitectureName that = (ArchitectureName) o;
-    return arch.equals(that.arch) && name.equals(that.name);
+    return arch.equals(that.arch) && entity.equals(that.entity);
   }
 
   @Override
   public int hashCode() {
-    int result = name.hashCode();
+    int result = entity.hashCode();
     result = 31 * result + arch.hashCode();
     return result;
   }
 
   @Override
   public String toString() {
-    return name + "(" + arch + ")";
+    return entity + "(" + arch + ")";
+  }
+
+  @Override
+  public String projectPathPart() {
+    return toString();
+  }
+
+  @Override
+  public InterfaceName interfaceName() {
+    return entity;
+  }
+
+  public EntityName entity() {
+    return entity;
   }
 }

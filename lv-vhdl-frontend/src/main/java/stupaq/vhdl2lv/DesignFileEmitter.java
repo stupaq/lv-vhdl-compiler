@@ -8,12 +8,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
 
-import stupaq.concepts.ArchitectureName;
-import stupaq.concepts.ComponentName;
+import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.EntityDeclaration;
-import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.lvproject.LVProject;
+import stupaq.naming.ArchitectureName;
+import stupaq.naming.IOReference;
+import stupaq.naming.Identifier;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 import stupaq.vhdl2lv.WiringRules.PassLabels;
@@ -33,7 +35,7 @@ import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-class DesignFileEmitter extends DepthFirstVisitor {
+public class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   private static final Optional<String> ENTITY_CONTEXT = of("ENTITY CONTEXT");
   private static final Optional<String> ARCHITECTURE_CONTEXT = of("ARCHITECTURE CONTEXT");
@@ -42,7 +44,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   private static final Optional<String> ARCHITECTURE_STATEMENT_PART_LABEL =
       of("ARCHITECTURE EXTRA BODY STATEMENTS");
   /** Context of {@link #visit(design_file)}. */
-  private final ComponentResolver resolver = new ComponentResolver();
+  private final ComponentBindingResolver resolver = new ComponentBindingResolver();
   /** Context of {@link #visit(design_file)}. */
   private final LVProject project;
   /** Context of {@link #visit(design_unit)}. */
@@ -71,7 +73,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
   @Override
   public void visit(entity_declaration n) {
-    EntityDeclaration entity = new EntityDeclaration(n, lastContext);
+    EntityDeclaration entity = new EntityDeclaration(resolver, n, lastContext);
     resolver.addGlobal(entity);
   }
 
@@ -79,17 +81,18 @@ class DesignFileEmitter extends DepthFirstVisitor {
   public void visit(architecture_declaration n) {
     danglingSinks = new IOSinks();
     namedSources = new IOSources();
-    EntityDeclaration entity = resolver.getGlobal(new ComponentName(n.entity_name));
-    final ArchitectureName name =
-        new ArchitectureName(entity.name(), n.architecture_identifier.identifier);
-    LOGGER.debug("Architecture: {}", name);
+    EntityDeclaration entity = resolver.getGlobal(Identifier.entity(n.entity_name));
+    final ArchitectureName arch = Identifier.architecture(entity.name(), n);
+    resolver.defaultArchitecture(arch);
+    LOGGER.debug("ARCHITECTURE: {}", arch);
     // Create all generics, ports and eventually the VI itself.
-    currentVi = new UniversalVI(project, entity, namedSources, danglingSinks);
+    currentVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);
     // Fill local scope with component declarations.
-    resolver.enterLocal(n.architecture_declarative_part.nodeListOptional);
+    resolver.enterLocal(arch, n.architecture_declarative_part);
     // Emit architecture body.
     ConcurrentStatementsEmitter concurrentStatements =
-        new ConcurrentStatementsEmitter(resolver, project, currentVi, namedSources, danglingSinks);
+        new ConcurrentStatementsEmitter(resolver, project, arch, currentVi, namedSources,
+            danglingSinks);
     n.architecture_statement_part.accept(concurrentStatements);
     // Print out what we have found when it comes to wiring.
     if (LOGGER.isDebugEnabled()) {

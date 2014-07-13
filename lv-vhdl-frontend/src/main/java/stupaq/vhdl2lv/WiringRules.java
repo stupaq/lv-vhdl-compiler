@@ -18,7 +18,7 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.tools.ArithmeticMode;

@@ -1,14 +1,14 @@
 package stupaq.naming;
 
-import stupaq.vhdl93.ast.identifier;
+import stupaq.lvproject.InstanceName;
 
-public class ComponentName {
+public class ComponentName implements InterfaceName, InstanceName {
   private final ArchitectureName arch;
   private final Identifier component;
 
-  public ComponentName(ArchitectureName arch, identifier component) {
+  ComponentName(ArchitectureName arch, Identifier component) {
     this.arch = arch;
-    this.component = new Identifier(component);
+    this.component = component;
   }
 
   @Override
@@ -32,10 +32,16 @@ public class ComponentName {
 
   @Override
   public String toString() {
-    return arch + LibraryName.LIBRARY_SEPARATOR + component;
+    return arch + String.valueOf(LibraryName.LIBRARY_SEPARATOR) + component;
   }
 
-  public Identifier local() {
-    return component;
+  @Override
+  public String projectPathPart() {
+    return toString();
+  }
+
+  @Override
+  public InterfaceName interfaceName() {
+    return this;
   }
 }

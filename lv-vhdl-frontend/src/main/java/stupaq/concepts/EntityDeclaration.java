@@ -1,15 +1,18 @@
 package stupaq.concepts;
 
 import stupaq.MissingFeature;
+import stupaq.naming.EntityName;
+import stupaq.naming.Identifier;
 import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.entity_declaration;
 
-public class EntityDeclaration extends ComponentDeclaration {
+public class EntityDeclaration extends InterfaceDeclaration {
   private final entity_declaration node;
   private final context_clause context;
 
-  public EntityDeclaration(entity_declaration node, context_clause context) {
-    super(new ComponentName(node), node.entity_header);
+  public EntityDeclaration(ComponentBindingResolver resolver, entity_declaration node,
+      context_clause context) {
+    super(Identifier.entity(node), node.entity_header);
     this.node = node;
     this.context = context;
     MissingFeature.missingIf(node.nodeOptional.present(),
@@ -22,5 +25,10 @@ public class EntityDeclaration extends ComponentDeclaration {
 
   public context_clause context() {
     return context;
+  }
+
+  @Override
+  public EntityName name() {
+    return (EntityName) super.name();
   }
 }

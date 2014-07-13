@@ -8,16 +8,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import stupaq.MissingFeature;
-import stupaq.concepts.ComponentDeclaration;
-import stupaq.concepts.ComponentName;
-import stupaq.concepts.IOReference;
+import stupaq.concepts.ComponentBindingResolver;
+import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.WhileLoop;
+import stupaq.lvproject.InstanceName;
+import stupaq.lvproject.LVProject;
 import stupaq.metadata.ConnectorPaneTerminal;
+import stupaq.naming.ArchitectureName;
+import stupaq.naming.IOReference;
+import stupaq.naming.Identifier;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
@@ -29,7 +33,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentStatementsEmitter.class);
   private static final Optional<String> PROCESS_STATEMENT_PART_LABEL = of("PROCESS");
   /** External context. */
-  private final ComponentResolver resolver;
+  private final ComponentBindingResolver resolver;
   /** External context. */
   private final LVProject project;
   /** External context. */
@@ -39,16 +43,19 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   /** External context. */
   private final IOSinks danglingSinks;
   /** Context of {@link ConcurrentStatementsEmitter}. */
+  private final ArchitectureName architecture;
+  /** Context of {@link ConcurrentStatementsEmitter}. */
   private boolean applyFallback;
   /** Result. */
   private final WiresBlacklist wiresBlacklist = new WiresBlacklist();
   /** Result. */
   private final StringBuilder fallbackText = new StringBuilder();
 
-  public ConcurrentStatementsEmitter(ComponentResolver resolver, LVProject project, VI theVi,
-      IOSources namedSources, IOSinks danglingSinks) {
+  public ConcurrentStatementsEmitter(ComponentBindingResolver resolver, LVProject project,
+      ArchitectureName architecture, VI theVi, IOSources namedSources, IOSinks danglingSinks) {
     this.resolver = resolver;
     this.project = project;
+    this.architecture = architecture;
     this.theVi = theVi;
     this.namedSources = namedSources;
     this.danglingSinks = danglingSinks;
@@ -65,12 +72,13 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   @Override
   public void visit(component_instantiation_statement n) {
     applyFallback = false;
-    ComponentName name = new ComponentName(n.instantiated_unit);
-    final ComponentDeclaration entity = resolver.get(name);
-    Verify.verifyNotNull(entity, "Missing component or entity declaration: %s", name);
+    InstanceName instance = Identifier.instantiation(resolver, architecture,  n.instantiated_unit);
+    final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
+    Verify.verifyNotNull(entity, "Missing component or entity declaration: %s",
+        instance.interfaceName());
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
-    final UniversalSubVI instance = new UniversalSubVI(theVi, project, entity, of(label));
+    final UniversalSubVI subVI = new UniversalSubVI(theVi, project, instance, entity, of(label));
     sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
       /**
        * Context of {@link #visit(generic_map_aspect)} and {@link
@@ -104,7 +112,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         ConnectorPaneTerminal terminal =
             isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
         portIsSink = terminal.isInput();
-        portTerminal = instance.terminal(terminal.connectorIndex());
+        portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
         Verify.verify(portTerminal == null);
       }
@@ -116,7 +124,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
             : entity.resolvePort(elementIndex);
         portIsSink = terminal.isInput();
-        portTerminal = instance.terminal(terminal.connectorIndex());
+        portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
         Verify.verify(portTerminal == null);
         ++elementIndex;

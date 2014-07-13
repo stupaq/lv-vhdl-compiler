@@ -12,7 +12,7 @@ import com.google.common.collect.Multimaps;
 import java.util.Collection;
 import java.util.List;
 
-import stupaq.concepts.IOReference;
+import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.vhdl2lv.IOSources.Source;
 

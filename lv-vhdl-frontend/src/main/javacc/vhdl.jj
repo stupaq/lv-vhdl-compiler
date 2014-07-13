@@ -911,9 +911,11 @@ void component_instantiation_statement() :
 void instantiated_unit() :
 {}
 {
-    [ <COMPONENT> ] component_name()
-  | <ENTITY> entity_name() [ <LPAREN> architecture_identifier() <RPAREN> ]
-  | <CONFIGURATION> configuration_name()
+    LOOKAHEAD( <ENTITY> )
+      <ENTITY> entity_name() [ <LPAREN> architecture_identifier() <RPAREN> ]
+  | LOOKAHEAD( <CONFIGURATION> )
+      <CONFIGURATION> configuration_name()
+  | [ <COMPONENT> ] component_identifier()
 }
 
 void generic_map_aspect() :

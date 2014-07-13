@@ -1,7 +1,7 @@
 import java.io.FileInputStream;
 import java.nio.file.Paths;
 
-import stupaq.vhdl2lv.LVProject;
+import stupaq.lvproject.LVProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.design_file;
 

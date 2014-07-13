@@ -3,8 +3,7 @@ package stupaq.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 
-import stupaq.concepts.ComponentDeclaration;
-import stupaq.concepts.IOReference;
+import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.scripting.hierarchy.Bundler;
 import stupaq.labview.scripting.hierarchy.Control;
 import stupaq.labview.scripting.hierarchy.ControlCluster;
@@ -14,7 +13,10 @@ import stupaq.labview.scripting.hierarchy.Unbundler;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
+import stupaq.lvproject.InstanceName;
+import stupaq.lvproject.LVProject;
 import stupaq.metadata.ConnectorPaneTerminal;
+import stupaq.naming.IOReference;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
@@ -24,9 +26,9 @@ import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
 public class UniversalVI extends VI {
   private static final int CLUSTERED_VI_THRESHOLD = 26;
 
-  public UniversalVI(LVProject project, ComponentDeclaration entity, IOSources namedSources,
-      IOSinks danglingSinks) {
-    super(project.tools(), project.allocate(entity.name(), true),
+  public UniversalVI(LVProject project, InstanceName lvName, InterfaceDeclaration entity,
+      IOSources namedSources, IOSinks danglingSinks) {
+    super(project.tools(), project.allocate(lvName, true),
         choosePattern(entity.inputs(), entity.outputs()));
     boolean clustered = isClusteredVI(entity.inputs(), entity.outputs());
     if (clustered) {
