@@ -3,7 +3,7 @@ package stupaq.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 
-import stupaq.concepts.EntityDeclaration;
+import stupaq.concepts.ComponentDeclaration;
 import stupaq.concepts.IOReference;
 import stupaq.labview.scripting.hierarchy.Bundler;
 import stupaq.labview.scripting.hierarchy.Control;
@@ -17,14 +17,14 @@ import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.metadata.ConnectorPaneTerminal;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
-import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
 
 public class UniversalVI extends VI {
   private static final int CLUSTERED_VI_THRESHOLD = 26;
 
-  public UniversalVI(LVProject project, EntityDeclaration entity, IOSources namedSources,
+  public UniversalVI(LVProject project, ComponentDeclaration entity, IOSources namedSources,
       IOSinks danglingSinks) {
     super(project.tools(), project.allocate(entity.name(), true),
         choosePattern(entity.inputs(), entity.outputs()));
