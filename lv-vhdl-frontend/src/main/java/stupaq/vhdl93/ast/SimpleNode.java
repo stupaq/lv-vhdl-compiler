@@ -5,7 +5,6 @@ import com.google.common.base.Optional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
 import stupaq.vhdl93.visitor.NameExtractorVisitor;
 import stupaq.vhdl93.visitor.PositionExtractorVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
@@ -13,12 +12,7 @@ import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 public abstract class SimpleNode implements Node {
   private static String representation(identifier n) {
-    String rep = n.nodeChoice.accept(new GJNoArguDepthFirst<String>() {
-      @Override
-      public String visit(NodeToken n) {
-        return n.tokenImage;
-      }
-    });
+    String rep = ((NodeToken) n.nodeChoice.choice).tokenImage;
     return rep == null ? null : rep.toLowerCase().trim();
   }
 

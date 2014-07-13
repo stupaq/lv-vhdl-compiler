@@ -54,14 +54,14 @@ public class ComponentBindingResolver {
       }
 
       @Override
-      public void visit(package_declarative_item n) {
-        n.nodeChoice.choice.accept(this);
-      }
-
-      @Override
       public void visit(component_declaration n) {
         ComponentDeclaration component = new ComponentDeclaration(name, n);
         local.put(component.name(), component);
+      }
+
+      @Override
+      public void visit(package_declarative_item n) {
+        n.nodeChoice.choice.accept(this);
       }
     });
   }

@@ -10,8 +10,10 @@ public class EntityName implements InterfaceName {
   }
 
   @Override
-  public String toString() {
-    return library + String.valueOf(LibraryName.LIBRARY_SEPARATOR) + entity;
+  public int hashCode() {
+    int result = library.hashCode();
+    result = 31 * result + entity.hashCode();
+    return result;
   }
 
   @Override
@@ -27,9 +29,7 @@ public class EntityName implements InterfaceName {
   }
 
   @Override
-  public int hashCode() {
-    int result = library.hashCode();
-    result = 31 * result + entity.hashCode();
-    return result;
+  public String toString() {
+    return library + String.valueOf(LibraryName.LIBRARY_SEPARATOR) + entity;
   }
 }

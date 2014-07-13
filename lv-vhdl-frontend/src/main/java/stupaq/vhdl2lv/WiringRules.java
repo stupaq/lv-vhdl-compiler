@@ -18,10 +18,10 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
-import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Generic;
 import stupaq.labview.scripting.tools.ArithmeticMode;
+import stupaq.naming.IOReference;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 

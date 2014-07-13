@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.CompoundArithmetic;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
@@ -22,6 +21,7 @@ import stupaq.labview.scripting.hierarchy.RingConstant;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
+import stupaq.naming.IOReference;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
 

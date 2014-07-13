@@ -10,6 +10,13 @@ public class ArchitectureName implements InstanceName {
   }
 
   @Override
+  public int hashCode() {
+    int result = entity.hashCode();
+    result = 31 * result + arch.hashCode();
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -19,13 +26,6 @@ public class ArchitectureName implements InstanceName {
     }
     ArchitectureName that = (ArchitectureName) o;
     return arch.equals(that.arch) && entity.equals(that.entity);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = entity.hashCode();
-    result = 31 * result + arch.hashCode();
-    return result;
   }
 
   @Override

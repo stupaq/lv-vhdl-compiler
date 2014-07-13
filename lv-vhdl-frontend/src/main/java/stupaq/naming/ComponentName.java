@@ -10,6 +10,13 @@ public class ComponentName implements InterfaceName, InstanceName {
   }
 
   @Override
+  public int hashCode() {
+    int result = arch.hashCode();
+    result = 31 * result + component.hashCode();
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -19,13 +26,6 @@ public class ComponentName implements InterfaceName, InstanceName {
     }
     ComponentName that = (ComponentName) o;
     return arch.equals(that.arch) && component.equals(that.component);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = arch.hashCode();
-    result = 31 * result + component.hashCode();
-    return result;
   }
 
   @Override

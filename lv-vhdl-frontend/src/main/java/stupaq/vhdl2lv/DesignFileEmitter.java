@@ -12,14 +12,14 @@ import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.EntityDeclaration;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
 import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.project.LVProject;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.IOReference;
 import stupaq.naming.Identifier;
+import stupaq.project.LVProject;
 import stupaq.vhdl2lv.IOSinks.Sink;
 import stupaq.vhdl2lv.IOSources.Source;
 import stupaq.vhdl2lv.WiringRules.PassLabels;
-import stupaq.vhdl93.ast.NodeSequence;
+import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.block_declarative_item;
 import stupaq.vhdl93.ast.constant_declaration;
@@ -30,7 +30,7 @@ import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
-import stupaq.vhdl93.visitor.GJNoArguDepthFirst;
+import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
@@ -115,23 +115,24 @@ public class DesignFileEmitter extends DepthFirstVisitor {
       public void visit(constant_declaration n) {
         declarativePartFallback = false;
         IOReference ref = new IOReference(n.identifier_list.identifier);
-        SemanticException.check(n.nodeOptional.present(), n, "Missing value for constant: %s.", ref);
-        // There will be no more dangling sinks than we see right now, we can connect this
-        // constant to every pending sink and forget about it.
         final String label = sequence(n.nodeToken, n.identifier_list, n.nodeToken1,
             n.subtype_indication).representation();
-        Terminal terminal = n.nodeOptional.accept(new GJNoArguDepthFirst<Terminal>() {
+        Terminal terminal = (new NonTerminalsNoOpVisitor<Terminal>() {
+          Terminal terminal = null;
+
           @Override
-          public Terminal visit(NodeSequence n) {
-            return n.nodes.get(1).accept(this);
+          public Terminal apply(Node n) {
+            super.apply(n);
+            return terminal;
           }
 
           @Override
-          public Terminal visit(expression n) {
-            return new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n,
+          public void visit(expression n) {
+            terminal = new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n,
                 of(label));
           }
-        });
+        }).apply(n.nodeOptional);
+        SemanticException.checkNotNull(terminal, n, "Missing value for constant: %s.", ref);
         SemanticException.check(!namedSources.containsKey(ref), n,
             "Constant: %s has multiple definitions.", ref);
         namedSources.put(ref, terminal);

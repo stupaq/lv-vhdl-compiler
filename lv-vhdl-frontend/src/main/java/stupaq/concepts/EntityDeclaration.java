@@ -15,8 +15,10 @@ public class EntityDeclaration extends InterfaceDeclaration {
     super(Identifier.entity(node), node.entity_header);
     this.node = node;
     this.context = context;
-    MissingFeatureException.throwIf(node.nodeOptional.present(),
-        "Entities with statements are not supported.", node.nodeOptional);
+    MissingFeatureException.throwIf(node.entity_declarative_part.nodeListOptional.present(), node,
+        "Entity-scoped declarations are not supported.");
+    MissingFeatureException.throwIf(node.nodeOptional.present(), node,
+        "Entities with statements are not supported.");
   }
 
   public entity_declaration node() {

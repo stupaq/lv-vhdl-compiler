@@ -13,15 +13,17 @@ entity process_outer is
 end entity;
 
 architecture behavioral of process_outer is
+  constant CLK_TRIGGER_VALUE : std_logic := '1';
+  constant IN1_CONSTANT : std_logic := '1';
 begin
   process (clk, rst) is
   begin
-    if clk'event and clk = '1' then
-      if in1 = '1' then
+    if clk'event and clk = CLK_TRIGGER_VALUE then
+      if in1 = IN1_CONSTANT then
         -- Missing else branch.
         out1 <= in2;
       end if;
-      if in1 = '1' then
+      if in1 = IN1_CONSTANT then
         out2 <= in2;
       else
         -- Assigned in every branch.

@@ -1,9 +1,9 @@
 package stupaq.concepts;
 
-import stupaq.project.LVProject;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
 import stupaq.naming.Identifier;
+import stupaq.project.LVProject;
 import stupaq.vhdl2lv.IOSinks;
 import stupaq.vhdl2lv.IOSources;
 import stupaq.vhdl2lv.UniversalVI;

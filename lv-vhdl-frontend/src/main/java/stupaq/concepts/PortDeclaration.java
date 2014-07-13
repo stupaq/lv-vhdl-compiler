@@ -30,8 +30,8 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
             direction = PortDirection.OUT;
             break;
           default:
-            throw new MissingFeatureException(
-                "Port direction: " + tokenImage[mode] + " is not supported.", n);
+            throw new MissingFeatureException(n,
+                "Port direction: " + tokenImage[mode] + " is not supported.");
         }
       }
     });

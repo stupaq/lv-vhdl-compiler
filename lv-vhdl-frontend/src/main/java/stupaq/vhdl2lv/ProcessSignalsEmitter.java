@@ -21,7 +21,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-public class ProcessSignalsEmitter extends DepthFirstVisitor {
+public class ProcessSignalsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private final Loop loop;
   private final Formula formula;
   private final IOSinks danglingSinks;
@@ -173,10 +173,15 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   }
 
   @Override
+  public void visit(process_statement_part n) {
+    n.nodeListOptional.accept(this);
+  }
+
+  @Override
   public void visit(sequential_statement n) {
     // We handle each of them individually. See below.
     sequentialStatementLevel++;
-    super.visit(n);
+    n.nodeChoice.accept(this);
     sequentialStatementLevel--;
   }
 
@@ -188,11 +193,6 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   @Override
   public void visit(assertion_statement n) {
     signalsRead(n.assertion);
-  }
-
-  @Override
-  public void visit(wait_statement n) {
-    signalsRead(n);
   }
 
   @Override
@@ -244,26 +244,8 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   }
 
   @Override
-  public void visit(report_statement n) {
-    signalsRead(n);
-  }
-
-  @Override
-  public void visit(signal_assignment_statement n) {
-    signalsRead(n.nodeOptional1);
-    signalsRead(n.waveform);
-    signalsWritten(n.target);
-  }
-
-  @Override
-  public void visit(variable_assignment_statement n) {
-    signalsRead(n.expression);
-    signalsWritten(n.target);
-  }
-
-  @Override
-  public void visit(procedure_call_statement n) {
-    signalsRead(n);
+  public void visit(exit_statement n) {
+    signalsRead(n.nodeOptional2);
   }
 
   @Override
@@ -305,13 +287,41 @@ public class ProcessSignalsEmitter extends DepthFirstVisitor {
   }
 
   @Override
-  public void visit(exit_statement n) {
-    signalsRead(n.nodeOptional2);
+  public void visit(procedure_call_statement n) {
+    signalsRead(n);
+  }
+
+  @Override
+  public void visit(report_statement n) {
+    signalsRead(n);
   }
 
   @Override
   public void visit(return_statement n) {
     signalsRead(n.nodeOptional1);
+  }
+
+  @Override
+  public void visit(sequence_of_statements n) {
+    n.nodeListOptional.accept(this);
+  }
+
+  @Override
+  public void visit(signal_assignment_statement n) {
+    signalsRead(n.nodeOptional1);
+    signalsRead(n.waveform);
+    signalsWritten(n.target);
+  }
+
+  @Override
+  public void visit(variable_assignment_statement n) {
+    signalsRead(n.expression);
+    signalsWritten(n.target);
+  }
+
+  @Override
+  public void visit(wait_statement n) {
+    signalsRead(n);
   }
 
 }

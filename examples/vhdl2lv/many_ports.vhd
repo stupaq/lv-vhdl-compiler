@@ -44,14 +44,20 @@ use ieee.std_logic_1164.all;
 
 entity many_ports_outer is
   port(
-    input    : in  std_logic;
+    ctrl  : in  std_logic_vector(1 downto 0);
     in0   : in  std_logic;
     out0  : out std_logic);
 end entity;
 
 architecture behavioral of many_ports_outer is
+  signal output : std_logic;
+  signal input  : std_logic;
 begin
   many_ports : entity work.many_ports port map(in0, in0, in0, in0, in0, in0, in0, in0,
    in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0,
-    in0, in0, input, out0);
+    in0, in0, input, output);
+  input <= '1';
+  output <= out0 when ctrl = "10" else
+            '0' when ctrl = "01" else
+            '1';
 end behavioral;

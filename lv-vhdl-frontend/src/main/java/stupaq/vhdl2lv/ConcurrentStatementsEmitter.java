@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
+import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.scripting.hierarchy.Formula;
 import stupaq.labview.scripting.hierarchy.FormulaNode;
@@ -17,12 +18,11 @@ import stupaq.labview.scripting.hierarchy.Loop;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.hierarchy.WhileLoop;
-import stupaq.naming.InstanceName;
-import stupaq.project.LVProject;
-import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.IOReference;
 import stupaq.naming.Identifier;
+import stupaq.naming.InstanceName;
+import stupaq.project.LVProject;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
@@ -45,12 +45,12 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private final IOSinks danglingSinks;
   /** Context of {@link ConcurrentStatementsEmitter}. */
   private final ArchitectureName architecture;
-  /** Context of {@link ConcurrentStatementsEmitter}. */
-  private boolean applyFallback;
   /** Result. */
   private final WiresBlacklist wiresBlacklist = new WiresBlacklist();
   /** Result. */
   private final StringBuilder fallbackText = new StringBuilder();
+  /** Context of {@link ConcurrentStatementsEmitter}. */
+  private boolean applyFallback;
 
   public ConcurrentStatementsEmitter(ComponentBindingResolver resolver, LVProject project,
       ArchitectureName architecture, VI theVi, IOSources namedSources, IOSinks danglingSinks) {
@@ -71,17 +71,31 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   }
 
   @Override
+  public void visit(architecture_statement_part n) {
+    n.nodeListOptional.accept(this);
+  }
+
+  @Override
+  public void visit(concurrent_statement n) {
+    applyFallback = true;
+    n.nodeChoice.choice.accept(this);
+    if (applyFallback) {
+      fallbackText.append(n.representation()).append(System.lineSeparator());
+    }
+  }
+
+  @Override
   public void visit(component_instantiation_statement n) {
     applyFallback = false;
     InstanceName instance = Identifier.instantiation(resolver, architecture,  n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
     entity.materialiseVI(project, namedSources, danglingSinks);
-    SemanticException.checkNotNull(entity, n, "Missing component or entity declaration: %s",
+    SemanticException.checkNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
     String label = n.instantiation_label.label.representation();
-    LOGGER.debug("Instance of: {} labelled: {}", entity.name(), label);
+    LOGGER.debug("Instantiating: {} with label: {}", entity.name(), label);
     final UniversalSubVI subVI = new UniversalSubVI(theVi, project, instance, entity, of(label));
-    sequence(n.nodeOptional, n.nodeOptional1).accept(new DepthFirstVisitor() {
+    sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor() {
       /**
        * Context of {@link #visit(generic_map_aspect)} and {@link
        * #visit(port_map_aspect)}.
@@ -95,15 +109,22 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
       Terminal portTerminal;
 
       @Override
+      public void visit(association_list n) {
+        n.nodeChoice.accept(this);
+      }
+
+      @Override
       public void visit(named_association_list n) {
         elementIndex = Integer.MIN_VALUE;
-        super.visit(n);
+        n.named_association_element.accept(this);
+        n.nodeListOptional.accept(this);
       }
 
       @Override
       public void visit(positional_association_list n) {
         elementIndex = 0;
-        super.visit(n);
+        n.positional_association_element.accept(this);
+        n.nodeListOptional.accept(this);
       }
 
       @Override
@@ -133,6 +154,11 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
       }
 
       @Override
+      public void visit(actual_part n) {
+        n.nodeChoice.choice.accept(this);
+      }
+
+      @Override
       public void visit(actual_part_open n) {
         // This way we do nothing for <OPEN> ports which is very appropriate.
         portTerminal = null;
@@ -154,21 +180,15 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
       @Override
       public void visit(generic_map_aspect n) {
         isGenericAspect = true;
-        super.visit(n);
+        n.association_list.accept(this);
       }
 
       @Override
       public void visit(port_map_aspect n) {
         isGenericAspect = false;
-        super.visit(n);
+        n.association_list.accept(this);
       }
     });
-  }
-
-  @Override
-  public void visit(block_statement n) {
-    applyFallback = false;
-    throw new MissingFeatureException("Blocks are not supported at this time.", n);
   }
 
   @Override
@@ -183,8 +203,9 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   }
 
   @Override
-  public void visit(concurrent_procedure_call_statement n) {
-    // TODO for now we can rely on fallback
+  public void visit(block_statement n) {
+    applyFallback = false;
+    throw new MissingFeatureException(n, "Blocks are not supported at this time.");
   }
 
   @Override
@@ -199,6 +220,11 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         sourceEmitter.addTerminals(formula, n);
       }
     });
+  }
+
+  @Override
+  public void visit(concurrent_procedure_call_statement n) {
+    // TODO for now we can rely on fallback
   }
 
   @Override
@@ -236,19 +262,5 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   @Override
   public void visit(generate_statement n) {
     // TODO for now we can rely on fallback
-  }
-
-  @Override
-  public void visit(concurrent_statement n) {
-    applyFallback = true;
-    n.nodeChoice.choice.accept(this);
-    if (applyFallback) {
-      fallbackText.append(n.representation()).append(System.lineSeparator());
-    }
-  }
-
-  @Override
-  public void visit(architecture_statement_part n) {
-    n.nodeListOptional.accept(this);
   }
 }

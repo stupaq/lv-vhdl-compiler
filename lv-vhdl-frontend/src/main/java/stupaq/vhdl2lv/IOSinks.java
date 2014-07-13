@@ -11,8 +11,8 @@ import com.google.common.collect.Multimaps;
 import java.util.Collection;
 import java.util.List;
 
-import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.naming.IOReference;
 import stupaq.vhdl2lv.IOSinks.Sink;
 
 public class IOSinks extends ForwardingMultimap<IOReference, Sink> {

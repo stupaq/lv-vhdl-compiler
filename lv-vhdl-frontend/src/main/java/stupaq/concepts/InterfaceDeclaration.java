@@ -10,9 +10,9 @@ import java.util.Map;
 
 import stupaq.concepts.PortDeclaration.DirectionPredicate;
 import stupaq.concepts.PortDeclaration.PortDirection;
-import stupaq.project.LVProject;
 import stupaq.naming.IOReference;
 import stupaq.naming.InterfaceName;
+import stupaq.project.LVProject;
 import stupaq.vhdl2lv.IOSinks;
 import stupaq.vhdl2lv.IOSources;
 import stupaq.vhdl93.ast.SimpleNode;

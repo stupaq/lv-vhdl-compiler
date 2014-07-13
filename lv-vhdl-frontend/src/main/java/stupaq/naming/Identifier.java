@@ -32,22 +32,6 @@ public class Identifier {
     this.string = string;
   }
 
-  @Override
-  public int hashCode() {
-    return string.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    return this == o ||
-        !(o == null || getClass() != o.getClass()) && string.equals(((Identifier) o).string);
-  }
-
-  @Override
-  public String toString() {
-    return string;
-  }
-
   public static EntityName entity(entity_declaration n) {
     return new EntityName(LibraryName.DEFAULT_LIBRARY,
         new Identifier(n.entity_identifier.identifier));
@@ -93,8 +77,24 @@ public class Identifier {
 
       @Override
       public void visit(configuration_name n) {
-        throw new MissingFeatureException("Configurations are not supported.", n);
+        throw new MissingFeatureException(n, "Configurations are not supported.");
       }
     }).apply(n.nodeChoice.choice);
+  }
+
+  @Override
+  public int hashCode() {
+    return string.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return this == o ||
+        !(o == null || getClass() != o.getClass()) && string.equals(((Identifier) o).string);
+  }
+
+  @Override
+  public String toString() {
+    return string;
   }
 }

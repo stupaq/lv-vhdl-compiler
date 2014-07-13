@@ -3,6 +3,7 @@ package stupaq.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 
+import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.scripting.hierarchy.Bundler;
 import stupaq.labview.scripting.hierarchy.Control;
@@ -13,10 +14,9 @@ import stupaq.labview.scripting.hierarchy.Unbundler;
 import stupaq.labview.scripting.hierarchy.VI;
 import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
+import stupaq.naming.IOReference;
 import stupaq.naming.InstanceName;
 import stupaq.project.LVProject;
-import stupaq.concepts.ConnectorPaneTerminal;
-import stupaq.naming.IOReference;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
