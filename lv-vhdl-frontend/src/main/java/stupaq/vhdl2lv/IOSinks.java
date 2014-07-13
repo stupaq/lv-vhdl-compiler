@@ -15,7 +15,7 @@ import stupaq.naming.IOReference;
 import stupaq.labview.scripting.hierarchy.Terminal;
 import stupaq.vhdl2lv.IOSinks.Sink;
 
-class IOSinks extends ForwardingMultimap<IOReference, Sink> {
+public class IOSinks extends ForwardingMultimap<IOReference, Sink> {
   private final Multimap<IOReference, Sink> sinks =
       Multimaps.newListMultimap(Maps.<IOReference, Collection<Sink>>newHashMap(),
           new Supplier<List<Sink>>() {

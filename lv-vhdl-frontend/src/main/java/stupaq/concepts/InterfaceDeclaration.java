@@ -10,9 +10,12 @@ import java.util.Map;
 
 import stupaq.concepts.PortDeclaration.DirectionPredicate;
 import stupaq.concepts.PortDeclaration.PortDirection;
+import stupaq.lvproject.LVProject;
 import stupaq.metadata.ConnectorPaneTerminal;
 import stupaq.naming.IOReference;
 import stupaq.naming.InterfaceName;
+import stupaq.vhdl2lv.IOSinks;
+import stupaq.vhdl2lv.IOSources;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
@@ -98,5 +101,9 @@ public abstract class InterfaceDeclaration {
 
   public int outputs() {
     return outputs;
+  }
+
+  public void materialiseVI(LVProject project, IOSources namedSources, IOSinks danglingSinks) {
+    // Do nothing in general case.
   }
 }

@@ -54,7 +54,9 @@ public class Identifier {
   }
 
   public static EntityName entity(entity_name n) {
-    return new EntityName(LibraryName.DEFAULT_LIBRARY, new Identifier(n.firstName()));
+    String id = n.firstName();
+    id = id.substring(id.lastIndexOf(LibraryName.LIBRARY_SEPARATOR) + 1);
+    return new EntityName(LibraryName.DEFAULT_LIBRARY, new Identifier(id));
   }
 
   public static ComponentName component(ArchitectureName arch, component_declaration n) {
