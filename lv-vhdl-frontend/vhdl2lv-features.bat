@@ -7,7 +7,6 @@
   %source_dir%\branch_and_merge.vhd ^
   %source_dir%\many_ports.vhd ^
   %source_dir%\process_outer.vhd ^
-  %source_dir%\main.vhd ^
   %destination_dir%
 
 @PAUSE
