@@ -198,8 +198,9 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     // Emit process body AND declarations.
     Formula formula =
         new FormulaNode(loop.diagram(), n.representation(), PROCESS_STATEMENT_PART_LABEL);
-    // Connect wires.
+    // Connect wires, emit latches.
     new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources, wiresBlacklist).visit(n);
+    formula.cleanupFormula();
   }
 
   @Override
@@ -220,6 +221,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         sourceEmitter.addTerminals(formula, n);
       }
     });
+    formula.cleanupFormula();
   }
 
   @Override
@@ -257,6 +259,7 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         });
       }
     });
+    formula.cleanupFormula();
   }
 
   @Override

@@ -83,6 +83,7 @@ class SourceEmitter {
   private Terminal<FormulaParameter> emitAsExpression(SimpleNode n) {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, n);
+    formula.cleanupFormula();
     return formula.addOutput(RVALUE_LABEL);
   }
 

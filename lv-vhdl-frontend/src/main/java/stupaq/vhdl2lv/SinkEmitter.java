@@ -37,6 +37,7 @@ class SinkEmitter {
   private Terminal emitAsLValue(SimpleNode n) {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, new SourceEmitter(owner, danglingSinks, namedSources), n);
+    formula.cleanupFormula();
     return formula.addInput(LVALUE_LABEL);
   }
 
