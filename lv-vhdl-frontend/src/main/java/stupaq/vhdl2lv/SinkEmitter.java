@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.labview.scripting.hierarchy.Formula;
-import stupaq.labview.scripting.hierarchy.FormulaNode;
-import stupaq.labview.scripting.hierarchy.Generic;
-import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Formula;
+import stupaq.labview.hierarchy.FormulaNode;
+import stupaq.labview.hierarchy.Generic;
+import stupaq.labview.hierarchy.Terminal;
 import stupaq.naming.IOReference;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;

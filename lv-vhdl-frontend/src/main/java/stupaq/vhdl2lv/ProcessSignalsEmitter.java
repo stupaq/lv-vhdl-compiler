@@ -7,12 +7,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.labview.scripting.hierarchy.Formula;
-import stupaq.labview.scripting.hierarchy.FormulaParameter;
-import stupaq.labview.scripting.hierarchy.LeftShiftRegister;
-import stupaq.labview.scripting.hierarchy.Loop;
-import stupaq.labview.scripting.hierarchy.RightShiftRegister;
-import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Formula;
+import stupaq.labview.hierarchy.FormulaParameter;
+import stupaq.labview.hierarchy.LeftShiftRegister;
+import stupaq.labview.hierarchy.Loop;
+import stupaq.labview.hierarchy.RightShiftRegister;
+import stupaq.labview.hierarchy.Terminal;
 import stupaq.naming.IOReference;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.*;

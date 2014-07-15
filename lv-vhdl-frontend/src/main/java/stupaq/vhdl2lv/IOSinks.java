@@ -11,7 +11,7 @@ import com.google.common.collect.Multimaps;
 import java.util.Collection;
 import java.util.List;
 
-import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Terminal;
 import stupaq.naming.IOReference;
 import stupaq.vhdl2lv.IOSinks.Sink;
 

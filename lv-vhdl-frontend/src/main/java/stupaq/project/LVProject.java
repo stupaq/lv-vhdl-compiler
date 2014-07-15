@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
-import stupaq.labview.scripting.tools.activex.ActiveXScriptingTools;
+import stupaq.labview.scripting.activex.ActiveXScriptingTools;
 import stupaq.vhdl2lv.DesignFileEmitter;
 import stupaq.vhdl93.ast.design_file;
 

@@ -7,11 +7,11 @@ import java.util.List;
 
 import stupaq.concepts.InterfaceDeclaration;
 import stupaq.labview.VIErrorException;
-import stupaq.labview.scripting.hierarchy.Bundler;
-import stupaq.labview.scripting.hierarchy.Generic;
-import stupaq.labview.scripting.hierarchy.SubVI;
-import stupaq.labview.scripting.hierarchy.Terminal;
-import stupaq.labview.scripting.hierarchy.Unbundler;
+import stupaq.labview.hierarchy.Bundler;
+import stupaq.labview.hierarchy.Generic;
+import stupaq.labview.hierarchy.SubVI;
+import stupaq.labview.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Unbundler;
 import stupaq.naming.InstanceName;
 import stupaq.project.LVProject;
 

@@ -4,7 +4,7 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
-import stupaq.labview.scripting.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Terminal;
 
 public class WiresBlacklist {
   private final Set<WireEndpoints> set = Sets.newHashSet();
