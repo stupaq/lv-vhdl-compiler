@@ -12,17 +12,17 @@ import stupaq.labview.hierarchy.Generic;
 import stupaq.labview.hierarchy.SubVI;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Unbundler;
-import stupaq.naming.InstanceName;
+import stupaq.naming.InstantiableName;
 import stupaq.project.LVProject;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl2lv.UniversalVI.isClusteredVI;
 
-public class UniversalSubVI extends SubVI {
+class UniversalSubVI extends SubVI {
   private final List<Terminal> terminals = Lists.newArrayList();
   private final boolean clustered;
 
-  public UniversalSubVI(Generic owner, LVProject project, InstanceName lvName,
+  public UniversalSubVI(Generic owner, LVProject project, InstantiableName lvName,
       InterfaceDeclaration entity, Optional<String> description) {
     super(owner, project.resolve(lvName), description);
     clustered = isClusteredVI(entity.inputs(), entity.outputs());

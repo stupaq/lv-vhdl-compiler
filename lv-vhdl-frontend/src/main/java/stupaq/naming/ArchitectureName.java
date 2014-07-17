@@ -1,6 +1,6 @@
 package stupaq.naming;
 
-public class ArchitectureName implements InstanceName {
+public class ArchitectureName implements InstantiableName {
   private final EntityName entity;
   private final Identifier arch;
 
@@ -34,7 +34,7 @@ public class ArchitectureName implements InstanceName {
   }
 
   @Override
-  public String projectInstanceName() {
+  public String elementName() {
     return toString();
   }
 

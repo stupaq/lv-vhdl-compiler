@@ -51,13 +51,13 @@ public class Identifier {
     return new ArchitectureName(entity, new Identifier(n.architecture_identifier.identifier));
   }
 
-  public static InstanceName instantiation(final ComponentBindingResolver resolver,
+  public static InstantiableName instantiation(final ComponentBindingResolver resolver,
       final ArchitectureName architecture, instantiated_unit n) {
-    return (new NonTerminalsNoOpVisitor<InstanceName>() {
-      InstanceName name;
+    return (new NonTerminalsNoOpVisitor<InstantiableName>() {
+      InstantiableName name;
 
       @Override
-      public InstanceName apply(Node n) {
+      public InstantiableName apply(Node n) {
         super.apply(n);
         Verify.verifyNotNull(name);
         return name;

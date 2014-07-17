@@ -7,8 +7,6 @@ import java.nio.file.Path;
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.labview.scripting.activex.ActiveXScriptingTools;
-import stupaq.vhdl2lv.DesignFileEmitter;
-import stupaq.vhdl93.ast.design_file;
 
 public class LVProject {
   private final ScriptingTools tools;
@@ -19,11 +17,7 @@ public class LVProject {
     tools = new ActiveXScriptingTools();
   }
 
-  public void update(design_file n) {
-    n.accept(new DesignFileEmitter(this));
-  }
-
-  public VIPath allocate(LVProjectInstance name, boolean override) {
+  public VIPath allocate(LVProjectElement name, boolean override) {
     VIPath path = resolve(name);
     if (override) {
       try {
@@ -35,8 +29,8 @@ public class LVProject {
     return path;
   }
 
-  public VIPath resolve(LVProjectInstance lvName) {
-    return new VIPath(root, lvName.projectInstanceName() + ".vi");
+  public VIPath resolve(LVProjectElement lvName) {
+    return new VIPath(root, lvName.elementName() + ".vi");
   }
 
   public ScriptingTools tools() {

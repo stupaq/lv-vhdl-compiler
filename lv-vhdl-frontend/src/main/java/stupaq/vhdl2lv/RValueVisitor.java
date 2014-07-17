@@ -8,7 +8,7 @@ import stupaq.vhdl93.ast.signature;
 import stupaq.vhdl93.ast.suffix;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-public abstract class RValueVisitor extends DepthFirstVisitor {
+abstract class RValueVisitor extends DepthFirstVisitor {
   protected abstract void topLevelScope(IOReference ref);
 
   @Override

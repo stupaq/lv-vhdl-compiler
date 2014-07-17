@@ -77,4 +77,8 @@ public class ComponentBindingResolver {
     }
     return iface;
   }
+
+  public Iterable<ComponentDeclaration> getLocalComponents() {
+    return local.values();
+  }
 }

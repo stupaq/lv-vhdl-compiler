@@ -2,7 +2,7 @@ package stupaq;
 
 import stupaq.vhdl93.ast.SimpleNode;
 
-public class MissingFeatureException extends LocalisedException {
+public class MissingFeatureException extends AbstractLocalisedException {
   public MissingFeatureException(SimpleNode near, String message, Object... args) {
     super(String.format(message, args), near);
   }

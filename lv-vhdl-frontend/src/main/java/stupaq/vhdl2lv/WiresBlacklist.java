@@ -6,7 +6,7 @@ import java.util.Set;
 
 import stupaq.labview.hierarchy.Terminal;
 
-public class WiresBlacklist {
+class WiresBlacklist {
   private final Set<WireEndpoints> set = Sets.newHashSet();
 
   public void add(Terminal source, Terminal sink) {

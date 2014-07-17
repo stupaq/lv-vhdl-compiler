@@ -1,3 +1,5 @@
+package stupaq.vhdl2lv;
+
 import com.google.common.base.Function;
 
 import java.io.FileInputStream;
@@ -14,7 +16,7 @@ import stupaq.vhdl93.ast.design_file;
 import static com.google.common.collect.FluentIterable.from;
 import static java.util.Collections.enumeration;
 
-public class vhdl2lv {
+public class TranslationDriver {
   public static void main(String args[]) throws Exception {
     if (args.length >= 2) {
       InputStream source = new SequenceInputStream(enumeration(
@@ -34,7 +36,7 @@ public class vhdl2lv {
       try {
         design_file root = parser.design_file();
         LVProject project = new LVProject(Paths.get(args[args.length - 1]));
-        project.update(root);
+        root.accept(new DesignFileEmitter(project));
       } catch (Exception e) {
         e.printStackTrace();
         throw e;

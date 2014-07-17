@@ -1,6 +1,6 @@
 package stupaq.naming;
 
-public class ComponentName implements InterfaceName, InstanceName {
+public class ComponentName implements InterfaceName, InstantiableName {
   private final ArchitectureName arch;
   private final Identifier component;
 
@@ -34,7 +34,7 @@ public class ComponentName implements InterfaceName, InstanceName {
   }
 
   @Override
-  public String projectInstanceName() {
+  public String elementName() {
     return toString();
   }
 

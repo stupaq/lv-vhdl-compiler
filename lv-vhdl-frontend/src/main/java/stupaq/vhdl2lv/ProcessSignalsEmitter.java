@@ -21,7 +21,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-public class ProcessSignalsEmitter extends NonTerminalsNoOpVisitor<Void> {
+class ProcessSignalsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private final Loop loop;
   private final Formula formula;
   private final IOSinks danglingSinks;

@@ -21,7 +21,7 @@ import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.IOReference;
 import stupaq.naming.Identifier;
-import stupaq.naming.InstanceName;
+import stupaq.naming.InstantiableName;
 import stupaq.project.LVProject;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
@@ -30,7 +30,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
+class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentStatementsEmitter.class);
   private static final Optional<String> PROCESS_STATEMENT_PART_LABEL = of("PROCESS");
   /** External context. */
@@ -87,9 +87,8 @@ public class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   @Override
   public void visit(component_instantiation_statement n) {
     applyFallback = false;
-    InstanceName instance = Identifier.instantiation(resolver, architecture, n.instantiated_unit);
+    InstantiableName instance = Identifier.instantiation(resolver, architecture, n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
-    entity.materialiseVI(project, namedSources, danglingSinks);
     SemanticException.checkNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
     String label = n.instantiation_label.label.representation();

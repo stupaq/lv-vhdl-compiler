@@ -33,7 +33,7 @@ import static com.google.common.base.Optional.fromNullable;
  * starting from source(s). Note that the LabVIEW logic for creating wires works in a very same
  * way.
  */
-public class WiringRules {
+class WiringRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(WiringRules.class);
   private final Generic owner;
   private final IOSources sources;

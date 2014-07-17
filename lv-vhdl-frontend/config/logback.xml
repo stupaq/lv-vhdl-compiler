@@ -5,12 +5,10 @@
         </encoder>
     </appender>
 
-    <logger name="STD_CALL_TRACE" level="ALL" additivity="false">
-        <appender class="ch.qos.logback.core.FileAppender">
-            <file>../examples/vhdl2lv/std_call_trace.log</file>
-            <append>false</append>
+    <logger name="stupaq.labview.activex.StdCallRunnableVI" level="DEBUG" additivity="false">
+        <appender class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
-                <pattern>%-5level | %msg%n</pattern>
+                <pattern>-- %-5level | %msg%n</pattern>
             </encoder>
         </appender>
     </logger>

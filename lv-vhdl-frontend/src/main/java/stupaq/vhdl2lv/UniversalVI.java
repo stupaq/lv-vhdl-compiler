@@ -15,7 +15,7 @@ import stupaq.labview.hierarchy.VI;
 import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.naming.IOReference;
-import stupaq.naming.InstanceName;
+import stupaq.naming.InstantiableName;
 import stupaq.project.LVProject;
 
 import static com.google.common.base.Optional.of;
@@ -23,10 +23,10 @@ import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
 
-public class UniversalVI extends VI {
+class UniversalVI extends VI {
   private static final int CLUSTERED_VI_THRESHOLD = 26;
 
-  public UniversalVI(LVProject project, InstanceName lvName, InterfaceDeclaration entity,
+  public UniversalVI(LVProject project, InstantiableName lvName, InterfaceDeclaration entity,
       IOSources namedSources, IOSinks danglingSinks) {
     super(project.tools(), project.allocate(lvName, true),
         choosePattern(entity.inputs(), entity.outputs()));

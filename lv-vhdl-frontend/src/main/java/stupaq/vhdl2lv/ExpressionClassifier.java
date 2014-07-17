@@ -12,7 +12,7 @@ import stupaq.vhdl93.ast.SimpleNode;
 
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-public class ExpressionClassifier {
+class ExpressionClassifier {
   private static String unwrapParentheses(String expression) {
     if (expression.startsWith("(") && expression.endsWith(")")) {
       return unwrapParentheses(expression.substring(1, expression.length() - 1));

@@ -2,7 +2,7 @@ package stupaq;
 
 import stupaq.vhdl93.ast.SimpleNode;
 
-public class SemanticException extends LocalisedException {
+public class SemanticException extends AbstractLocalisedException {
   protected SemanticException(SimpleNode near, String message, Object... args) {
     super(String.format(message, args), near);
   }

@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
+import stupaq.concepts.ComponentDeclaration;
 import stupaq.concepts.EntityDeclaration;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Terminal;
@@ -35,7 +36,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static com.google.common.base.Optional.of;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
-public class DesignFileEmitter extends DepthFirstVisitor {
+class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   private static final Optional<String> ENTITY_CONTEXT = of("ENTITY CONTEXT");
   private static final Optional<String> ARCHITECTURE_CONTEXT = of("ARCHITECTURE CONTEXT");
@@ -89,6 +90,11 @@ public class DesignFileEmitter extends DepthFirstVisitor {
     currentVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);
     // Fill local scope with component declarations.
     resolver.enterLocal(arch, n.architecture_declarative_part);
+    // Emit all locally declared components.
+    for (ComponentDeclaration component : resolver.getLocalComponents()) {
+      // Create all generics, ports and eventually the VI itself.
+      new UniversalVI(project, component.name(), component, namedSources, danglingSinks);
+    }
     // Emit architecture body.
     ConcurrentStatementsEmitter concurrentStatements =
         new ConcurrentStatementsEmitter(resolver, project, arch, currentVi, namedSources,

@@ -101,8 +101,4 @@ public abstract class InterfaceDeclaration {
   public int outputs() {
     return outputs;
   }
-
-  public void materialiseVI(LVProject project, IOSources namedSources, IOSinks danglingSinks) {
-    // Do nothing in general case.
-  }
 }
