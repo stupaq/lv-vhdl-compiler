@@ -17,7 +17,7 @@ public class LVProject {
     tools = new ActiveXScriptingTools();
   }
 
-  public VIPath allocate(LVProjectElement name, boolean override) {
+  public VIPath allocate(ProjectElementName name, boolean override) {
     VIPath path = resolve(name);
     if (override) {
       try {
@@ -33,7 +33,7 @@ public class LVProject {
     return path;
   }
 
-  public VIPath resolve(LVProjectElement lvName) {
+  public VIPath resolve(ProjectElementName lvName) {
     return new VIPath(root, lvName.elementName() + ".vi");
   }
 

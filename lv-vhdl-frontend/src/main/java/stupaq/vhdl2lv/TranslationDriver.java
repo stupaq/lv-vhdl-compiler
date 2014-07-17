@@ -32,8 +32,7 @@ public class TranslationDriver {
                       throw new RuntimeException(e);
                     }
                   }
-              })
-              .toList()));
+                }).toList()));
         VHDL93Parser parser = new VHDL93Parser(source);
         design_file root = parser.design_file();
         LVProject project = new LVProject(Paths.get(args[args.length - 1]));

@@ -1,7 +1,7 @@
 package stupaq.naming;
 
-import stupaq.project.LVProjectElement;
+import stupaq.project.ProjectElementName;
 
-public interface InstantiableName extends LVProjectElement {
-  public InterfaceName interfaceName();
+public abstract class InstantiableName extends ProjectElementName {
+  public abstract InterfaceName interfaceName();
 }

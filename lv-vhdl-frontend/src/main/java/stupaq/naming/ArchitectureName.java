@@ -1,6 +1,6 @@
 package stupaq.naming;
 
-public class ArchitectureName implements InstantiableName {
+public class ArchitectureName extends InstantiableName {
   private final EntityName entity;
   private final Identifier arch;
 

@@ -2,10 +2,12 @@ package stupaq.lv2vhdl;
 
 import com.google.common.base.Function;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import stupaq.ExceptionPrinter;
 import stupaq.labview.VIPath;
+import stupaq.project.VHDLProject;
 
 import static com.google.common.collect.FluentIterable.from;
 
@@ -20,7 +22,11 @@ public class TranslationDriver {
                 return new VIPath(input);
               }
             });
-        // FIXME
+        VHDLProject project = new VHDLProject(Paths.get(args[args.length - 1]), roots);
+        TranslationUnitEmitter emitter = new TranslationUnitEmitter(project);
+        for (VIPath path : project) {
+          emitter.emit(path);
+        }
       } else {
         System.out.println("usage: <filename1> <filename2>...");
       }
