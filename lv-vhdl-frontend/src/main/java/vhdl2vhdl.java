@@ -6,7 +6,7 @@ import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
-public class vhdl2vhd {
+public class vhdl2vhdl {
   public static void main(String args[]) throws Exception {
     if (args.length == 1) {
       FileInputStream file = new FileInputStream(args[0]);

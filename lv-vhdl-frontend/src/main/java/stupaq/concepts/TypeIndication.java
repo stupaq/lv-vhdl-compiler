@@ -3,10 +3,10 @@ package stupaq.concepts;
 import stupaq.vhdl93.ast.subtype_indication;
 
 public class TypeIndication {
-  String identifier;
+  private String identifier;
 
   public TypeIndication(subtype_indication node) {
-    identifier = node.representation();
+    this.identifier = node.representation();
   }
 
   public String identifier() {

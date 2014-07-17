@@ -8,7 +8,7 @@ import stupaq.vhdl93.ast.generic_clause;
 import stupaq.vhdl93.ast.port_clause;
 
 public class VHDLTreeFormatter extends LineBreakingTreeFormatter {
-  private static final int INDENT_SPACES = 4, LINE_WIDTH = 100;
+  private static final int INDENT_SPACES = 4, LINE_WIDTH = 120;
 
   public VHDLTreeFormatter() {
     super(INDENT_SPACES, LINE_WIDTH);

@@ -7,6 +7,7 @@ import stupaq.vhdl93.ast.NodeToken;
 
 public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
   private final TokenMatchingActionExecutor preExecutor = new TokenMatchingActionExecutor();
+  private final TokenMatchingActionExecutor postExecutor = new TokenMatchingActionExecutor();
 
   public LineBreakingTreeFormatter(int indentAmt, int wrapWidth) {
     super(indentAmt, wrapWidth);
@@ -59,6 +60,19 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
         add(outdent());
       }
     });
+    postExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (l != END) && (r == LOOP || r == GENERATE);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        add(indent());
+        add(force());
+      }
+    });
   }
 
   @Override
@@ -98,5 +112,6 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
   public void visit(NodeToken n) {
     preExecutor.nextToken(n);
     super.visit(n);
+    postExecutor.nextToken(n);
   }
 }
