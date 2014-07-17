@@ -26,6 +26,10 @@ public class LVProject {
         throw new RuntimeException(e);
       }
     }
+    try {
+      Files.createDirectories(path.path().getParent());
+    } catch (IOException ignored) {
+    }
     return path;
   }
 
