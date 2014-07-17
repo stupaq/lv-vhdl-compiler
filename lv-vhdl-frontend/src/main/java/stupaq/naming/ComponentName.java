@@ -1,6 +1,6 @@
 package stupaq.naming;
 
-public class ComponentName extends InstantiableName implements InterfaceName {
+public class ComponentName implements InstantiableName, InterfaceName {
   private final ArchitectureName arch;
   private final Identifier component;
 

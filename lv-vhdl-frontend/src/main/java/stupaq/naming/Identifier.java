@@ -4,6 +4,9 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
@@ -18,7 +21,13 @@ import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
+import static java.util.regex.Pattern.compile;
+import static stupaq.naming.LibraryName.DEFAULT_LIBRARY;
+import static stupaq.naming.LibraryName.LIBRARY_SEPARATOR;
+
 public class Identifier {
+  private static final Pattern INSTANTIABLE_NAME_PATTERN =
+      compile("(?<lib>[^()]+)\\.(?<ent>[^.()]+)\\((?<arch>[^.()]+)\\)(?:|\\.(?<comp>[^.()]+))");
   private final String string;
 
   public Identifier(identifier n) {
@@ -33,14 +42,13 @@ public class Identifier {
   }
 
   public static EntityName entity(entity_declaration n) {
-    return new EntityName(LibraryName.DEFAULT_LIBRARY,
-        new Identifier(n.entity_identifier.identifier));
+    return new EntityName(DEFAULT_LIBRARY, new Identifier(n.entity_identifier.identifier));
   }
 
   public static EntityName entity(entity_name n) {
     String id = n.firstName();
-    id = id.substring(id.lastIndexOf(LibraryName.LIBRARY_SEPARATOR) + 1);
-    return new EntityName(LibraryName.DEFAULT_LIBRARY, new Identifier(id));
+    id = id.substring(id.lastIndexOf(LIBRARY_SEPARATOR) + 1);
+    return new EntityName(DEFAULT_LIBRARY, new Identifier(id));
   }
 
   public static ComponentName component(ArchitectureName arch, component_declaration n) {
@@ -80,6 +88,18 @@ public class Identifier {
         throw new MissingFeatureException(n, "Configurations are not supported.");
       }
     }).apply(n.nodeChoice.choice);
+  }
+
+  public static InstantiableName parse(String string) {
+    Matcher matcher = INSTANTIABLE_NAME_PATTERN.matcher(string);
+    SemanticException.check(matcher.matches(), "Invalid instantiable name: %s.", string);
+    String library = matcher.group("lib"), entity = matcher.group("ent"), architecture =
+        matcher.group("arch"), component = matcher.group("comp");
+    MissingFeatureException.throwIf(!DEFAULT_LIBRARY.toString().equals(library),
+        "Non-default libraries are not supported.");
+    EntityName entityName = new EntityName(DEFAULT_LIBRARY, new Identifier(entity));
+    ArchitectureName archName = new ArchitectureName(entityName, new Identifier(architecture));
+    return component == null ? archName : new ComponentName(archName, new Identifier(component));
   }
 
   @Override

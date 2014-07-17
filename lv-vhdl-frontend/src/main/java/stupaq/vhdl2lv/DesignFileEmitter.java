@@ -23,6 +23,7 @@ import stupaq.vhdl2lv.WiringRules.PassLabels;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.block_declarative_item;
+import stupaq.vhdl93.ast.component_declaration;
 import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.design_file;
@@ -142,6 +143,12 @@ class DesignFileEmitter extends DepthFirstVisitor {
         SemanticException.check(!namedSources.containsKey(ref), n,
             "Constant: %s has multiple definitions.", ref);
         namedSources.put(ref, terminal);
+      }
+
+      @Override
+      public void visit(component_declaration n) {
+        declarativePartFallback = false;
+        // These will be emitted as a separate files.
       }
 
       @Override

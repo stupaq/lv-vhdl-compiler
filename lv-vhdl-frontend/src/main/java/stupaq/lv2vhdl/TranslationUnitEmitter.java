@@ -11,7 +11,8 @@ import javax.xml.bind.JAXBException;
 import stupaq.labview.VIPath;
 import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIElementsParser;
-import stupaq.project.ProjectElementName;
+import stupaq.naming.Identifier;
+import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
 
 public class TranslationUnitEmitter {
@@ -24,7 +25,7 @@ public class TranslationUnitEmitter {
 
   public void emit(VIPath path) throws IOException, JAXBException, SAXException {
     LOGGER.debug("Emitting VHDL from VI: {}", path);
-    ProjectElementName element = ProjectElementName.parse(path);
+    InstantiableName element = Identifier.parse(path.getBaseName());
     LOGGER.debug("Target project element: {}", element);
     // FIXME
     VIElementsParser.visitVI(project.tools(), path, PrintingVisitor.create());

@@ -1,5 +1,6 @@
 package stupaq.project;
 
+import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -15,6 +16,7 @@ import java.util.Set;
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
 import stupaq.labview.scripting.activex.ActiveXScriptingTools;
+import stupaq.labview.scripting.fake.FakeScriptingTools;
 
 public class VHDLProject implements Iterable<VIPath>, Iterator<VIPath> {
   private final ScriptingTools tools;
@@ -24,7 +26,11 @@ public class VHDLProject implements Iterable<VIPath>, Iterator<VIPath> {
 
   public VHDLProject(Path root, Iterable<VIPath> roots) {
     this.root = root;
-    tools = new ActiveXScriptingTools();
+    if (StandardSystemProperty.OS_NAME.value().toLowerCase().contains("windows")) {
+      tools = new ActiveXScriptingTools();
+    } else {
+      tools = new FakeScriptingTools();
+    }
     Iterables.addAll(todo, roots);
   }
 
