@@ -3,6 +3,7 @@ package stupaq.concepts;
 import com.google.common.base.Predicate;
 
 import stupaq.MissingFeatureException;
+import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
@@ -10,7 +11,6 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.VHDL93ParserConstants.IN;
 import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
-import static stupaq.vhdl93.VHDL93ParserConstants.tokenImage;
 
 public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private PortDirection direction;
@@ -31,7 +31,7 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
             break;
           default:
             throw new MissingFeatureException(n,
-                "Port direction: " + tokenImage[mode] + " is not supported.");
+                "Port direction: " + VHDL93Parser.tokenString(mode) + " is not supported.");
         }
       }
     });

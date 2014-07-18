@@ -20,6 +20,11 @@ public class VHDL93Parser
   public ErrorHandler getErrorHandler() {
     return errorHandler;
   }
+
+  public static String tokenString(int token) {
+    String string = VHDL93ParserConstants.tokenImage[token];
+    return string.substring(1, string.length() - 1);
+  }
 }
 
 PARSER_END(VHDL93Parser)

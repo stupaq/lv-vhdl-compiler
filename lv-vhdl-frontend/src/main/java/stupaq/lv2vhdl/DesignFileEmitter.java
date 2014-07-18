@@ -1,5 +1,6 @@
 package stupaq.lv2vhdl;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
@@ -23,27 +24,35 @@ import stupaq.labview.VIPath;
 import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.labview.parsing.VIParser;
+import stupaq.lv2vhdl.SinkTerminals.Sink;
+import stupaq.lv2vhdl.SourceTerminals.Source;
 import stupaq.naming.ComponentName;
 import stupaq.naming.Identifier;
 import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.NodeListOptional;
+import stupaq.vhdl93.ast.block_declarative_item;
 import stupaq.vhdl93.ast.concurrent_statement;
+import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.process_statement;
 
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
+import static stupaq.vhdl93.VHDL93Parser.tokenString;
+import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
+import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 
 class DesignFileEmitter implements VIElementsVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   private final VHDLProject project;
   /** Context. */
   private UID rootDiagram, rootPanel;
-  private Map<UID, TerminalMetadata> terminals;
-  private Multimap<UID, TerminalMetadata> wires;
+  private Map<UID, Endpoint> terminals;
+  private Multimap<UID, Endpoint> wiresToEndpoints;
+  private List<Endpoint> inputsList, outputsList;
   /** Results. */
   private context_clause entityContext, architectureContext;
   private NodeListOptional architectureDeclarations, concurrentStatements;
@@ -70,20 +79,22 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     // Context.
     rootDiagram = rootPanel = null;
     terminals = Maps.newHashMap();
-    wires = Multimaps.newListMultimap(Maps.<UID, Collection<TerminalMetadata>>newHashMap(),
-        new Supplier<List<TerminalMetadata>>() {
+    wiresToEndpoints = Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
+        new Supplier<List<Endpoint>>() {
           @Override
-          public List<TerminalMetadata> get() {
+          public List<Endpoint> get() {
             return Lists.newArrayList();
           }
         });
+    inputsList = outputsList = null;
     // Results.
     entityContext = architectureContext = null;
     concurrentStatements = new NodeListOptional();
     architectureDeclarations = new NodeListOptional();
   }
 
-  private VHDL93Parser parser(String string) {
+  private static VHDL93Parser parser(String string) {
+    LOGGER.trace("Parsing: {}", string);
     return new VHDL93Parser(new StringReader(string));
   }
 
@@ -103,28 +114,32 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
 
   @Override
   public void Terminal(UID owner, UID uid, UID wire, boolean isSource, String name) {
-    TerminalMetadata terminal = new TerminalMetadata(isSource, name);
+    Endpoint terminal = isSource ? new Source(name) : new Sink(name);
     terminals.put(uid, terminal);
-    wires.put(wire, terminal);
+    wiresToEndpoints.put(wire, terminal);
   }
 
   @Override
   public void Wire(UID owner, UID uid, Optional<String> label) throws Exception {
+    // We know that there will be no more terminals.
+    Collection<Endpoint> terms = wiresToEndpoints.removeAll(uid);
+    for (Endpoint term1 : terms) {
+      for (Endpoint term2 : terms) {
+        if (term1.isSource() ^ term2.isSource()) {
+          term1.addConnected(term2);
+        }
+        // Otherwise do nothing.
+        // Note that this can happen for single source and multiple sinks,
+        // as wires in LV are undirected and the graph itself is a multi-graph.
+      }
+    }
     if (label.isPresent()) {
-      Collection<TerminalMetadata> terms = wires.get(uid);
       VHDL93Parser labelParser = parser(label.get());
       expression parsed = labelParser.expression();
       labelParser.eof();
-      for (TerminalMetadata terminal : terms) {
-        if (terminal.isSource()) {
-          semanticCheck(!terminal.lvalue().isPresent(),
-              "Multiple l-value specifications for terminal.");
-          terminal.lvalue(parsed);
-        } else {
-          semanticCheck(!terminal.rvalue().isPresent(),
-              "Multiple r-value specifications for terminal.");
-          terminal.rvalue(parsed);
-        }
+      for (Endpoint terminal : terms) {
+        semanticCheck(!terminal.value().isPresent(), "Multiple value specifications for terminal.");
+        terminal.value(parsed);
       }
     }
   }
@@ -158,30 +173,30 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       boolean lvalue = false, rvalue = false;
       expression parsed = null;
       for (UID term : terms) {
-        TerminalMetadata terminal = terminals.get(term);
+        Endpoint terminal = terminals.get(term);
         Verify.verifyNotNull(terminal);
         String param = terminal.name();
         lvalue |= param.equals(LVALUE_PARAMETER);
         rvalue |= param.equals(RVALUE_PARAMETER);
+        if (lvalue) {
+          semanticCheck(!terminal.isSource(), "L-value must be data sink.");
+        } else if (rvalue) {
+          semanticCheck(terminal.isSource(), "R-value must be data source.");
+        }
         if (lvalue || rvalue) {
-          semanticCheck(!terminal.lvalue().isPresent(),
-              "Multiple l-value specifications for terminal.");
-          semanticCheck(!terminal.rvalue().isPresent(),
-              "Multiple r-value specifications for terminal.");
           if (parsed == null) {
             parsed = contentParser.expression();
           }
-        }
-        if (lvalue) {
-          semanticCheck(!terminal.isSource(), "L-value must be data sink.");
-          terminal.lvalue(parsed);
-        } else if (rvalue) {
-          semanticCheck(terminal.isSource(), "R-value must be data source.");
-          terminal.rvalue(parsed);
+          // This way we set the value in actual destination.
+          // The terminal is just a reference to all receivers of the value in the formula.
+          for (Endpoint connected : terminal) {
+            connected.value(parsed);
+          }
         }
       }
       semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
       if (!lvalue && !rvalue) {
+        Verify.verify(parsed == null);
         // It must be a concurrent statement then...
         concurrentStatements.nodes.add(contentParser.concurrent_statement());
       }
@@ -196,12 +211,24 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
 
   @Override
   public void Bundler(UID owner, UID uid, List<UID> terms) {
-    // TODO
+    semanticCheck(inputsList == null, "Multiple bundlers in the VI.");
+    inputsList = Lists.transform(terms, new Function<UID, Endpoint>() {
+      @Override
+      public Endpoint apply(UID input) {
+        return Verify.verifyNotNull(terminals.get(input));
+      }
+    });
   }
 
   @Override
   public void Unbundler(UID owner, UID uid, List<UID> terms) {
-    // TODO
+    semanticCheck(outputsList == null, "Multiple unbundlers in the VI.");
+    outputsList = Lists.transform(terms, new Function<UID, Endpoint>() {
+      @Override
+      public Endpoint apply(UID input) {
+        return Verify.verifyNotNull(terminals.get(input));
+      }
+    });
   }
 
   @Override
@@ -211,8 +238,28 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void RingConstant(UID owner, UID uid, UID terminal, Map<String, Object> stringsAndValues) {
-    // TODO
+  public void RingConstant(UID owner, UID uid, Optional<String> label, UID terminal,
+      Map<String, Object> stringsAndValues) throws Exception {
+    Verify.verify(!stringsAndValues.isEmpty());
+    String valueString = stringsAndValues.keySet().iterator().next();
+    VHDL93Parser parser;
+    if (label.isPresent()) {
+      parser = parser(label.get() + tokenString(ASSIGN) + valueString + tokenString(SEMICOLON));
+      block_declarative_item constant = parser.block_declarative_item();
+      semanticCheck(constant.nodeChoice.choice instanceof constant_declaration,
+          "Expected constant declaration.");
+    } else {
+      parser = parser(valueString);
+      expression value = parser.expression();
+      Endpoint constantTerminal = terminals.get(terminal);
+      Verify.verify(constantTerminal.isSource());
+      // Set the value of all connected sinks.
+      for (Endpoint connected : constantTerminal) {
+        Verify.verify(!connected.isSource());
+        connected.value(value);
+      }
+    }
+    parser.eof();
   }
 
   @Override
