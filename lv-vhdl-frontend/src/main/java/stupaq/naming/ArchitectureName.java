@@ -46,4 +46,8 @@ public class ArchitectureName implements InstantiableName {
   public EntityName entity() {
     return entity;
   }
+
+  public Identifier identifier() {
+    return arch;
+  }
 }

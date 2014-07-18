@@ -1,6 +1,5 @@
 package stupaq.lv2vhdl;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
@@ -14,7 +13,10 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,33 +28,47 @@ import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.lv2vhdl.SinkTerminals.Sink;
 import stupaq.lv2vhdl.SourceTerminals.Source;
+import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
+import stupaq.naming.EntityName;
 import stupaq.naming.Identifier;
 import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.NodeListOptional;
+import stupaq.vhdl93.ast.architecture_declaration;
+import stupaq.vhdl93.ast.architecture_declarative_part;
+import stupaq.vhdl93.ast.architecture_identifier;
+import stupaq.vhdl93.ast.architecture_statement_part;
 import stupaq.vhdl93.ast.block_declarative_item;
 import stupaq.vhdl93.ast.concurrent_statement;
 import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.context_clause;
+import stupaq.vhdl93.ast.design_unit;
+import stupaq.vhdl93.ast.entity_name;
 import stupaq.vhdl93.ast.expression;
+import stupaq.vhdl93.ast.library_unit;
 import stupaq.vhdl93.ast.process_statement;
+import stupaq.vhdl93.ast.secondary_unit;
+import stupaq.vhdl93.visitor.TreeDumper;
+import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
+import static stupaq.vhdl93.ast.ASTBuilders.choice;
+import static stupaq.vhdl93.ast.ASTBuilders.listOptional;
+import static stupaq.vhdl93.ast.ASTBuilders.optional;
 
 class DesignFileEmitter implements VIElementsVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   private final VHDLProject project;
   /** Context. */
-  private UID rootDiagram, rootPanel;
+  private UID rootPanel;
   private Map<UID, Endpoint> terminals;
   private Multimap<UID, Endpoint> wiresToEndpoints;
-  private List<Endpoint> inputsList, outputsList;
   /** Results. */
   private context_clause entityContext, architectureContext;
   private NodeListOptional architectureDeclarations, concurrentStatements;
@@ -67,17 +83,39 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     LOGGER.debug("Target project element: {}", element);
     if (element instanceof ComponentName) {
       LOGGER.info("Component will be emitted together with accompanying architecture.");
-      return;
+    } else if (element instanceof EntityName) {
+      LOGGER.info("Entity will be emitted together with any of accompanying architectures.");
+    } else if (element instanceof ArchitectureName) {
+      VIDump theVi = VIParser.parseVI(project.tools(), path);
+      reset();
+      VIParser.visitVI(theVi, PrintingVisitor.create());
+      VIParser.visitVI(theVi, this);
+      design_unit unit = emitArchitecture((ArchitectureName) element);
+      Path destination = project.allocate(element, true);
+      try (OutputStream output = new FileOutputStream(destination.toFile())) {
+        unit.accept(new VHDLTreeFormatter());
+        System.out.println("DESIGN UNIT FOR: " + path);
+        unit.accept(new TreeDumper(System.out));
+        System.out.println();
+        // TODO unit.accept(new TreeDumper(output));
+      }
     }
-    VIDump theVi = VIParser.parseVI(project.tools(), path);
-    reset();
-    VIParser.visitVI(theVi, PrintingVisitor.create());
-    VIParser.visitVI(theVi, this);
+  }
+
+  private design_unit emitArchitecture(ArchitectureName name) throws Exception {
+    context_clause context =
+        architectureContext != null ? architectureContext : new context_clause(listOptional());
+    architecture_identifier identifier = parser(name.identifier()).architecture_identifier();
+    entity_name entity = parser(name.entity().identifier()).entity_name();
+    return new design_unit(context, new library_unit(choice(new secondary_unit(choice(
+        new architecture_declaration(identifier, entity,
+            new architecture_declarative_part(architectureDeclarations),
+            new architecture_statement_part(concurrentStatements), optional(), optional()))))));
   }
 
   private void reset() {
     // Context.
-    rootDiagram = rootPanel = null;
+    rootPanel = null;
     terminals = Maps.newHashMap();
     wiresToEndpoints = Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
         new Supplier<List<Endpoint>>() {
@@ -86,28 +124,26 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
             return Lists.newArrayList();
           }
         });
-    inputsList = outputsList = null;
     // Results.
     entityContext = architectureContext = null;
     concurrentStatements = new NodeListOptional();
     architectureDeclarations = new NodeListOptional();
   }
 
-  private static VHDL93Parser parser(String string) {
+  private static VHDL93Parser parser(Object string) {
     LOGGER.trace("Parsing: {}", string);
-    return new VHDL93Parser(new StringReader(string));
+    return new VHDL93Parser(new StringReader(string.toString()));
   }
 
   @Override
   public void Diagram(Optional<UID> owner, UID uid) {
-    if (!owner.isPresent()) {
-      rootDiagram = uid;
-    }
+    // No need to maintain diagrams as of today.
   }
 
   @Override
   public void Panel(Optional<UID> owner, UID uid) {
     if (!owner.isPresent()) {
+      Verify.verify(rootPanel == null);
       rootPanel = uid;
     }
   }
@@ -206,35 +242,37 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
 
   @Override
   public void CompoundArithmetic(UID owner, UID uid, List<UID> terms) {
-    // We do not need to loo at these.
+    // We do not need to look at these.
   }
 
   @Override
   public void Bundler(UID owner, UID uid, List<UID> terms) {
-    semanticCheck(inputsList == null, "Multiple bundlers in the VI.");
-    inputsList = Lists.transform(terms, new Function<UID, Endpoint>() {
-      @Override
-      public Endpoint apply(UID input) {
-        return Verify.verifyNotNull(terminals.get(input));
-      }
-    });
+    // TODO assuming we do not have the bundling VI
   }
 
   @Override
   public void Unbundler(UID owner, UID uid, List<UID> terms) {
-    semanticCheck(outputsList == null, "Multiple unbundlers in the VI.");
-    outputsList = Lists.transform(terms, new Function<UID, Endpoint>() {
-      @Override
-      public Endpoint apply(UID input) {
-        return Verify.verifyNotNull(terminals.get(input));
-      }
-    });
+    // TODO assuming we do not have the bundling VI
   }
 
   @Override
   public void Control(UID owner, UID uid, Optional<String> label, UID terminal, boolean isIndicator,
       int style, Optional<Integer> representation, int controlIndex) {
+    Verify.verifyNotNull(rootPanel);
+    // TODO assuming we do not have the bundling VI
     // TODO
+  }
+
+  @Override
+  public void ControlCluster(UID owner, UID uid, Optional<String> label, UID terminal,
+      boolean isIndicator, int controlIndex, List<UID> controls) {
+    // TODO assuming we do not have the bundling VI
+  }
+
+  @Override
+  public void ControlArray(UID owner, UID uid, Optional<String> label, UID terminal,
+      boolean isIndicator, int controlIndex) {
+    // This should not even be in the VI.
   }
 
   @Override
@@ -264,6 +302,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
 
   @Override
   public void SubVI(UID owner, UID uid, List<UID> terms, VIPath viPath) {
+    // TODO assuming we do not have the bundling VI
     // TODO
   }
 }

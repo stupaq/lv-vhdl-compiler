@@ -32,4 +32,8 @@ public class EntityName implements InterfaceName {
   public String toString() {
     return library + String.valueOf(LibraryName.LIBRARY_SEPARATOR) + entity;
   }
+
+  public Identifier identifier() {
+    return entity;
+  }
 }
