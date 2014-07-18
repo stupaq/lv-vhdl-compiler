@@ -1,13 +1,12 @@
 package stupaq.vhdl2lv;
 
-import com.google.common.base.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
 
 import stupaq.SemanticException;
+import stupaq.TranslationConventions;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.ComponentDeclaration;
 import stupaq.concepts.EntityDeclaration;
@@ -39,12 +38,6 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
-  private static final Optional<String> ENTITY_CONTEXT = of("ENTITY CONTEXT");
-  private static final Optional<String> ARCHITECTURE_CONTEXT = of("ARCHITECTURE CONTEXT");
-  private static final Optional<String> ARCHITECTURE_DECLARATIVE_PART_LABEL =
-      of("ARCHITECTURE EXTRA DECLARATIONS");
-  private static final Optional<String> ARCHITECTURE_STATEMENT_PART_LABEL =
-      of("ARCHITECTURE EXTRA BODY STATEMENTS");
   /** Context of {@link #visit(design_file)}. */
   private final ComponentBindingResolver resolver = new ComponentBindingResolver();
   /** Context of {@link #visit(design_file)}. */
@@ -164,23 +157,24 @@ class DesignFileEmitter extends DepthFirstVisitor {
     if (entity.context() != null) {
       String rep = entity.context().representation();
       if (!rep.isEmpty()) {
-        new FormulaNode(currentVi, rep, ENTITY_CONTEXT);
+        new FormulaNode(currentVi, rep, TranslationConventions.ENTITY_CONTEXT);
       }
     }
     if (lastContext != null) {
       String rep = lastContext.representation();
       if (!rep.isEmpty()) {
-        new FormulaNode(currentVi, rep, ARCHITECTURE_CONTEXT);
+        new FormulaNode(currentVi, rep, TranslationConventions.ARCHITECTURE_CONTEXT);
       }
     }
     // Emit declarative part leftovers.
     if (declarativePartFallbacked.length() > 0) {
       new FormulaNode(currentVi, declarativePartFallbacked.toString(),
-          ARCHITECTURE_DECLARATIVE_PART_LABEL);
+          TranslationConventions.ARCHITECTURE_EXTRA_DECLARATIONS);
     }
     // Emit statement part leftovers.
     for (StringBuilder text : concurrentStatements.fallbackText().asSet()) {
-      new FormulaNode(currentVi, text.toString(), ARCHITECTURE_STATEMENT_PART_LABEL);
+      new FormulaNode(currentVi, text.toString(),
+          TranslationConventions.ARCHITECTURE_EXTRA_STATEMENTS);
     }
     // All references and labels are resolved now.
     new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels(),

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 
+import stupaq.TranslationConventions;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Generic;
@@ -18,7 +19,6 @@ import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
 
 class SinkEmitter {
-  public static final String LVALUE_LABEL = "ASSIGNEE";
   private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
   private final Generic owner;
   private final IOSinks danglingSinks;
@@ -38,7 +38,7 @@ class SinkEmitter {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, new SourceEmitter(owner, danglingSinks, namedSources), n);
     formula.cleanupFormula();
-    return formula.addInput(LVALUE_LABEL);
+    return formula.addInput(TranslationConventions.LVALUE_PARAMETER);
   }
 
   private void emitAsIdentifier(Terminal source, IOReference ref) {

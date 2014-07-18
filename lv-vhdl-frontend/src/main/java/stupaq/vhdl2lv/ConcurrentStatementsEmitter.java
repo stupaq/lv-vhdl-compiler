@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
+import stupaq.TranslationConventions;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.ConnectorPaneTerminal;
 import stupaq.concepts.InterfaceDeclaration;
@@ -32,7 +33,6 @@ import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentStatementsEmitter.class);
-  private static final Optional<String> PROCESS_STATEMENT_PART_LABEL = of("PROCESS");
   /** External context. */
   private final ComponentBindingResolver resolver;
   /** External context. */
@@ -195,8 +195,8 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     applyFallback = false;
     Loop loop = new WhileLoop(theVi, Optional.<String>absent());
     // Emit process body AND declarations.
-    Formula formula =
-        new FormulaNode(loop.diagram(), n.representation(), PROCESS_STATEMENT_PART_LABEL);
+    Formula formula = new FormulaNode(loop.diagram(), n.representation(),
+        TranslationConventions.PROCESS_STATEMENT);
     // Connect wires, emit latches.
     new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources, wiresBlacklist).visit(n);
     formula.cleanupFormula();

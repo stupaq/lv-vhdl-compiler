@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import stupaq.TranslationConventions;
 import stupaq.labview.hierarchy.CompoundArithmetic;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
@@ -28,7 +29,6 @@ import stupaq.vhdl93.ast.expression;
 import static com.google.common.base.Optional.of;
 
 class SourceEmitter {
-  public static final String RVALUE_LABEL = "RESULT";
   private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
   private final Generic owner;
   private final IOSinks danglingSinks;
@@ -84,7 +84,7 @@ class SourceEmitter {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, n);
     formula.cleanupFormula();
-    return formula.addOutput(RVALUE_LABEL);
+    return formula.addOutput(TranslationConventions.RVALUE_PARAMETER);
   }
 
   public void addTerminals(final Formula formula, SimpleNode n) {

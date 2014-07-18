@@ -23,7 +23,7 @@ public class TranslationDriver {
               }
             });
         VHDLProject project = new VHDLProject(Paths.get(args[args.length - 1]), roots);
-        TranslationUnitEmitter emitter = new TranslationUnitEmitter(project);
+        DesignFileEmitter emitter = new DesignFileEmitter(project);
         for (VIPath path : project) {
           emitter.emit(path);
         }

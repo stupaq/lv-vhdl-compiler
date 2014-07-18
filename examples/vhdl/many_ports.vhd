@@ -55,7 +55,7 @@ architecture behavioral of many_ports_outer is
 begin
   many_ports : entity work.many_ports port map(in0, in0, in0, in0, in0, in0, in0, in0,
    in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0, in0,
-    in0, in0, input, output);
+    in0, in0, input, out0);
   input <= '1';
   output <= out0 when ctrl = "10" else
             '0' when ctrl = "01" else
