@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import stupaq.MissingFeatureException;
-import stupaq.SemanticException;
 import stupaq.TranslationConventions;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.ConnectorPaneTerminal;
@@ -29,6 +28,7 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.SemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
@@ -89,7 +89,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     applyFallback = false;
     InstantiableName instance = Identifier.instantiation(resolver, architecture, n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
-    SemanticException.checkNotNull(entity, n, "Missing component or entity declaration: %s.",
+    semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instantiating: {} with label: {}", entity.name(), label);

@@ -1,10 +1,11 @@
 package stupaq.concepts;
 
-import stupaq.MissingFeatureException;
 import stupaq.naming.EntityName;
 import stupaq.naming.Identifier;
 import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.entity_declaration;
+
+import static stupaq.MissingFeatureException.missingIf;
 
 public class EntityDeclaration extends InterfaceDeclaration {
   private final entity_declaration node;
@@ -15,10 +16,9 @@ public class EntityDeclaration extends InterfaceDeclaration {
     super(Identifier.entity(node), node.entity_header);
     this.node = node;
     this.context = context;
-    MissingFeatureException.throwIf(node.entity_declarative_part.nodeListOptional.present(), node,
+    missingIf(node.entity_declarative_part.nodeListOptional.present(), node,
         "Entity-scoped declarations are not supported.");
-    MissingFeatureException.throwIf(node.nodeOptional.present(), node,
-        "Entities with statements are not supported.");
+    missingIf(node.nodeOptional.present(), node, "Entities with statements are not supported.");
   }
 
   public entity_declaration node() {

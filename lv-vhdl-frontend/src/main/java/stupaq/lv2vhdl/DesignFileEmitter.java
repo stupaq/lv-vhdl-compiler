@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.SemanticException;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.parsing.PrintingVisitor;
@@ -35,6 +34,7 @@ import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.process_statement;
 
+import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
 
 class DesignFileEmitter implements VIElementsVisitor<Exception> {
@@ -117,11 +117,11 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       labelParser.eof();
       for (TerminalMetadata terminal : terms) {
         if (terminal.isSource()) {
-          SemanticException.check(!terminal.lvalue().isPresent(),
+          semanticCheck(!terminal.lvalue().isPresent(),
               "Multiple l-value specifications for terminal.");
           terminal.lvalue(parsed);
         } else {
-          SemanticException.check(!terminal.rvalue().isPresent(),
+          semanticCheck(!terminal.rvalue().isPresent(),
               "Multiple r-value specifications for terminal.");
           terminal.rvalue(parsed);
         }
@@ -151,7 +151,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       concurrentStatements.nodes.addAll(extra.nodes);
     } else if (label.equals(PROCESS_STATEMENT)) {
       concurrent_statement process = contentParser.concurrent_statement();
-      SemanticException.check(process.nodeChoice.choice instanceof process_statement,
+      semanticCheck(process.nodeChoice.choice instanceof process_statement,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
     } else {
@@ -164,23 +164,23 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
         lvalue |= param.equals(LVALUE_PARAMETER);
         rvalue |= param.equals(RVALUE_PARAMETER);
         if (lvalue || rvalue) {
-          SemanticException.check(!terminal.lvalue().isPresent(),
+          semanticCheck(!terminal.lvalue().isPresent(),
               "Multiple l-value specifications for terminal.");
-          SemanticException.check(!terminal.rvalue().isPresent(),
+          semanticCheck(!terminal.rvalue().isPresent(),
               "Multiple r-value specifications for terminal.");
           if (parsed == null) {
             parsed = contentParser.expression();
           }
         }
         if (lvalue) {
-          SemanticException.check(!terminal.isSource(), "L-value must be data sink.");
+          semanticCheck(!terminal.isSource(), "L-value must be data sink.");
           terminal.lvalue(parsed);
         } else if (rvalue) {
-          SemanticException.check(terminal.isSource(), "R-value must be data source.");
+          semanticCheck(terminal.isSource(), "R-value must be data source.");
           terminal.rvalue(parsed);
         }
       }
-      SemanticException.check(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
+      semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
       if (!lvalue && !rvalue) {
         // It must be a concurrent statement then...
         concurrentStatements.nodes.add(contentParser.concurrent_statement());

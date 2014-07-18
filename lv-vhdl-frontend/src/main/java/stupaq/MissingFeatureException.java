@@ -14,13 +14,13 @@ public class MissingFeatureException extends AbstractLocalisedException {
     super(String.format(message, args), Optional.<Position>absent());
   }
 
-  public static void throwIf(boolean b, SimpleNode n, String message, Object... args) {
+  public static void missingIf(boolean b, SimpleNode n, String message, Object... args) {
     if (b) {
       throw new MissingFeatureException(n, message, args);
     }
   }
 
-  public static void throwIf(boolean b, String message, Object... args) {
+  public static void missingIf(boolean b, String message, Object... args) {
     if (b) {
       throw new MissingFeatureException(message, args);
     }

@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import stupaq.MissingFeatureException;
-import stupaq.SemanticException;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
@@ -22,6 +21,9 @@ import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static java.util.regex.Pattern.compile;
+import static stupaq.MissingFeatureException.missingIf;
+import static stupaq.SemanticException.semanticCheck;
+import static stupaq.SemanticException.semanticNotNull;
 import static stupaq.naming.LibraryName.DEFAULT_LIBRARY;
 import static stupaq.naming.LibraryName.LIBRARY_SEPARATOR;
 
@@ -80,7 +82,7 @@ public class Identifier {
       public void visit(entity_name n) {
         EntityName entity = entity(n);
         name = resolver.defaultArchitecture(entity);
-        SemanticException.checkNotNull(name, n, "Missing default architecture for: %s", entity);
+        semanticNotNull(name, n, "Missing default architecture for: %s", entity);
       }
 
       @Override
@@ -92,10 +94,10 @@ public class Identifier {
 
   public static InstantiableName parse(String string) {
     Matcher matcher = INSTANTIABLE_NAME_PATTERN.matcher(string);
-    SemanticException.check(matcher.matches(), "Invalid instantiable name: %s.", string);
+    semanticCheck(matcher.matches(), "Invalid instantiable name: %s.", string);
     String library = matcher.group("lib"), entity = matcher.group("ent"), architecture =
         matcher.group("arch"), component = matcher.group("comp");
-    MissingFeatureException.throwIf(!DEFAULT_LIBRARY.toString().equals(library),
+    missingIf(!DEFAULT_LIBRARY.toString().equals(library),
         "Non-default libraries are not supported.");
     EntityName entityName = new EntityName(DEFAULT_LIBRARY, new Identifier(entity));
     ArchitectureName archName = new ArchitectureName(entityName, new Identifier(architecture));

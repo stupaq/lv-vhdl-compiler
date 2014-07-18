@@ -14,20 +14,20 @@ public class SemanticException extends AbstractLocalisedException {
     super(String.format(message, args), Optional.<Position>absent());
   }
 
-  public static <T> T checkNotNull(T x, SimpleNode n, String message, Object... args) {
+  public static <T> T semanticNotNull(T x, SimpleNode n, String message, Object... args) {
     if (x == null) {
       throw new SemanticException(n, message, args);
     }
     return x;
   }
 
-  public static void check(boolean b, SimpleNode n, String message, Object... args) {
+  public static void semanticCheck(boolean b, SimpleNode n, String message, Object... args) {
     if (!b) {
       throw new SemanticException(n, message, args);
     }
   }
 
-  public static void check(boolean b, String message, Object... args) {
+  public static void semanticCheck(boolean b, String message, Object... args) {
     if (!b) {
       throw new SemanticException(message, args);
     }

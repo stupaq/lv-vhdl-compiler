@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
 
-import stupaq.SemanticException;
 import stupaq.TranslationConventions;
 import stupaq.concepts.ComponentBindingResolver;
 import stupaq.concepts.ComponentDeclaration;
@@ -34,6 +33,8 @@ import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.SemanticException.semanticCheck;
+import static stupaq.SemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.ASTBuilders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
@@ -132,9 +133,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
                 of(label));
           }
         }).apply(n.nodeOptional);
-        SemanticException.checkNotNull(terminal, n, "Missing value for constant: %s.", ref);
-        SemanticException.check(!namedSources.containsKey(ref), n,
-            "Constant: %s has multiple definitions.", ref);
+        semanticNotNull(terminal, n, "Missing value for constant: %s.", ref);
+        semanticCheck(!namedSources.containsKey(ref), n, "Multiple definitions of constant: %s.",
+            ref);
         namedSources.put(ref, terminal);
       }
 
