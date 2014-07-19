@@ -13,11 +13,13 @@ import static stupaq.vhdl93.VHDL93ParserConstants.IN;
 import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
 
 public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
+  private final interface_signal_declaration node;
   private PortDirection direction;
   private int connectorIndex;
 
   public PortDeclaration(interface_signal_declaration node) {
     super(node);
+    this.node = node;
     direction = PortDirection.IN;
     node.nodeOptional1.accept(new NonTerminalsNoOpVisitor() {
       public void visit(mode n) {
@@ -59,6 +61,11 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
   @Override
   public void connectorIndex(int index) {
     this.connectorIndex = index;
+  }
+
+  @Override
+  public String representation() {
+    return node.representation();
   }
 
   public static enum PortDirection {

@@ -6,11 +6,11 @@ import stupaq.vhdl93.ast.Position;
 import stupaq.vhdl93.ast.SimpleNode;
 
 public class SemanticException extends AbstractLocalisedException {
-  protected SemanticException(SimpleNode near, String message, Object... args) {
+  public SemanticException(SimpleNode near, String message, Object... args) {
     super(String.format(message, args), near);
   }
 
-  protected SemanticException(String message, Object... args) {
+  public SemanticException(String message, Object... args) {
     super(String.format(message, args), Optional.<Position>absent());
   }
 

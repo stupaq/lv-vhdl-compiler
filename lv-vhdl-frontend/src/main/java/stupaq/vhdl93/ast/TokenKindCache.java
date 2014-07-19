@@ -9,7 +9,7 @@ import stupaq.vhdl93.VHDL93Parser;
 
 import static stupaq.vhdl93.VHDL93ParserConstants.tokenImage;
 
-public class TokenKindCache {
+class TokenKindCache {
   private TokenKindCache() {
   }
 
@@ -19,8 +19,7 @@ public class TokenKindCache {
     Map<String, Integer> cache = Maps.newHashMap();
     for (int kind = 0; kind < tokenImage.length; ++kind) {
       String image = tokenImage[kind];
-      if (image.startsWith("\"") && image.endsWith("\"") && !image.contains("\\") &&
-          !image.contains(" ")) {
+      if (image.startsWith("\"") && image.endsWith("\"") && !image.contains("\\")) {
         image = VHDL93Parser.tokenString(kind).toLowerCase();
         cache.put(image, kind);
       }

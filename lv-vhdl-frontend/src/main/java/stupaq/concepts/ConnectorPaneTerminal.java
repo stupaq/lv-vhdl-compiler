@@ -12,4 +12,6 @@ public interface ConnectorPaneTerminal {
   public void connectorIndex(int index);
 
   public IOReference reference();
+
+  public String representation();
 }

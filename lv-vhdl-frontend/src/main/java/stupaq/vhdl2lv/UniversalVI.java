@@ -35,8 +35,7 @@ class UniversalVI extends VI {
       ControlCluster controlOwner = new ControlCluster(this, of("inputs"), 1);
       IndicatorCluster indicatorOwner = new IndicatorCluster(this, of("outputs"), 0);
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {
-        IOReference ref = connector.reference();
-        Optional<String> label = of(ref.toString());
+        Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
         if (connector.isInput()) {
           new Control(controlOwner, style, label, DO_NOT_CONNECT);
@@ -63,7 +62,7 @@ class UniversalVI extends VI {
     } else {
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {
         IOReference ref = connector.reference();
-        Optional<String> label = of(ref.toString());
+        Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
         int index = connector.connectorIndex();
         if (connector.isInput()) {

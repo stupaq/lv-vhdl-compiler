@@ -21,11 +21,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import stupaq.SemanticException;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.labview.parsing.VIParser;
+import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.lv2vhdl.SinkTerminals.Sink;
 import stupaq.lv2vhdl.SourceTerminals.Source;
 import stupaq.naming.ArchitectureName;
@@ -35,21 +37,8 @@ import stupaq.naming.Identifier;
 import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
 import stupaq.vhdl93.VHDL93Parser;
-import stupaq.vhdl93.ast.NodeListOptional;
-import stupaq.vhdl93.ast.architecture_declaration;
-import stupaq.vhdl93.ast.architecture_declarative_part;
-import stupaq.vhdl93.ast.architecture_identifier;
-import stupaq.vhdl93.ast.architecture_statement_part;
-import stupaq.vhdl93.ast.block_declarative_item;
-import stupaq.vhdl93.ast.concurrent_statement;
-import stupaq.vhdl93.ast.constant_declaration;
-import stupaq.vhdl93.ast.context_clause;
-import stupaq.vhdl93.ast.design_unit;
-import stupaq.vhdl93.ast.entity_name;
-import stupaq.vhdl93.ast.expression;
-import stupaq.vhdl93.ast.library_unit;
-import stupaq.vhdl93.ast.process_statement;
-import stupaq.vhdl93.ast.secondary_unit;
+import stupaq.vhdl93.ast.*;
+import stupaq.vhdl93.visitor.PositionResettingVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
@@ -58,9 +47,7 @@ import static stupaq.TranslationConventions.*;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
-import static stupaq.vhdl93.ast.ASTBuilders.choice;
-import static stupaq.vhdl93.ast.ASTBuilders.listOptional;
-import static stupaq.vhdl93.ast.ASTBuilders.optional;
+import static stupaq.vhdl93.ast.ASTBuilders.*;
 
 class DesignFileEmitter implements VIElementsVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
@@ -69,9 +56,12 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   private UID rootPanel;
   private Map<UID, Endpoint> terminals;
   private Multimap<UID, Endpoint> wiresToEndpoints;
+  private boolean clustered;
   /** Results. */
   private context_clause entityContext, architectureContext;
-  private NodeListOptional architectureDeclarations, concurrentStatements;
+  private NodeListOptional architectureDeclarations, entityDeclarations, concurrentStatements;
+  private List<interface_constant_declaration> generics;
+  private List<interface_signal_declaration> ports;
 
   public DesignFileEmitter(VHDLProject project) {
     this.project = project;
@@ -86,27 +76,62 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     } else if (element instanceof EntityName) {
       LOGGER.info("Entity will be emitted together with any of accompanying architectures.");
     } else if (element instanceof ArchitectureName) {
+      ArchitectureName name = (ArchitectureName) element;
       VIDump theVi = VIParser.parseVI(project.tools(), path);
       reset();
       VIParser.visitVI(theVi, PrintingVisitor.create());
       VIParser.visitVI(theVi, this);
-      design_unit unit = emitArchitecture((ArchitectureName) element);
+      design_file file = new design_file(list(emitEntity(name.entity()), emitArchitecture(name)));
       Path destination = project.allocate(element, true);
       try (OutputStream output = new FileOutputStream(destination.toFile())) {
-        unit.accept(new VHDLTreeFormatter());
+        file.accept(new PositionResettingVisitor());
+        file.accept(new VHDLTreeFormatter());
         System.out.println("DESIGN UNIT FOR: " + path);
-        unit.accept(new TreeDumper(System.out));
+        file.accept(new TreeDumper(System.out));
         System.out.println();
         // TODO unit.accept(new TreeDumper(output));
       }
     }
   }
 
+  private design_unit emitEntity(EntityName name) throws Exception {
+    context_clause context =
+        entityContext != null ? entityContext : new context_clause(listOptional());
+    entity_identifier identifier = parser(name.identifier().toString()).entity_identifier();
+    entity_header header = new entity_header(emitGenerics(), emitPorts());
+    return new design_unit(context, new library_unit(choice(new primary_unit(choice(
+        new entity_declaration(identifier, header, new entity_declarative_part(entityDeclarations),
+            optional(), optional(), optional()))))));
+  }
+
+  private NodeOptional emitGenerics() throws Exception {
+    if (generics.isEmpty()) {
+      return optional();
+    } else {
+      NodeListOptional rest = listOptional();
+      interface_constant_declaration first = split(generics, tokenSupplier(SEMICOLON), rest);
+      return optional(new formal_generic_clause(
+          new generic_clause(new generic_list(new generic_interface_list(first, rest)))));
+    }
+  }
+
+  private NodeOptional emitPorts() throws Exception {
+    if (ports.isEmpty()) {
+      return optional();
+    } else {
+      NodeListOptional rest = listOptional();
+      interface_signal_declaration first = split(ports, tokenSupplier(SEMICOLON), rest);
+      return optional(new formal_port_clause(
+          new port_clause(new port_list(new port_interface_list(first, rest)))));
+    }
+  }
+
   private design_unit emitArchitecture(ArchitectureName name) throws Exception {
     context_clause context =
         architectureContext != null ? architectureContext : new context_clause(listOptional());
-    architecture_identifier identifier = parser(name.identifier()).architecture_identifier();
-    entity_name entity = parser(name.entity().identifier()).entity_name();
+    architecture_identifier identifier =
+        parser(name.identifier().toString()).architecture_identifier();
+    entity_name entity = parser(name.entity().identifier().toString()).entity_name();
     return new design_unit(context, new library_unit(choice(new secondary_unit(choice(
         new architecture_declaration(identifier, entity,
             new architecture_declarative_part(architectureDeclarations),
@@ -124,15 +149,19 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
             return Lists.newArrayList();
           }
         });
+    clustered = false;
     // Results.
     entityContext = architectureContext = null;
-    concurrentStatements = new NodeListOptional();
-    architectureDeclarations = new NodeListOptional();
+    concurrentStatements = listOptional();
+    architectureDeclarations = listOptional();
+    entityDeclarations = listOptional();
+    generics = Lists.newArrayList();
+    ports = Lists.newArrayList();
   }
 
-  private static VHDL93Parser parser(Object string) {
+  private static VHDL93Parser parser(String string) {
     LOGGER.trace("Parsing: {}", string);
-    return new VHDL93Parser(new StringReader(string.toString()));
+    return new VHDL93Parser(new StringReader(string));
   }
 
   @Override
@@ -174,7 +203,6 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       expression parsed = labelParser.expression();
       labelParser.eof();
       for (Endpoint terminal : terms) {
-        semanticCheck(!terminal.value().isPresent(), "Multiple value specifications for terminal.");
         terminal.value(parsed);
       }
     }
@@ -226,7 +254,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
           // This way we set the value in actual destination.
           // The terminal is just a reference to all receivers of the value in the formula.
           for (Endpoint connected : terminal) {
-            connected.value(parsed);
+            connected.valueOverride(parsed);
           }
         }
       }
@@ -242,7 +270,8 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
 
   @Override
   public void CompoundArithmetic(UID owner, UID uid, List<UID> terms) {
-    // We do not need to look at these.
+    // We look at these for error checking only.
+    // TODO
   }
 
   @Override
@@ -256,16 +285,9 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void Control(UID owner, UID uid, Optional<String> label, UID terminal, boolean isIndicator,
-      int style, Optional<Integer> representation, int controlIndex) {
-    Verify.verifyNotNull(rootPanel);
-    // TODO assuming we do not have the bundling VI
-    // TODO
-  }
-
-  @Override
   public void ControlCluster(UID owner, UID uid, Optional<String> label, UID terminal,
       boolean isIndicator, int controlIndex, List<UID> controls) {
+    clustered = true;
     // TODO assuming we do not have the bundling VI
   }
 
@@ -273,6 +295,43 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   public void ControlArray(UID owner, UID uid, Optional<String> label, UID terminal,
       boolean isIndicator, int controlIndex) {
     // This should not even be in the VI.
+  }
+
+  @Override
+  public void Control(UID owner, UID uid, Optional<String> label, UID terminal, boolean isIndicator,
+      ControlStyle style, int controlIndex) throws Exception {
+    Verify.verifyNotNull(rootPanel);
+    // TODO assuming we do not have the bundling VI
+    Verify.verify(rootPanel.equals(owner));
+    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
+    String declaration = label.get().trim();
+    VHDL93Parser labelParser = parser(declaration);
+    identifier signal;
+    if (style == ControlStyle.NUMERIC_I32) {
+      // This is a generic.
+      interface_constant_declaration generic = labelParser.interface_constant_declaration();
+      generics.add(generic);
+      signal = generic.identifier_list.identifier;
+    } else if (style == ControlStyle.NUMERIC_DBL) {
+      // This is a port.
+      interface_signal_declaration port = labelParser.interface_signal_declaration();
+      ports.add(port);
+      signal = port.identifier_list.identifier;
+    } else {
+      throw new SemanticException("Control style not recognised: %s", style);
+    }
+    labelParser.eof();
+    expression value = parser(signal.representation()).expression();
+    Endpoint endpoint = terminals.get(terminal);
+    if (!endpoint.hasValue()) {
+      // Populate value through all connected wires.
+      // If conflict found, fallback to existing one.
+      for (Endpoint connected : endpoint) {
+        if (!connected.hasValue()) {
+          connected.valueIfEmpty(value);
+        }
+      }
+    }
   }
 
   @Override
@@ -294,7 +353,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       // Set the value of all connected sinks.
       for (Endpoint connected : constantTerminal) {
         Verify.verify(!connected.isSource());
-        connected.value(value);
+        connected.valueIfEmpty(value);
       }
     }
     parser.eof();
