@@ -37,10 +37,11 @@ class UniversalVI extends VI {
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
+        int index = connector.connectorIndex();
         if (connector.isInput()) {
-          new Control(controlOwner, style, label, DO_NOT_CONNECT);
+          new Control(controlOwner, style, label, DO_NOT_CONNECT, String.valueOf(index));
         } else {
-          new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT);
+          new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT, String.valueOf(index));
         }
       }
       Unbundler unbundler = new Unbundler(this, entity.inputs(), of("inputs"));

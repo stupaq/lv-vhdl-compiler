@@ -3,10 +3,12 @@ package stupaq.lv2vhdl;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.primitives.UnsignedInteger;
 
 import com.ni.labview.VIDump;
 
@@ -17,19 +19,32 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import stupaq.SemanticException;
+import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
+import stupaq.labview.hierarchy.Bundler;
+import stupaq.labview.hierarchy.CompoundArithmetic;
+import stupaq.labview.hierarchy.Control;
+import stupaq.labview.hierarchy.ControlCluster;
+import stupaq.labview.hierarchy.FormulaNode;
+import stupaq.labview.hierarchy.Panel;
+import stupaq.labview.hierarchy.RingConstant;
+import stupaq.labview.hierarchy.SubVI;
+import stupaq.labview.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Unbundler;
+import stupaq.labview.hierarchy.Wire;
+import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.PrintingVisitor;
-import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
-import stupaq.lv2vhdl.SinkTerminals.Sink;
-import stupaq.lv2vhdl.SourceTerminals.Source;
+import stupaq.lv2vhdl.Endpoint.Sink;
+import stupaq.lv2vhdl.Endpoint.Source;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
 import stupaq.naming.EntityName;
@@ -49,19 +64,20 @@ import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
 
-class DesignFileEmitter implements VIElementsVisitor<Exception> {
+class DesignFileEmitter extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
   private final VHDLProject project;
   /** Context. */
   private UID rootPanel;
   private Map<UID, Endpoint> terminals;
   private Multimap<UID, Endpoint> wiresToEndpoints;
-  private boolean clustered;
+  private Map<Endpoint, Multiplexer> multiplexers;
+  private Map<UID, Endpoint> clusteredControls;
   /** Results. */
   private context_clause entityContext, architectureContext;
   private NodeListOptional architectureDeclarations, entityDeclarations, concurrentStatements;
-  private List<interface_constant_declaration> generics;
-  private List<interface_signal_declaration> ports;
+  private IntegerMap<interface_constant_declaration> generics;
+  private IntegerMap<interface_signal_declaration> ports;
 
   public DesignFileEmitter(VHDLProject project) {
     this.project = project;
@@ -73,8 +89,6 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     LOGGER.debug("Target project element: {}", element);
     if (element instanceof ComponentName) {
       LOGGER.info("Component will be emitted together with accompanying architecture.");
-    } else if (element instanceof EntityName) {
-      LOGGER.info("Entity will be emitted together with any of accompanying architectures.");
     } else if (element instanceof ArchitectureName) {
       ArchitectureName name = (ArchitectureName) element;
       VIDump theVi = VIParser.parseVI(project.tools(), path);
@@ -109,7 +123,8 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       return optional();
     } else {
       NodeListOptional rest = listOptional();
-      interface_constant_declaration first = split(generics, tokenSupplier(SEMICOLON), rest);
+      interface_constant_declaration first =
+          split(generics.values(), tokenSupplier(SEMICOLON), rest);
       return optional(new formal_generic_clause(
           new generic_clause(new generic_list(new generic_interface_list(first, rest)))));
     }
@@ -120,7 +135,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
       return optional();
     } else {
       NodeListOptional rest = listOptional();
-      interface_signal_declaration first = split(ports, tokenSupplier(SEMICOLON), rest);
+      interface_signal_declaration first = split(ports.values(), tokenSupplier(SEMICOLON), rest);
       return optional(new formal_port_clause(
           new port_clause(new port_list(new port_interface_list(first, rest)))));
     }
@@ -149,14 +164,16 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
             return Lists.newArrayList();
           }
         });
-    clustered = false;
+    multiplexers = Maps.newHashMap();
+    clusteredControls = null;
     // Results.
-    entityContext = architectureContext = null;
+    entityContext = null;
+    architectureContext = null;
     concurrentStatements = listOptional();
     architectureDeclarations = listOptional();
     entityDeclarations = listOptional();
-    generics = Lists.newArrayList();
-    ports = Lists.newArrayList();
+    generics = new IntegerMap<>();
+    ports = new IntegerMap<>();
   }
 
   private static VHDL93Parser parser(String string) {
@@ -165,27 +182,29 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void Diagram(Optional<UID> owner, UID uid) {
-    // No need to maintain diagrams as of today.
+  public Iterable<String> parsersOrder() {
+    return Arrays.asList(Panel.XML_NAME, Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME,
+        CompoundArithmetic.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME,
+        Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
   }
 
   @Override
-  public void Panel(Optional<UID> owner, UID uid) {
-    if (!owner.isPresent()) {
+  public void Panel(Optional<UID> ownerUID, UID uid) {
+    if (!ownerUID.isPresent()) {
       Verify.verify(rootPanel == null);
       rootPanel = uid;
     }
   }
 
   @Override
-  public void Terminal(UID owner, UID uid, UID wire, boolean isSource, String name) {
-    Endpoint terminal = isSource ? new Source(name) : new Sink(name);
+  public void Terminal(UID ownerUID, UID uid, UID wireUID, boolean isSource, String name) {
+    Endpoint terminal = isSource ? new Source(uid, name) : new Sink(uid, name);
     terminals.put(uid, terminal);
-    wiresToEndpoints.put(wire, terminal);
+    wiresToEndpoints.put(wireUID, terminal);
   }
 
   @Override
-  public void Wire(UID owner, UID uid, Optional<String> label) throws Exception {
+  public void Wire(UID ownerUID, UID uid, Optional<String> label) throws Exception {
     // We know that there will be no more terminals.
     Collection<Endpoint> terms = wiresToEndpoints.removeAll(uid);
     for (Endpoint term1 : terms) {
@@ -209,14 +228,8 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void InlineCNode(UID owner, UID uid, String expression, Optional<String> label,
-      List<UID> terms) {
-    // This element is not currently in use.
-  }
-
-  @Override
-  public void FormulaNode(UID owner, UID uid, String expression, Optional<String> label,
-      List<UID> terms) throws Exception {
+  public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
+      List<UID> termUIDs) throws Exception {
     final VHDL93Parser contentParser = parser(expression);
     if (label.equals(ENTITY_CONTEXT)) {
       entityContext = contentParser.context_clause();
@@ -236,7 +249,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     } else {
       boolean lvalue = false, rvalue = false;
       expression parsed = null;
-      for (UID term : terms) {
+      for (UID term : termUIDs) {
         Endpoint terminal = terminals.get(term);
         Verify.verifyNotNull(terminal);
         String param = terminal.name();
@@ -269,40 +282,61 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void CompoundArithmetic(UID owner, UID uid, List<UID> terms) {
+  public void CompoundArithmetic(UID ownerUID, UID uid, UID outputUID, List<UID> inputUIDs) {
     // We look at these for error checking only.
     // TODO
   }
 
   @Override
-  public void Bundler(UID owner, UID uid, List<UID> terms) {
-    // TODO assuming we do not have the bundling VI
+  public void Bundler(UID ownerUID, UID uid, UID outputUIDs, List<UID> inputUIDs) {
+    Endpoint terminal = terminals.get(outputUIDs);
+    Verify.verifyNotNull(terminal);
+    multiplexers.put(terminal, Multiplexer.create(terminals, inputUIDs));
   }
 
   @Override
-  public void Unbundler(UID owner, UID uid, List<UID> terms) {
-    // TODO assuming we do not have the bundling VI
+  public void Unbundler(UID ownerUID, UID uid, UID inputUID, List<UID> outputUIDs) {
+    Endpoint terminal = terminals.get(inputUID);
+    Verify.verifyNotNull(terminal);
+    multiplexers.put(terminal, Multiplexer.create(terminals, outputUIDs));
   }
 
   @Override
-  public void ControlCluster(UID owner, UID uid, Optional<String> label, UID terminal,
-      boolean isIndicator, int controlIndex, List<UID> controls) {
-    clustered = true;
-    // TODO assuming we do not have the bundling VI
+  public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
+      boolean isIndicator, int controlIndex, List<UID> controlUIDs) {
+    if (clusteredControls == null) {
+      clusteredControls = Maps.newHashMap();
+    }
+    for (Endpoint other : terminals.get(terminalUID)) {
+      Multiplexer multiplexer = multiplexers.get(other);
+      if (multiplexer != null) {
+        semanticCheck(multiplexer.size() == controlUIDs.size(),
+            "Different size of (un)bundler and clustered control.");
+        for (int i = 0, n = controlUIDs.size(); i < n; ++i) {
+          UID control = controlUIDs.get(i);
+          Endpoint endpoint = multiplexer.get(i);
+          clusteredControls.put(control, endpoint);
+        }
+      }
+    }
   }
 
   @Override
-  public void ControlArray(UID owner, UID uid, Optional<String> label, UID terminal,
-      boolean isIndicator, int controlIndex) {
-    // This should not even be in the VI.
-  }
-
-  @Override
-  public void Control(UID owner, UID uid, Optional<String> label, UID terminal, boolean isIndicator,
-      ControlStyle style, int controlIndex) throws Exception {
+  public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
+      boolean isIndicator, ControlStyle style, int controlIndex, String description)
+      throws Exception {
     Verify.verifyNotNull(rootPanel);
-    // TODO assuming we do not have the bundling VI
-    Verify.verify(rootPanel.equals(owner));
+    if (clusteredControls != null) {
+      try {
+        controlIndex = UnsignedInteger.valueOf(description.trim()).intValue();
+      } catch (NumberFormatException e) {
+        throw new SemanticException(
+            "Control description: %s does not contain port or generic index.", description);
+      }
+    } else {
+      semanticCheck(rootPanel.equals(ownerUID),
+          "VI is not clustered, but some control has owner other than front panel.");
+    }
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93Parser labelParser = parser(declaration);
@@ -310,32 +344,34 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
-      generics.add(generic);
+      generics.put(controlIndex, generic);
       signal = generic.identifier_list.identifier;
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
-      ports.add(port);
+      ports.put(controlIndex, port);
       signal = port.identifier_list.identifier;
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
     }
     labelParser.eof();
     expression value = parser(signal.representation()).expression();
-    Endpoint endpoint = terminals.get(terminal);
-    if (!endpoint.hasValue()) {
-      // Populate value through all connected wires.
-      // If conflict found, fallback to existing one.
-      for (Endpoint connected : endpoint) {
-        if (!connected.hasValue()) {
-          connected.valueIfEmpty(value);
-        }
-      }
+    Iterable<Endpoint> connected;
+    if (clusteredControls != null) {
+      Endpoint virtual = clusteredControls.get(uid);
+      connected = Iterables.concat(virtual);
+    } else {
+      connected = terminals.get(terminalUID);
+    }
+    // Populate value through all connected wires.
+    // If conflict found, fallback to existing one.
+    for (Endpoint term : connected) {
+      term.valueIfEmpty(value);
     }
   }
 
   @Override
-  public void RingConstant(UID owner, UID uid, Optional<String> label, UID terminal,
+  public void RingConstant(UID owner, UID uid, Optional<String> label, UID terminalUID,
       Map<String, Object> stringsAndValues) throws Exception {
     Verify.verify(!stringsAndValues.isEmpty());
     String valueString = stringsAndValues.keySet().iterator().next();
@@ -348,7 +384,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
     } else {
       parser = parser(valueString);
       expression value = parser.expression();
-      Endpoint constantTerminal = terminals.get(terminal);
+      Endpoint constantTerminal = terminals.get(terminalUID);
       Verify.verify(constantTerminal.isSource());
       // Set the value of all connected sinks.
       for (Endpoint connected : constantTerminal) {
@@ -360,7 +396,7 @@ class DesignFileEmitter implements VIElementsVisitor<Exception> {
   }
 
   @Override
-  public void SubVI(UID owner, UID uid, List<UID> terms, VIPath viPath) {
+  public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath) {
     // TODO assuming we do not have the bundling VI
     // TODO
   }

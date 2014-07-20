@@ -8,15 +8,18 @@ public class ExceptionPrinter {
   private ExceptionPrinter() {
   }
 
-  public static void print(Exception exception, PrintStream strem) {
+  public static void print(Exception exception, PrintStream stream) {
     if (exception instanceof SemanticException) {
-      strem.println(exception.getMessage());
+      stream.println("Translation error encountered:");
+      stream.println(exception.getMessage());
     } else if (exception instanceof MissingFeatureException) {
-      strem.println(exception.getMessage());
+      stream.println("Translation error encountered:");
+      stream.println(exception.getMessage());
     } else if (exception instanceof ParseException) {
-      strem.println(exception.getMessage());
+      stream.println("Translation error encountered:");
+      stream.println(exception.getMessage());
     } else {
-      exception.printStackTrace(strem);
+      exception.printStackTrace(stream);
     }
   }
 }

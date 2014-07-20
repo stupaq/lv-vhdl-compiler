@@ -21,6 +21,13 @@ public class SemanticException extends AbstractLocalisedException {
     return x;
   }
 
+  public static <T> T semanticNotNull(T x, String message, Object... args) {
+    if (x == null) {
+      throw new SemanticException(message, args);
+    }
+    return x;
+  }
+
   public static void semanticCheck(boolean b, SimpleNode n, String message, Object... args) {
     if (!b) {
       throw new SemanticException(n, message, args);
