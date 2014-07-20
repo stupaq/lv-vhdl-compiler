@@ -5,13 +5,12 @@ import com.google.common.collect.ForwardingList;
 import com.google.common.collect.Lists;
 
 import java.util.List;
-import java.util.Map;
 
 import stupaq.labview.UID;
 
 import static com.google.common.collect.FluentIterable.from;
 
-public class Multiplexer extends ForwardingList<Endpoint> {
+class Multiplexer extends ForwardingList<Endpoint> {
   private List<Endpoint> delegate = Lists.newArrayList();
 
   public Multiplexer(List<Endpoint> endpoints) {
@@ -23,7 +22,7 @@ public class Multiplexer extends ForwardingList<Endpoint> {
     return delegate;
   }
 
-  public static Multiplexer create(final Map<UID, Endpoint> terminals, List<UID> multiple) {
+  public static Multiplexer create(final EndpointsResolver terminals, List<UID> multiple) {
     return new Multiplexer(from(multiple).transform(new Function<UID, Endpoint>() {
       @Override
       public Endpoint apply(UID input) {

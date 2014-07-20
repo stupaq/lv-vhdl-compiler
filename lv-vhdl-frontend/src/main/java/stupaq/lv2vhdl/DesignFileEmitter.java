@@ -43,8 +43,6 @@ import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
-import stupaq.lv2vhdl.Endpoint.Sink;
-import stupaq.lv2vhdl.Endpoint.Source;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
 import stupaq.naming.EntityName;
@@ -69,7 +67,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   private final VHDLProject project;
   /** Context. */
   private UID rootPanel;
-  private Map<UID, Endpoint> terminals;
+  private EndpointsResolver terminals;
   private Multimap<UID, Endpoint> wiresToEndpoints;
   private Map<Endpoint, Multiplexer> multiplexers;
   private Map<UID, Endpoint> clusteredControls;
@@ -156,7 +154,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   private void reset() {
     // Context.
     rootPanel = null;
-    terminals = Maps.newHashMap();
+    terminals = new EndpointsResolver();
     wiresToEndpoints = Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
         new Supplier<List<Endpoint>>() {
           @Override
@@ -198,7 +196,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
 
   @Override
   public void Terminal(UID ownerUID, UID uid, UID wireUID, boolean isSource, String name) {
-    Endpoint terminal = isSource ? new Source(uid, name) : new Sink(uid, name);
+    Endpoint terminal = new Endpoint(uid, isSource, name);
     terminals.put(uid, terminal);
     wiresToEndpoints.put(wireUID, terminal);
   }
@@ -378,21 +376,25 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     VHDL93Parser parser;
     if (label.isPresent()) {
       parser = parser(label.get() + tokenString(ASSIGN) + valueString + tokenString(SEMICOLON));
-      block_declarative_item constant = parser.block_declarative_item();
-      semanticCheck(constant.nodeChoice.choice instanceof constant_declaration,
-          "Expected constant declaration.");
+      constant_declaration constant = parser.constant_declaration();
+      parser.eof();
+      architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
+      identifier_list identifiers = constant.identifier_list;
+      semanticCheck(!identifiers.nodeListOptional.present(),
+          "Multiple identifiers in constant declaration.");
+      parser = parser(identifiers.representation());
     } else {
       parser = parser(valueString);
-      expression value = parser.expression();
-      Endpoint constantTerminal = terminals.get(terminalUID);
-      Verify.verify(constantTerminal.isSource());
-      // Set the value of all connected sinks.
-      for (Endpoint connected : constantTerminal) {
-        Verify.verify(!connected.isSource());
-        connected.valueIfEmpty(value);
-      }
     }
+    expression value = parser.expression();
     parser.eof();
+    Endpoint terminal = terminals.get(terminalUID);
+    Verify.verify(terminal.isSource());
+    // Set the value of all connected sinks.
+    for (Endpoint connected : terminal) {
+      Verify.verify(!connected.isSource());
+      connected.valueIfEmpty(value);
+    }
   }
 
   @Override
