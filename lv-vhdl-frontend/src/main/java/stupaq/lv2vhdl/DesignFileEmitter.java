@@ -62,10 +62,7 @@ import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
-import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
-import static stupaq.vhdl93.VHDL93ParserConstants.COMPONENT;
-import static stupaq.vhdl93.VHDL93ParserConstants.ENTITY;
-import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
+import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
 
 class DesignFileEmitter extends NoOpVisitor<Exception> {
@@ -461,7 +458,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
     NodeListOptional rest = listOptional();
-    named_association_element first = split(elements, tokenSupplier(SEMICOLON), rest);
+    named_association_element first = split(elements, tokenSupplier(COMMA), rest);
     return new association_list(choice(new named_association_list(first, rest)));
   }
 }
