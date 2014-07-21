@@ -177,6 +177,11 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
           for (Endpoint connected : terminal) {
             connected.valueOverride(expression);
           }
+        } else {
+          // Set parameter name as a fallback. This one should have very low priority.
+          for (Endpoint connected : terminal) {
+            connected.valueIfEmpty(param);
+          }
         }
       }
       semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
