@@ -84,7 +84,6 @@
                             <nodeParentClass>stupaq.vhdl93.ast.SimpleNode</nodeParentClass>
                             <printer>true</printer>
                             <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
-                            <specialTokens>true</specialTokens>
                             <visitorPackageName>stupaq.vhdl93.visitor</visitorPackageName>
                         </configuration>
                     </execution>

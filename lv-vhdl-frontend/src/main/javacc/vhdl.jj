@@ -1629,13 +1629,13 @@ void interface_constant_declaration() :
 void interface_declaration() :
 {}
 {
-    LOOKAHEAD( interface_constant_declaration() )
+    LOOKAHEAD( <CONSTANT> )
     interface_constant_declaration()
-  | LOOKAHEAD( interface_signal_declaration() )
+  | LOOKAHEAD( <SIGNAL> )
     interface_signal_declaration()
-  | LOOKAHEAD( interface_variable_declaration() )
+  | LOOKAHEAD( <VARIABLE> )
     interface_variable_declaration()
-  | LOOKAHEAD( interface_file_declaration() )
+  | LOOKAHEAD( <FILE> )
     interface_file_declaration()
 }
 
