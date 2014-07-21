@@ -4,14 +4,12 @@ import java.io.PrintStream;
 
 import stupaq.vhdl93.ParseException;
 
-public class ExceptionPrinter {
+public final class ExceptionPrinter {
   private ExceptionPrinter() {
   }
 
   public static void print(Exception exception, PrintStream stream) {
     exception.printStackTrace();
-    // FIXME
-    /*
     if (exception instanceof SemanticException) {
       stream.println("Translation error encountered:");
       stream.println(exception.getMessage());
@@ -24,6 +22,5 @@ public class ExceptionPrinter {
     } else {
       exception.printStackTrace(stream);
     }
-    */
   }
 }

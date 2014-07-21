@@ -18,7 +18,6 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -46,12 +45,12 @@ import stupaq.naming.ComponentName;
 import stupaq.naming.Identifier;
 import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
-import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.*;
 
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
+import static stupaq.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
@@ -82,11 +81,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     this.project = project;
     this.entity = entity;
     VIParser.visitVI(theVi, this);
-  }
-
-  private static VHDL93Parser parser(String string) {
-    LOGGER.trace("Parsing: {}", string);
-    return new VHDL93Parser(new StringReader(string));
   }
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
@@ -143,7 +137,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   @Override
   public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
       List<UID> termUIDs) throws Exception {
-    VHDL93Parser parser = parser(expression);
+    VHDL93PartialParser parser = parser(expression);
     if (label.equals(ENTITY_CONTEXT)) {
       // We are not interested in this.
       return;
@@ -188,11 +182,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       if (!lvalue && !rvalue) {
         // It must be a concurrent statement then...
         concurrentStatements.nodes.add(parser.concurrent_statement());
-      } else {
-        parser.expression();
       }
     }
-    parser.eof();
   }
 
   @Override
@@ -235,7 +226,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       throws Exception {
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
-    VHDL93Parser labelParser = parser(declaration);
+    VHDL93PartialParser labelParser = parser(declaration);
     identifier signal;
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
@@ -252,7 +243,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
     }
-    labelParser.eof();
     Iterable<Endpoint> connected;
     if (clusteredControls != null) {
       Endpoint virtual = clusteredControls.get(uid);
@@ -274,10 +264,9 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     String constantString = stringsAndValues.keySet().iterator().next();
     String valueString;
     if (label.isPresent()) {
-      VHDL93Parser parser =
+      VHDL93PartialParser parser =
           parser(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
       constant_declaration constant = parser.constant_declaration();
-      parser.eof();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       identifier_list identifiers = constant.identifier_list;
       semanticCheck(!identifiers.nodeListOptional.present(),
@@ -354,9 +343,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     for (Endpoint terminal : endpoints) {
       actual_part actual =
           new actual_part(choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
-      VHDL93Parser parser = parser(terminal.name());
+      VHDL93PartialParser parser = parser(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
-      parser.eof();
       if (node instanceof interface_constant_declaration) {
         interface_constant_declaration generic = (interface_constant_declaration) node;
         semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
@@ -371,9 +359,9 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         throw new MissingFeatureException("Interface element of specified type is not supported.");
       }
     }
-    VHDL93Parser parser = parser(description.isEmpty() ? "label" + ++nextLabelNum : description);
+    VHDL93PartialParser parser =
+        parser(description.isEmpty() ? "label" + ++nextLabelNum : description);
     instantiation_label instantiationLabel = parser.instantiation_label();
-    parser.eof();
     NodeOptional genericAspect = generics.isEmpty() ? optional()
         : optional(new generic_map_aspect(emitAssociationList(generics)));
     NodeOptional portAspect =

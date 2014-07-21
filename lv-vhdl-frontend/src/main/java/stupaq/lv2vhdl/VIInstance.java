@@ -61,7 +61,7 @@ class VIInstance {
       try (OutputStream output = new FileOutputStream(path.toFile())) {
         file.accept(new PositionResettingVisitor());
         file.accept(new VHDLTreeFormatter());
-        System.out.println("DESIGN UNIT");
+        System.out.println("TO FILE: " + path);
         file.accept(new TreeDumper(System.out));
         System.out.println();
         // TODO unit.accept(new TreeDumper(output));

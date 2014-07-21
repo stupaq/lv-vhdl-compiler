@@ -9,7 +9,6 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,12 +27,12 @@ import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.naming.ComponentName;
 import stupaq.naming.EntityName;
 import stupaq.project.VHDLProject;
-import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.*;
 
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.ENTITY_CONTEXT;
 import static stupaq.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
+import static stupaq.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
@@ -54,11 +53,6 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   public InterfaceDeclaration(VIDump theVi) throws Exception {
     VIParser.visitVI(theVi, PrintingVisitor.create());
     VIParser.visitVI(theVi, this);
-  }
-
-  private static VHDL93Parser parser(String string) {
-    LOGGER.trace("Parsing: {}", string);
-    return new VHDL93Parser(new StringReader(string));
   }
 
   public design_unit emitAsEntity(EntityName name) throws Exception {
@@ -119,13 +113,11 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   @Override
   public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
       List<UID> termUIDs) throws Exception {
-    VHDL93Parser parser = parser(expression);
+    VHDL93PartialParser parser = parser(expression);
     if (label.equals(ENTITY_CONTEXT)) {
       entityContext = parser.context_clause();
-      parser.eof();
     } else if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
       NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
-      parser.eof();
       entityDeclarations.nodes.addAll(extra.nodes);
     }
   }
@@ -154,7 +146,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     }
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
-    VHDL93Parser labelParser = parser(declaration);
+    VHDL93PartialParser labelParser = parser(declaration);
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
@@ -170,6 +162,5 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
     }
-    labelParser.eof();
   }
 }
