@@ -6,7 +6,6 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
 import com.google.common.base.VerifyException;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -59,6 +58,7 @@ import stupaq.vhdl93.visitor.PositionResettingVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
+import static com.google.common.collect.FluentIterable.from;
 import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
@@ -410,20 +410,40 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     } else {
       throw new VerifyException("Unknown instantiable name.");
     }
-    // TODO assuming we do not have the bundling VI
-    Iterable<Endpoint> endpoints =
-        FluentIterable.from(termUIDs).transform(new Function<UID, Endpoint>() {
-          @Override
-          public Endpoint apply(UID uid) {
-            return terminals.get(uid);
-          }
-        }).filter(new Predicate<Endpoint>() {
-          @Override
-          public boolean apply(Endpoint endpoint) {
-            return !endpoint.name().isEmpty();
-          }
-        });
-    // TODO end of assumptions
+    // Determine whether this is a clustered VI.
+    boolean clustered = false;
+    if (termUIDs.size() == 2) {
+      Endpoint inputs = terminals.get(termUIDs.get(1)), outputs = terminals.get(termUIDs.get(0));
+      clustered = INPUTS_CONTROL.equals(inputs.name()) && OUTPUTS_CONTROL.equals(outputs.name());
+    }
+    // Prepare all endpoints to process.
+    Iterable<Endpoint> endpoints;
+    if (clustered) {
+      LOGGER.debug("Clustered SubVI: {}.", viPath);
+      Verify.verify(termUIDs.size() == 2);
+      Endpoint input = terminals.get(termUIDs.get(0)), output = terminals.get(termUIDs.get(1));
+      semanticCheck(Iterables.size(input) == 1,
+          "Clustered SubVI should have one bundler attached.");
+      semanticCheck(Iterables.size(output) == 1,
+          "Clustered SubVI should have one unbundler attached.");
+      Multiplexer bundler = multiplexers.get(Iterables.get(input, 0));
+      Multiplexer unbundler = multiplexers.get(Iterables.get(output, 0));
+      // FIXME there is a problem with bundler terminal names
+      endpoints = Iterables.concat(bundler, unbundler);
+    } else {
+      endpoints = from(termUIDs).transform(new Function<UID, Endpoint>() {
+        @Override
+        public Endpoint apply(UID uid) {
+          return terminals.get(uid);
+        }
+      }).filter(new Predicate<Endpoint>() {
+        @Override
+        public boolean apply(Endpoint endpoint) {
+          return !endpoint.name().isEmpty();
+        }
+      });
+    }
+    // Split them into generic and port lists and assign values.
     List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
     for (Endpoint terminal : endpoints) {
       actual_part actual = new actual_part(

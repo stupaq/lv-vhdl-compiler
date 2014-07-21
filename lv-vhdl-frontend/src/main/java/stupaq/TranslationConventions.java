@@ -12,4 +12,6 @@ public interface TranslationConventions {
   Optional<String> PROCESS_STATEMENT = of("PROCESS");
   String RVALUE_PARAMETER = "RESULT";
   String LVALUE_PARAMETER = "ASSIGNEE";
+  String INPUTS_CONTROL = "INPUTS";
+  String OUTPUTS_CONTROL = "OUTPUTS";
 }
