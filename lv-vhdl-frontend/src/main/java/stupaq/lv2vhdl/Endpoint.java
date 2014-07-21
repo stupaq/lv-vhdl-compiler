@@ -7,10 +7,13 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.Set;
 
 import stupaq.labview.UID;
+import stupaq.vhdl93.ParseException;
+import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.expression;
 
 import static stupaq.SemanticException.semanticCheck;
@@ -20,7 +23,7 @@ class Endpoint implements Iterable<Endpoint> {
   private final UID uid;
   private final boolean isSource;
   private final String name;
-  private Optional<expression> value = Optional.absent();
+  private Optional<String> value = Optional.absent();
   private Set<Endpoint> connected = Sets.newHashSet();
 
   public Endpoint(UID uid, boolean isSource, String name) {
@@ -37,35 +40,37 @@ class Endpoint implements Iterable<Endpoint> {
     return isSource;
   }
 
-  public Optional<expression> value() {
+  public expression value() throws ParseException {
+    VHDL93Parser parser = new VHDL93Parser(new StringReader(this.value.get()));
+    expression value = parser.expression();
+    parser.eof();
     return value;
   }
 
-  private void valueInternal(expression value) {
+  private void valueInternal(String valueString) {
     if (LOGGER.isDebugEnabled()) {
       if (hasValue()) {
-        LOGGER.debug("Overriding <{}> from <{}> to <{}>", name, value().get().representation(),
-            value.representation());
+        LOGGER.debug("Overriding <{}> from <{}> to <{}>", name, this.value.get(), valueString);
       } else {
-        LOGGER.debug("Setting <{}> to <{}>", name, value.representation());
+        LOGGER.debug("Setting <{}> to <{}>", name, valueString);
       }
     }
-    this.value = Optional.of(value);
+    this.value = Optional.of(valueString);
   }
 
-  public void valueOverride(expression value) {
-    valueInternal(value);
+  public void valueOverride(String valueString) {
+    valueInternal(valueString);
   }
 
-  public void valueIfEmpty(expression value) {
+  public void valueIfEmpty(String valueString) {
     if (!hasValue()) {
-      valueInternal(value);
+      valueInternal(valueString);
     }
   }
 
-  public void value(expression value) {
+  public void value(String valueString) {
     semanticCheck(!hasValue(), "Multiple value specifications for terminal.");
-    valueInternal(value);
+    valueInternal(valueString);
   }
 
   public void addConnected(Endpoint other) {
@@ -79,11 +84,11 @@ class Endpoint implements Iterable<Endpoint> {
   }
 
   public boolean hasValue() {
-    return value().isPresent();
+    return value.isPresent();
   }
 
   public String toString() {
     return getClass().getSimpleName() + "{uid=" + uid +
-        (hasValue() ? ", value=<" + value().get().representation() + '>' : "") + '}';
+        (hasValue() ? ", value=<" + value.get() + '>' : "") + '}';
   }
 }

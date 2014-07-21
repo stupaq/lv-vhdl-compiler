@@ -42,4 +42,8 @@ public class ComponentName implements InstantiableName, InterfaceName {
   public InterfaceName interfaceName() {
     return this;
   }
+
+  public Identifier component() {
+    return component;
+  }
 }

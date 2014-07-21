@@ -1,8 +1,12 @@
 package stupaq.lv2vhdl;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
+import com.google.common.base.VerifyException;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,7 +34,6 @@ import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.hierarchy.Bundler;
-import stupaq.labview.hierarchy.CompoundArithmetic;
 import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
@@ -60,6 +63,8 @@ import static stupaq.SemanticException.semanticCheck;
 import static stupaq.TranslationConventions.*;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
+import static stupaq.vhdl93.VHDL93ParserConstants.COMPONENT;
+import static stupaq.vhdl93.VHDL93ParserConstants.ENTITY;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
 
@@ -72,6 +77,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   private Multimap<UID, Endpoint> wiresToEndpoints;
   private Map<Endpoint, Multiplexer> multiplexers;
   private Map<UID, Endpoint> clusteredControls;
+  private int nextLabelNum;
   /** Results. */
   private context_clause entityContext, architectureContext;
   private NodeListOptional architectureDeclarations, entityDeclarations, concurrentStatements;
@@ -144,7 +150,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     context_clause context =
         architectureContext != null ? architectureContext : new context_clause(listOptional());
     architecture_identifier identifier =
-        parser(name.identifier().toString()).architecture_identifier();
+        parser(name.architecture().toString()).architecture_identifier();
     entity_name entity = parser(name.entity().identifier().toString()).entity_name();
     return new design_unit(context, new library_unit(choice(new secondary_unit(choice(
         new architecture_declaration(identifier, entity,
@@ -165,6 +171,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
         });
     multiplexers = Maps.newHashMap();
     clusteredControls = null;
+    nextLabelNum = 0;
     // Results.
     entityContext = null;
     architectureContext = null;
@@ -183,8 +190,8 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   @Override
   public Iterable<String> parsersOrder() {
     return Arrays.asList(Panel.XML_NAME, Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME,
-        CompoundArithmetic.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME,
-        Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
+        Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME,
+        RingConstant.XML_NAME, SubVI.XML_NAME);
   }
 
   @Override
@@ -217,11 +224,8 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
       }
     }
     if (label.isPresent()) {
-      VHDL93Parser labelParser = parser(label.get());
-      expression parsed = labelParser.expression();
-      labelParser.eof();
       for (Endpoint terminal : terms) {
-        terminal.value(parsed);
+        terminal.value(label.get());
       }
     }
   }
@@ -247,7 +251,6 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
       concurrentStatements.nodes.add(process);
     } else {
       boolean lvalue = false, rvalue = false;
-      expression parsed = null;
       for (UID term : termUIDs) {
         Endpoint terminal = terminals.get(term);
         Verify.verifyNotNull(terminal);
@@ -260,30 +263,22 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
           semanticCheck(terminal.isSource(), "R-value must be data source.");
         }
         if (lvalue || rvalue) {
-          if (parsed == null) {
-            parsed = contentParser.expression();
-          }
           // This way we set the value in actual destination.
           // The terminal is just a reference to all receivers of the value in the formula.
           for (Endpoint connected : terminal) {
-            connected.valueOverride(parsed);
+            connected.valueOverride(expression);
           }
         }
       }
       semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
       if (!lvalue && !rvalue) {
-        Verify.verify(parsed == null);
         // It must be a concurrent statement then...
         concurrentStatements.nodes.add(contentParser.concurrent_statement());
+      } else {
+        contentParser.expression();
       }
     }
     contentParser.eof();
-  }
-
-  @Override
-  public void CompoundArithmetic(UID ownerUID, UID uid, UID outputUID, List<UID> inputUIDs) {
-    // We look at these for error checking only.
-    // TODO
   }
 
   @Override
@@ -358,7 +353,6 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
       throw new SemanticException("Control style not recognised: %s", style);
     }
     labelParser.eof();
-    expression value = parser(signal.representation()).expression();
     Iterable<Endpoint> connected;
     if (clusteredControls != null) {
       Endpoint virtual = clusteredControls.get(uid);
@@ -369,7 +363,7 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     // Populate value through all connected wires.
     // If conflict found, fallback to existing one.
     for (Endpoint term : connected) {
-      term.valueIfEmpty(value);
+      term.valueIfEmpty(signal.representation());
     }
   }
 
@@ -377,46 +371,66 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   public void RingConstant(UID owner, UID uid, Optional<String> label, UID terminalUID,
       Map<String, Object> stringsAndValues) throws Exception {
     Verify.verify(!stringsAndValues.isEmpty());
-    String valueString = stringsAndValues.keySet().iterator().next();
-    VHDL93Parser parser;
+    String constantString = stringsAndValues.keySet().iterator().next();
+    String valueString;
     if (label.isPresent()) {
-      parser = parser(label.get() + tokenString(ASSIGN) + valueString + tokenString(SEMICOLON));
+      VHDL93Parser parser =
+          parser(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
       constant_declaration constant = parser.constant_declaration();
       parser.eof();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       identifier_list identifiers = constant.identifier_list;
       semanticCheck(!identifiers.nodeListOptional.present(),
           "Multiple identifiers in constant declaration.");
-      parser = parser(identifiers.representation());
+      valueString = identifiers.representation();
     } else {
-      parser = parser(valueString);
+      valueString = constantString;
     }
-    expression value = parser.expression();
-    parser.eof();
     Endpoint terminal = terminals.get(terminalUID);
     Verify.verify(terminal.isSource());
     // Set the value of all connected sinks.
     for (Endpoint connected : terminal) {
       Verify.verify(!connected.isSource());
-      connected.valueIfEmpty(value);
+      connected.valueIfEmpty(valueString);
     }
   }
 
   @Override
-  public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath) throws Exception {
+  public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description)
+      throws Exception {
     InstantiableName element = Identifier.parse(viPath.getBaseName());
+    instantiated_unit unit;
     if (element instanceof ComponentName) {
-      // Note that given information in the terminal's name property,
+      ComponentName name = (ComponentName) element;
+      // Note that given information in the terminal name property,
       // we need not to read the VI itself.
       // On the other hand it is so much more convenient to use existing logic.
       // TODO emit block declarative item
+      unit = parser(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
+    } else if (element instanceof ArchitectureName) {
+      ArchitectureName name = (ArchitectureName) element;
+      unit = parser(tokenString(ENTITY) + ' ' + name.toString()).instantiated_unit();
+    } else {
+      throw new VerifyException("Unknown instantiable name.");
     }
     // TODO assuming we do not have the bundling VI
+    Iterable<Endpoint> endpoints =
+        FluentIterable.from(termUIDs).transform(new Function<UID, Endpoint>() {
+          @Override
+          public Endpoint apply(UID uid) {
+            return terminals.get(uid);
+          }
+        }).filter(new Predicate<Endpoint>() {
+          @Override
+          public boolean apply(Endpoint endpoint) {
+            return !endpoint.name().isEmpty();
+          }
+        });
+    // TODO end of assumptions
     List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
-    for (UID termUID : termUIDs) {
-      Endpoint terminal = terminals.get(termUID);
+    for (Endpoint terminal : endpoints) {
       actual_part actual = new actual_part(
-          choice(terminal.hasValue() ? terminal.value().get() : new actual_part_open()));
+          choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
       VHDL93Parser parser = parser(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
       parser.eof();
@@ -434,6 +448,20 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
         throw new MissingFeatureException("Interface element of specified type is not supported.");
       }
     }
-    // TODO
+    VHDL93Parser parser = parser(description.isEmpty() ? "label" + ++nextLabelNum : description);
+    instantiation_label instantiationLabel = parser.instantiation_label();
+    parser.eof();
+    NodeOptional genericAspect = generics.isEmpty() ? optional()
+        : optional(new generic_map_aspect(emitAssociationList(generics)));
+    NodeOptional portAspect =
+        ports.isEmpty() ? optional() : optional(new port_map_aspect(emitAssociationList(ports)));
+    concurrentStatements.addNode(
+        new component_instantiation_statement(instantiationLabel, unit, genericAspect, portAspect));
+  }
+
+  private static association_list emitAssociationList(List<named_association_element> elements) {
+    NodeListOptional rest = listOptional();
+    named_association_element first = split(elements, tokenSupplier(SEMICOLON), rest);
+    return new association_list(choice(new named_association_list(first, rest)));
   }
 }
