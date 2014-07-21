@@ -11,6 +11,9 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.vhdl93.VHDL93ParserConstants.IN;
 import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
+import static stupaq.vhdl93.VHDL93ParserConstants.SIGNAL;
+import static stupaq.vhdl93.ast.ASTBuilders.optional;
+import static stupaq.vhdl93.ast.ASTBuilders.token;
 
 public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private final interface_signal_declaration node;
@@ -20,6 +23,7 @@ public class PortDeclaration extends SignalDeclaration implements ConnectorPaneT
   public PortDeclaration(interface_signal_declaration node) {
     super(node);
     this.node = node;
+    node.nodeOptional = optional(token(SIGNAL));
     direction = PortDirection.IN;
     node.nodeOptional1.accept(new NonTerminalsNoOpVisitor() {
       public void visit(mode n) {

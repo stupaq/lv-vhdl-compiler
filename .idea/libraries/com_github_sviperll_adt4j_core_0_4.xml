@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="com.github.sviperll:adt4j-core:0.4" type="repository">
+    <properties maven-id="com.github.sviperll:adt4j-core:0.4" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/sviperll/adt4j-core/0.4/adt4j-core-0.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

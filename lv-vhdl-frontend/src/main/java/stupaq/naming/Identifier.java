@@ -28,8 +28,8 @@ import static stupaq.naming.LibraryName.DEFAULT_LIBRARY;
 import static stupaq.naming.LibraryName.LIBRARY_SEPARATOR;
 
 public class Identifier {
-  private static final Pattern INSTANTIABLE_NAME_PATTERN =
-      compile("(?<lib>[^()]+)\\.(?<ent>[^.()]+)\\((?<arch>[^.()]+)\\)(?:|\\.(?<comp>[^.()]+))");
+  private static final Pattern INSTANTIABLE_NAME_PATTERN = compile(
+      "(?:|(?<lib>[^()]+))\\.(?<ent>[^.()]+)\\((?<arch>[^.()]+)\\)(?:|\\.(?<comp>[^.()]+))");
   private final String string;
 
   public Identifier(identifier n) {
@@ -97,8 +97,9 @@ public class Identifier {
     semanticCheck(matcher.matches(), "Invalid instantiable name: %s.", string);
     String library = matcher.group("lib"), entity = matcher.group("ent"), architecture =
         matcher.group("arch"), component = matcher.group("comp");
+    library = library == null ? DEFAULT_LIBRARY.toString() : library;
     missingIf(!DEFAULT_LIBRARY.toString().equals(library),
-        "Non-default libraries are not supported.");
+        "Non-default libraries: %s are not supported.", library);
     EntityName entityName = new EntityName(DEFAULT_LIBRARY, new Identifier(entity));
     ArchitectureName archName = new ArchitectureName(entityName, new Identifier(architecture));
     return component == null ? archName : new ComponentName(archName, new Identifier(component));

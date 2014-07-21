@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
@@ -342,11 +343,15 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
+      semanticCheck(!generic.identifier_list.nodeListOptional.present(),
+          "Multiple identifiers in generic declaration.");
       generics.put(controlIndex, generic);
       signal = generic.identifier_list.identifier;
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
+      semanticCheck(!port.identifier_list.nodeListOptional.present(),
+          "Multiple identifiers in port declaration.");
       ports.put(controlIndex, port);
       signal = port.identifier_list.identifier;
     } else {
@@ -398,8 +403,37 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   }
 
   @Override
-  public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath) {
+  public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath) throws Exception {
+    InstantiableName element = Identifier.parse(viPath.getBaseName());
+    if (element instanceof ComponentName) {
+      // Note that given information in the terminal's name property,
+      // we need not to read the VI itself.
+      // On the other hand it is so much more convenient to use existing logic.
+      // TODO emit block declarative item
+    }
     // TODO assuming we do not have the bundling VI
+    List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
+    for (UID termUID : termUIDs) {
+      Endpoint terminal = terminals.get(termUID);
+      actual_part actual = new actual_part(
+          choice(terminal.hasValue() ? terminal.value().get() : new actual_part_open()));
+      VHDL93Parser parser = parser(terminal.name());
+      Node node = parser.interface_declaration().nodeChoice.choice;
+      parser.eof();
+      if (node instanceof interface_constant_declaration) {
+        interface_constant_declaration generic = (interface_constant_declaration) node;
+        semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
+        formal_part formal = new formal_part(generic.identifier_list.identifier);
+        generics.add(new named_association_element(formal, actual));
+      } else if (node instanceof interface_signal_declaration) {
+        interface_signal_declaration port = (interface_signal_declaration) node;
+        semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
+        formal_part formal = new formal_part(port.identifier_list.identifier);
+        ports.add(new named_association_element(formal, actual));
+      } else {
+        throw new MissingFeatureException("Interface element of specified type is not supported.");
+      }
+    }
     // TODO
   }
 }
