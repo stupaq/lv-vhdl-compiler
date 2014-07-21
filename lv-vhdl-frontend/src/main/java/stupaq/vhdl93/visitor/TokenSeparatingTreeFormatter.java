@@ -17,8 +17,9 @@ public class TokenSeparatingTreeFormatter extends UserDefinedTreeFormatter
       public boolean matches(NodeToken left, NodeToken right) {
         int l = left.kind, r = right.kind;
         return (!(l == PERIOD || l == LPAREN || l == RPAREN) &&
-            !(r == SEMICOLON || r == PERIOD || r == LPAREN || r == RPAREN)) || (l == ASSIGN) ||
-            (r == ASSIGN) || (l == LE) || (r == LE) || (r == IS) || (l == PROCESS && r == LPAREN);
+            !(r == SEMICOLON || r == PERIOD || r == COMMA || r == LPAREN || r == RPAREN)) ||
+            (l == ASSIGN) || (r == ASSIGN) || (l == LE) || (r == LE) || (r == IS) ||
+            (l == PROCESS && r == LPAREN);
       }
     }, new Action() {
       @Override
