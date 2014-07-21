@@ -22,7 +22,7 @@ class Endpoint implements Iterable<Endpoint> {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
   private final UID uid;
   private final boolean isSource;
-  private final String name;
+  private String name;
   private Optional<String> value = Optional.absent();
   private Set<Endpoint> connected = Sets.newHashSet();
 
@@ -34,6 +34,10 @@ class Endpoint implements Iterable<Endpoint> {
 
   public String name() {
     return name;
+  }
+
+  public void rename(String name) {
+    this.name = name;
   }
 
   public boolean isSource() {

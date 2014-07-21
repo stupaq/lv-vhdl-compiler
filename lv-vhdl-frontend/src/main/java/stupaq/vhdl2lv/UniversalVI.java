@@ -19,7 +19,9 @@ import stupaq.naming.InstantiableName;
 import stupaq.project.LVProject;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.TranslationConventions.INPUTS_CONTROL;
+import static stupaq.TranslationConventions.OUTPUTS_CONN_INDEX;
 import static stupaq.TranslationConventions.OUTPUTS_CONTROL;
 import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
@@ -34,8 +36,9 @@ class UniversalVI extends VI {
         choosePattern(entity.inputs(), entity.outputs()));
     boolean clustered = isClusteredVI(entity.inputs(), entity.outputs());
     if (clustered) {
-      ControlCluster controlOwner = new ControlCluster(this, of(INPUTS_CONTROL), 1);
-      IndicatorCluster indicatorOwner = new IndicatorCluster(this, of(OUTPUTS_CONTROL), 0);
+      ControlCluster controlOwner = new ControlCluster(this, INPUTS_CONTROL, INPUTS_CONN_INDEX);
+      IndicatorCluster indicatorOwner =
+          new IndicatorCluster(this, OUTPUTS_CONTROL, OUTPUTS_CONN_INDEX);
       for (ConnectorPaneTerminal connector : entity.allTerminals()) {
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
@@ -46,9 +49,9 @@ class UniversalVI extends VI {
           new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT, String.valueOf(index));
         }
       }
-      Unbundler unbundler = new Unbundler(this, entity.inputs(), of("inputs"));
+      Unbundler unbundler = new Unbundler(this, entity.inputs(), INPUTS_CONTROL);
       controlOwner.terminal().connectTo(unbundler.input(), Optional.<String>absent());
-      Bundler bundler = new Bundler(this, entity.outputs(), of("outputs"));
+      Bundler bundler = new Bundler(this, entity.outputs(), OUTPUTS_CONTROL);
       bundler.output().connectTo(indicatorOwner.terminal(), Optional.<String>absent());
       int index = 0;
       int inputIndex = 0;

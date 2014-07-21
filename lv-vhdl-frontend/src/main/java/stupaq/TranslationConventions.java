@@ -13,6 +13,8 @@ public interface TranslationConventions {
   Optional<String> PROCESS_STATEMENT = of("PROCESS");
   String RVALUE_PARAMETER = "RESULT";
   String LVALUE_PARAMETER = "ASSIGNEE";
-  String INPUTS_CONTROL = "INPUTS";
-  String OUTPUTS_CONTROL = "OUTPUTS";
+  Optional<String> INPUTS_CONTROL = of("INPUTS");
+  Optional<String> OUTPUTS_CONTROL = of("OUTPUTS");
+  int INPUTS_CONN_INDEX = 1;
+  int OUTPUTS_CONN_INDEX = 0;
 }

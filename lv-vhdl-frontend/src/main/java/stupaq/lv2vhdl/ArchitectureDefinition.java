@@ -26,6 +26,7 @@ import java.util.Set;
 
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
+import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.hierarchy.Bundler;
@@ -306,24 +307,27 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       throw new VerifyException("Unknown instantiable name.");
     }
     // Determine whether this is a clustered VI.
-    boolean clustered = false;
-    if (termUIDs.size() == 2) {
-      Endpoint inputs = terminals.get(termUIDs.get(1)), outputs = terminals.get(termUIDs.get(0));
-      clustered = INPUTS_CONTROL.equals(inputs.name()) && OUTPUTS_CONTROL.equals(outputs.name());
-    }
     // Prepare all endpoints to process.
+    InterfaceDeclaration declaration = new InterfaceDeclaration(project, viPath);
     Iterable<Endpoint> endpoints;
-    if (clustered) {
+    if (declaration.isClustered()) {
       LOGGER.debug("Clustered SubVI: {}.", viPath);
       Verify.verify(termUIDs.size() == 2);
-      Endpoint input = terminals.get(termUIDs.get(0)), output = terminals.get(termUIDs.get(1));
+      Endpoint input = terminals.get(termUIDs.get(INPUTS_CONN_INDEX));
       semanticCheck(Iterables.size(input) == 1,
           "Clustered SubVI should have one bundler attached.");
+      Multiplexer bundler = multiplexers.get(Iterables.get(input, 0));
+      Endpoint output = terminals.get(termUIDs.get(OUTPUTS_CONN_INDEX));
       semanticCheck(Iterables.size(output) == 1,
           "Clustered SubVI should have one unbundler attached.");
-      Multiplexer bundler = multiplexers.get(Iterables.get(input, 0));
       Multiplexer unbundler = multiplexers.get(Iterables.get(output, 0));
-      // FIXME there is a problem with bundler terminal names
+      // To resolve the problem with (un)bundler terminal names, we will set them manually from
+      // interface definition taken from the appropriate VI.
+      // FIXME this obviously makes no sense, but for some reason LV is badly broken
+      IntegerMap<String> newNames = declaration.clusteredNames(OUTPUTS_CONN_INDEX);
+      for (int index = 0; index < bundler.size(); ++index) {
+        bundler.get(index).rename(newNames.getPresent(index));
+      }
       endpoints = Iterables.concat(bundler, unbundler);
     } else {
       endpoints = from(termUIDs).transform(new Function<UID, Endpoint>() {

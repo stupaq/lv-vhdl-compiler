@@ -2,6 +2,7 @@ package stupaq.lv2vhdl;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedInteger;
 
 import com.ni.labview.VIDump;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import stupaq.SemanticException;
 import stupaq.commons.IntegerMap;
@@ -42,8 +44,11 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   private final NodeListOptional entityDeclarations = new NodeListOptional();
   private final IntegerMap<interface_constant_declaration> generics = new IntegerMap<>();
   private final IntegerMap<interface_signal_declaration> ports = new IntegerMap<>();
+  private final IntegerMap<IntegerMap<String>> connIndexToNames = new IntegerMap<>();
+  private final Map<UID, Integer> controlIndexWithinCluster = Maps.newHashMap();
+  private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
   private UID rootPanel;
-  private boolean clusteredControls;
+  private boolean clustered;
   private context_clause entityContext;
 
   public InterfaceDeclaration(VHDLProject project, VIPath viPath) throws Exception {
@@ -53,6 +58,14 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   public InterfaceDeclaration(VIDump theVi) throws Exception {
     VIParser.visitVI(theVi, PrintingVisitor.create());
     VIParser.visitVI(theVi, this);
+  }
+
+  public boolean isClustered() {
+    return clustered;
+  }
+
+  public IntegerMap<String> clusteredNames(int connPaneIndex) {
+    return connIndexToNames.getPresent(connPaneIndex);
   }
 
   public design_unit emitAsEntity(EntityName name) throws Exception {
@@ -125,7 +138,16 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   @Override
   public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, int controlIndex, List<UID> controlUIDs) {
-    clusteredControls = true;
+    clustered = true;
+    int index = 0;
+    IntegerMap<String> names = new IntegerMap<>();
+    // FIXME for some reason indicator is hooked up to 1 and control to 0, I don't want to know
+    connIndexToNames.put(controlIndex, names);
+    controlOwnerToNames.put(uid, names);
+    for (UID control : controlUIDs) {
+      controlIndexWithinCluster.put(control, index);
+      ++index;
+    }
   }
 
   @Override
@@ -133,7 +155,15 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
       boolean isIndicator, ControlStyle style, int controlIndex, String description)
       throws Exception {
     Verify.verifyNotNull(rootPanel);
-    if (clusteredControls) {
+    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
+    if (clustered) {
+      semanticCheck(!rootPanel.equals(ownerUID),
+          "VI is clustered, but some control has front panel as an owner.");
+      Verify.verify(controlIndex == 0);
+      // Fill information about clustered control.
+      IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
+      names.put(controlIndexWithinCluster.get(uid), label.get());
+      // Read virtual controlIndex.
       try {
         controlIndex = UnsignedInteger.valueOf(description.trim()).intValue();
       } catch (NumberFormatException e) {
@@ -144,7 +174,6 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
       semanticCheck(rootPanel.equals(ownerUID),
           "VI is not clustered, but some control has owner other than front panel.");
     }
-    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
     if (style == ControlStyle.NUMERIC_I32) {

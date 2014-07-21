@@ -15,7 +15,10 @@ import stupaq.labview.hierarchy.Unbundler;
 import stupaq.naming.InstantiableName;
 import stupaq.project.LVProject;
 
-import static com.google.common.base.Optional.of;
+import static stupaq.TranslationConventions.INPUTS_CONN_INDEX;
+import static stupaq.TranslationConventions.INPUTS_CONTROL;
+import static stupaq.TranslationConventions.OUTPUTS_CONN_INDEX;
+import static stupaq.TranslationConventions.OUTPUTS_CONTROL;
 import static stupaq.vhdl2lv.UniversalVI.isClusteredVI;
 
 class UniversalSubVI extends SubVI {
@@ -27,10 +30,10 @@ class UniversalSubVI extends SubVI {
     super(owner, project.resolve(lvName), description);
     clustered = isClusteredVI(entity.inputs(), entity.outputs());
     if (clustered) {
-      Bundler inputs = new Bundler(owner, entity.inputs(), of("inputs"));
-      Unbundler outputs = new Unbundler(owner, entity.outputs(), of("outputs"));
-      inputs.output().connectTo(super.terminal(1));
-      super.terminal(0).connectTo(outputs.input());
+      Bundler inputs = new Bundler(owner, entity.inputs(), INPUTS_CONTROL);
+      Unbundler outputs = new Unbundler(owner, entity.outputs(), OUTPUTS_CONTROL);
+      inputs.output().connectTo(super.terminal(INPUTS_CONN_INDEX));
+      super.terminal(OUTPUTS_CONN_INDEX).connectTo(outputs.input());
       terminals.addAll(inputs.inputs());
       terminals.addAll(outputs.outputs());
     }
