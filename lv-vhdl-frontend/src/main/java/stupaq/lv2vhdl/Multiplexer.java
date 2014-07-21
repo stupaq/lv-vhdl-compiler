@@ -17,11 +17,6 @@ class Multiplexer extends ForwardingList<Endpoint> {
     this.delegate = endpoints;
   }
 
-  @Override
-  protected List<Endpoint> delegate() {
-    return delegate;
-  }
-
   public static Multiplexer create(final EndpointsResolver terminals, List<UID> multiple) {
     return new Multiplexer(from(multiple).transform(new Function<UID, Endpoint>() {
       @Override
@@ -29,5 +24,10 @@ class Multiplexer extends ForwardingList<Endpoint> {
         return terminals.get(input);
       }
     }).toList());
+  }
+
+  @Override
+  protected List<Endpoint> delegate() {
+    return delegate;
   }
 }

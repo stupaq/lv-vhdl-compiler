@@ -11,52 +11,43 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.primitives.UnsignedInteger;
+import com.google.common.collect.Sets;
 
 import com.ni.labview.VIDump;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.io.StringReader;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
-import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
-import stupaq.labview.hierarchy.Panel;
 import stupaq.labview.hierarchy.RingConstant;
 import stupaq.labview.hierarchy.SubVI;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Unbundler;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.NoOpVisitor;
-import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.naming.ArchitectureName;
 import stupaq.naming.ComponentName;
-import stupaq.naming.EntityName;
 import stupaq.naming.Identifier;
 import stupaq.naming.InstantiableName;
 import stupaq.project.VHDLProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.*;
-import stupaq.vhdl93.visitor.PositionResettingVisitor;
-import stupaq.vhdl93.visitor.TreeDumper;
-import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.SemanticException.semanticCheck;
@@ -65,118 +56,32 @@ import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.ast.ASTBuilders.*;
 
-class DesignFileEmitter extends NoOpVisitor<Exception> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);
+class ArchitectureDefinition extends NoOpVisitor<Exception> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
+  private final EndpointsResolver terminals = new EndpointsResolver();
+  private final Multimap<UID, Endpoint> wiresToEndpoints =
+      Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
+          new Supplier<List<Endpoint>>() {
+            @Override
+            public List<Endpoint> get() {
+              return Lists.newArrayList();
+            }
+          });
+  private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
+  private final Set<ComponentName> emittedComponents = Sets.newHashSet();
+  private final NodeListOptional architectureDeclarations = new NodeListOptional();
+  private final NodeListOptional concurrentStatements = new NodeListOptional();
   private final VHDLProject project;
-  /** Context. */
-  private UID rootPanel;
-  private EndpointsResolver terminals;
-  private Multimap<UID, Endpoint> wiresToEndpoints;
-  private Map<Endpoint, Multiplexer> multiplexers;
+  private final InterfaceDeclaration entity;
   private Map<UID, Endpoint> clusteredControls;
-  private int nextLabelNum;
-  /** Results. */
-  private context_clause entityContext, architectureContext;
-  private NodeListOptional architectureDeclarations, entityDeclarations, concurrentStatements;
-  private IntegerMap<interface_constant_declaration> generics;
-  private IntegerMap<interface_signal_declaration> ports;
+  private int nextLabelNum = 0;
+  private context_clause architectureContext;
 
-  public DesignFileEmitter(VHDLProject project) {
+  public ArchitectureDefinition(VHDLProject project, InterfaceDeclaration entity, VIDump theVi)
+      throws Exception {
     this.project = project;
-  }
-
-  public void emit(VIPath path) throws Exception {
-    LOGGER.debug("Emitting VHDL from VI: {}", path);
-    InstantiableName element = Identifier.parse(path.getBaseName());
-    LOGGER.debug("Target project element: {}", element);
-    if (element instanceof ComponentName) {
-      LOGGER.info("Component will be emitted together with accompanying architecture.");
-    } else if (element instanceof ArchitectureName) {
-      ArchitectureName name = (ArchitectureName) element;
-      VIDump theVi = VIParser.parseVI(project.tools(), path);
-      reset();
-      VIParser.visitVI(theVi, PrintingVisitor.create());
-      VIParser.visitVI(theVi, this);
-      design_file file = new design_file(list(emitEntity(name.entity()), emitArchitecture(name)));
-      Path destination = project.allocate(element, true);
-      try (OutputStream output = new FileOutputStream(destination.toFile())) {
-        file.accept(new PositionResettingVisitor());
-        file.accept(new VHDLTreeFormatter());
-        System.out.println("DESIGN UNIT FOR: " + path);
-        file.accept(new TreeDumper(System.out));
-        System.out.println();
-        // TODO unit.accept(new TreeDumper(output));
-      }
-    }
-  }
-
-  private design_unit emitEntity(EntityName name) throws Exception {
-    context_clause context =
-        entityContext != null ? entityContext : new context_clause(listOptional());
-    entity_identifier identifier = parser(name.identifier().toString()).entity_identifier();
-    entity_header header = new entity_header(emitGenerics(), emitPorts());
-    return new design_unit(context, new library_unit(choice(new primary_unit(choice(
-        new entity_declaration(identifier, header, new entity_declarative_part(entityDeclarations),
-            optional(), optional(), optional()))))));
-  }
-
-  private NodeOptional emitGenerics() throws Exception {
-    if (generics.isEmpty()) {
-      return optional();
-    } else {
-      NodeListOptional rest = listOptional();
-      interface_constant_declaration first =
-          split(generics.values(), tokenSupplier(SEMICOLON), rest);
-      return optional(new formal_generic_clause(
-          new generic_clause(new generic_list(new generic_interface_list(first, rest)))));
-    }
-  }
-
-  private NodeOptional emitPorts() throws Exception {
-    if (ports.isEmpty()) {
-      return optional();
-    } else {
-      NodeListOptional rest = listOptional();
-      interface_signal_declaration first = split(ports.values(), tokenSupplier(SEMICOLON), rest);
-      return optional(new formal_port_clause(
-          new port_clause(new port_list(new port_interface_list(first, rest)))));
-    }
-  }
-
-  private design_unit emitArchitecture(ArchitectureName name) throws Exception {
-    context_clause context =
-        architectureContext != null ? architectureContext : new context_clause(listOptional());
-    architecture_identifier identifier =
-        parser(name.architecture().toString()).architecture_identifier();
-    entity_name entity = parser(name.entity().identifier().toString()).entity_name();
-    return new design_unit(context, new library_unit(choice(new secondary_unit(choice(
-        new architecture_declaration(identifier, entity,
-            new architecture_declarative_part(architectureDeclarations),
-            new architecture_statement_part(concurrentStatements), optional(), optional()))))));
-  }
-
-  private void reset() {
-    // Context.
-    rootPanel = null;
-    terminals = new EndpointsResolver();
-    wiresToEndpoints = Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
-        new Supplier<List<Endpoint>>() {
-          @Override
-          public List<Endpoint> get() {
-            return Lists.newArrayList();
-          }
-        });
-    multiplexers = Maps.newHashMap();
-    clusteredControls = null;
-    nextLabelNum = 0;
-    // Results.
-    entityContext = null;
-    architectureContext = null;
-    concurrentStatements = listOptional();
-    architectureDeclarations = listOptional();
-    entityDeclarations = listOptional();
-    generics = new IntegerMap<>();
-    ports = new IntegerMap<>();
+    this.entity = entity;
+    VIParser.visitVI(theVi, this);
   }
 
   private static VHDL93Parser parser(String string) {
@@ -184,19 +89,27 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     return new VHDL93Parser(new StringReader(string));
   }
 
-  @Override
-  public Iterable<String> parsersOrder() {
-    return Arrays.asList(Panel.XML_NAME, Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME,
-        Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME,
-        RingConstant.XML_NAME, SubVI.XML_NAME);
+  private static association_list emitAssociationList(List<named_association_element> elements) {
+    NodeListOptional rest = listOptional();
+    named_association_element first = split(elements, tokenSupplier(COMMA), rest);
+    return new association_list(choice(new named_association_list(first, rest)));
+  }
+
+  public architecture_declaration emitAsArchitecture(ArchitectureName name) throws Exception {
+    context_clause context =
+        architectureContext != null ? architectureContext : new context_clause(listOptional());
+    architecture_identifier identifier =
+        parser(name.architecture().toString()).architecture_identifier();
+    entity_name entity = parser(name.entity().entity().toString()).entity_name();
+    return new architecture_declaration(identifier, entity,
+        new architecture_declarative_part(architectureDeclarations),
+        new architecture_statement_part(concurrentStatements), optional(), optional());
   }
 
   @Override
-  public void Panel(Optional<UID> ownerUID, UID uid) {
-    if (!ownerUID.isPresent()) {
-      Verify.verify(rootPanel == null);
-      rootPanel = uid;
-    }
+  public Iterable<String> parsersOrder() {
+    return Arrays.asList(Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME, Bundler.XML_NAME,
+        Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
   }
 
   @Override
@@ -230,19 +143,23 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   @Override
   public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
       List<UID> termUIDs) throws Exception {
-    final VHDL93Parser contentParser = parser(expression);
+    VHDL93Parser parser = parser(expression);
     if (label.equals(ENTITY_CONTEXT)) {
-      entityContext = contentParser.context_clause();
+      // We are not interested in this.
+      return;
+    } else if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
+      // We are not interested in this.
+      return;
     } else if (label.equals(ARCHITECTURE_CONTEXT)) {
-      architectureContext = contentParser.context_clause();
+      architectureContext = parser.context_clause();
     } else if (label.equals(ARCHITECTURE_EXTRA_DECLARATIONS)) {
-      NodeListOptional extra = contentParser.architecture_declarative_part().nodeListOptional;
+      NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
       architectureDeclarations.nodes.addAll(extra.nodes);
     } else if (label.equals(ARCHITECTURE_EXTRA_STATEMENTS)) {
-      NodeListOptional extra = contentParser.architecture_statement_part().nodeListOptional;
+      NodeListOptional extra = parser.architecture_statement_part().nodeListOptional;
       concurrentStatements.nodes.addAll(extra.nodes);
     } else if (label.equals(PROCESS_STATEMENT)) {
-      concurrent_statement process = contentParser.concurrent_statement();
+      concurrent_statement process = parser.concurrent_statement();
       semanticCheck(process.nodeChoice.choice instanceof process_statement,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
@@ -270,12 +187,12 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
       semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
       if (!lvalue && !rvalue) {
         // It must be a concurrent statement then...
-        concurrentStatements.nodes.add(contentParser.concurrent_statement());
+        concurrentStatements.nodes.add(parser.concurrent_statement());
       } else {
-        contentParser.expression();
+        parser.expression();
       }
     }
-    contentParser.eof();
+    parser.eof();
   }
 
   @Override
@@ -316,18 +233,6 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, int controlIndex, String description)
       throws Exception {
-    Verify.verifyNotNull(rootPanel);
-    if (clusteredControls != null) {
-      try {
-        controlIndex = UnsignedInteger.valueOf(description.trim()).intValue();
-      } catch (NumberFormatException e) {
-        throw new SemanticException(
-            "Control description: %s does not contain port or generic index.", description);
-      }
-    } else {
-      semanticCheck(rootPanel.equals(ownerUID),
-          "VI is not clustered, but some control has owner other than front panel.");
-    }
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93Parser labelParser = parser(declaration);
@@ -337,14 +242,12 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
       semanticCheck(!generic.identifier_list.nodeListOptional.present(),
           "Multiple identifiers in generic declaration.");
-      generics.put(controlIndex, generic);
       signal = generic.identifier_list.identifier;
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
       semanticCheck(!port.identifier_list.nodeListOptional.present(),
           "Multiple identifiers in port declaration.");
-      ports.put(controlIndex, port);
       signal = port.identifier_list.identifier;
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
@@ -399,10 +302,13 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     instantiated_unit unit;
     if (element instanceof ComponentName) {
       ComponentName name = (ComponentName) element;
-      // Note that given information in the terminal name property,
-      // we need not to read the VI itself.
-      // On the other hand it is so much more convenient to use existing logic.
-      // TODO emit block declarative item
+      // Emit block declarative item.
+      if (!emittedComponents.contains(name)) {
+        emittedComponents.add(name);
+        component_declaration component =
+            new InterfaceDeclaration(project, viPath).emitAsComponent(name);
+        architectureDeclarations.addNode(new block_declarative_item(choice(component)));
+      }
       unit = parser(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
     } else if (element instanceof ArchitectureName) {
       ArchitectureName name = (ArchitectureName) element;
@@ -446,8 +352,8 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
     // Split them into generic and port lists and assign values.
     List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
     for (Endpoint terminal : endpoints) {
-      actual_part actual = new actual_part(
-          choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
+      actual_part actual =
+          new actual_part(choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
       VHDL93Parser parser = parser(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
       parser.eof();
@@ -474,11 +380,5 @@ class DesignFileEmitter extends NoOpVisitor<Exception> {
         ports.isEmpty() ? optional() : optional(new port_map_aspect(emitAssociationList(ports)));
     concurrentStatements.addNode(
         new component_instantiation_statement(instantiationLabel, unit, genericAspect, portAspect));
-  }
-
-  private static association_list emitAssociationList(List<named_association_element> elements) {
-    NodeListOptional rest = listOptional();
-    named_association_element first = split(elements, tokenSupplier(COMMA), rest);
-    return new association_list(choice(new named_association_list(first, rest)));
   }
 }

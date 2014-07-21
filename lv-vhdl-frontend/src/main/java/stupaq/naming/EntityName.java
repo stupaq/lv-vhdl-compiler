@@ -1,6 +1,8 @@
 package stupaq.naming;
 
-public class EntityName implements InterfaceName {
+import stupaq.project.ProjectElementName;
+
+public class EntityName implements InterfaceName, ProjectElementName {
   private final LibraryName library;
   private final Identifier entity;
 
@@ -33,7 +35,12 @@ public class EntityName implements InterfaceName {
     return library + String.valueOf(LibraryName.LIBRARY_SEPARATOR) + entity;
   }
 
-  public Identifier identifier() {
+  public Identifier entity() {
     return entity;
+  }
+
+  @Override
+  public String elementName() {
+    return toString();
   }
 }

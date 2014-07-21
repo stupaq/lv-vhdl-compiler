@@ -11,7 +11,10 @@ import stupaq.project.VHDLProject;
 
 import static com.google.common.collect.FluentIterable.from;
 
-public class TranslationDriver {
+public final class TranslationDriver {
+  private TranslationDriver() {
+  }
+
   public static void main(String args[]) {
     try {
       if (args.length >= 2) {
@@ -23,9 +26,8 @@ public class TranslationDriver {
               }
             });
         VHDLProject project = new VHDLProject(Paths.get(args[args.length - 1]), roots);
-        DesignFileEmitter emitter = new DesignFileEmitter(project);
         for (VIPath path : project) {
-          emitter.emit(path);
+          new VIInstance(project, path).emitAsVHDL();
         }
       } else {
         System.out.println("usage: <filename1> <filename2>...");
