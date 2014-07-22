@@ -23,7 +23,7 @@ import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 
-public class VHDL93PartialParser {
+class VHDL93PartialParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDL93PartialParser.class);
   private final VHDL93Parser parser;
 

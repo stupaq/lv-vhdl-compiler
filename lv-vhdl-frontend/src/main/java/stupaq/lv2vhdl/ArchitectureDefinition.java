@@ -58,6 +58,7 @@ import static stupaq.vhdl93.ast.ASTBuilders.*;
 
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
+  private final InterfaceDeclarationCache interfaceCache;
   private final EndpointsResolver terminals = new EndpointsResolver();
   private final Multimap<UID, Endpoint> wiresToEndpoints =
       Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
@@ -71,13 +72,12 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private final Set<ComponentName> emittedComponents = Sets.newHashSet();
   private final NodeListOptional architectureDeclarations = new NodeListOptional();
   private final NodeListOptional concurrentStatements = new NodeListOptional();
-  private final VHDLProject project;
   private Map<UID, Endpoint> clusteredControls;
   private int nextLabelNum = 0;
   private context_clause architectureContext;
 
   public ArchitectureDefinition(VHDLProject project, VIDump theVi) throws Exception {
-    this.project = project;
+    this.interfaceCache = new InterfaceDeclarationCache(project);
     VIParser.visitVI(theVi, this);
   }
 
@@ -289,7 +289,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   @Override
   public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description)
       throws Exception {
-    InterfaceDeclaration declaration = new InterfaceDeclaration(project, viPath);
+    InterfaceDeclaration declaration = interfaceCache.get(viPath);
     InstantiableName element = Identifier.parse(viPath.getBaseName());
     instantiated_unit unit;
     if (element instanceof ComponentName) {
