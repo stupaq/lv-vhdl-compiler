@@ -67,6 +67,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     return clustered;
   }
 
+  public Optional<context_clause> getContext() {
+    return Optional.fromNullable(entityContext);
+  }
+
   private Optional<Integer> connPaneIndex(UID control) {
     return Optional.fromNullable(controlToPaneIndex.get(control));
   }

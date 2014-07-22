@@ -91,17 +91,22 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     return new association_list(choice(new named_association_list(first, rest)));
   }
 
-  public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
+  public Optional<context_clause> getContext() {
+    return Optional.fromNullable(architectureContext);
+  }
+
+  public design_unit emitAsArchitecture(ArchitectureName name, InterfaceDeclaration declaration)
+      throws Exception {
     context_clause context =
-        architectureContext != null ? architectureContext : new context_clause(listOptional());
+        getContext().or(declaration.getContext()).or(new context_clause(listOptional()));
     architecture_identifier identifier =
         parser(name.architecture().toString()).architecture_identifier();
     entity_name entity = parser(name.entity().entity().toString()).entity_name();
-    architecture_declaration declaration = new architecture_declaration(identifier, entity,
+    architecture_declaration definition = new architecture_declaration(identifier, entity,
         new architecture_declarative_part(architectureDeclarations),
         new architecture_statement_part(concurrentStatements), optional(), optional());
     return new design_unit(context,
-        new library_unit(choice(new secondary_unit(choice(declaration)))));
+        new library_unit(choice(new secondary_unit(choice(definition)))));
   }
 
   @Override
