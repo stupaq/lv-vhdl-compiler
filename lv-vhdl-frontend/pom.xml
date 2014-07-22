@@ -85,6 +85,7 @@
                             <printer>true</printer>
                             <sourceDirectory>${basedir}/src/main/javacc</sourceDirectory>
                             <visitorPackageName>stupaq.vhdl93.visitor</visitorPackageName>
+                            <specialTokens>true</specialTokens>
                         </configuration>
                     </execution>
                 </executions>
