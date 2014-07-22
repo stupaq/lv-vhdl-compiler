@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import stupaq.Configuration;
 import stupaq.MissingFeatureException;
 import stupaq.SemanticException;
 import stupaq.commons.IntegerMap;
@@ -58,6 +59,8 @@ import static stupaq.vhdl93.ast.ASTBuilders.*;
 
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
+  private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
+  private final VHDLProject project;
   private final InterfaceDeclarationCache interfaceCache;
   private final EndpointsResolver terminals = new EndpointsResolver();
   private final Multimap<UID, Endpoint> wiresToEndpoints =
@@ -77,6 +80,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private context_clause architectureContext;
 
   public ArchitectureDefinition(VHDLProject project, VIDump theVi) throws Exception {
+    this.project = project;
     this.interfaceCache = new InterfaceDeclarationCache(project);
     VIParser.visitVI(theVi, this);
   }
@@ -87,21 +91,24 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     return new association_list(choice(new named_association_list(first, rest)));
   }
 
-  public architecture_declaration emitAsArchitecture(ArchitectureName name) throws Exception {
+  public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
     context_clause context =
         architectureContext != null ? architectureContext : new context_clause(listOptional());
     architecture_identifier identifier =
         parser(name.architecture().toString()).architecture_identifier();
     entity_name entity = parser(name.entity().entity().toString()).entity_name();
-    return new architecture_declaration(identifier, entity,
+    architecture_declaration declaration = new architecture_declaration(identifier, entity,
         new architecture_declarative_part(architectureDeclarations),
         new architecture_statement_part(concurrentStatements), optional(), optional());
+    return new design_unit(context,
+        new library_unit(choice(new secondary_unit(choice(declaration)))));
   }
 
   @Override
   public Iterable<String> parsersOrder() {
     return Arrays.asList(Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME, Bundler.XML_NAME,
-        Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
+        Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME,
+        RingConstant.XML_NAME, SubVI.XML_NAME);
   }
 
   @Override
@@ -303,6 +310,10 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       unit = parser(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
     } else if (element instanceof ArchitectureName) {
       ArchitectureName name = (ArchitectureName) element;
+      // Schedule for processing.
+      if (FOLLOW_DEPENDENCIES) {
+        project.add(viPath);
+      }
       unit = parser(tokenString(ENTITY) + ' ' + name.toString()).instantiated_unit();
     } else {
       throw new VerifyException("Unknown instantiable name.");
