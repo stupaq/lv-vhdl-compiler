@@ -5,10 +5,10 @@ import com.google.common.base.Optional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import stupaq.vhdl93.visitor.NameExtractorVisitor;
-import stupaq.vhdl93.visitor.PositionExtractorVisitor;
+import stupaq.vhdl93.extractors.NameExtractorVisitor;
+import stupaq.vhdl93.extractors.PositionExtractorVisitor;
+import stupaq.vhdl93.formatting.VHDLTreeFormatter;
 import stupaq.vhdl93.visitor.TreeDumper;
-import stupaq.vhdl93.visitor.VHDLTreeFormatter;
 
 public abstract class SimpleNode implements Node {
   private static String representation(identifier n) {

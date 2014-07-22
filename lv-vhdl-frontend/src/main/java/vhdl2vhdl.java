@@ -3,9 +3,9 @@ import java.io.FileInputStream;
 import stupaq.ExceptionPrinter;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
-import stupaq.vhdl93.visitor.FlattenNestedListsVisitor;
+import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
-import stupaq.vhdl93.visitor.VHDLTreeFormatter;
+import stupaq.vhdl93.formatting.VHDLTreeFormatter;
 
 public class vhdl2vhdl {
   public static void main(String args[]) {

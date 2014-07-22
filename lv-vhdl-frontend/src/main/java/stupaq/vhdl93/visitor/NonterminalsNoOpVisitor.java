@@ -3,6 +3,7 @@ package stupaq.vhdl93.visitor;
 import java.util.Enumeration;
 
 import stupaq.vhdl93.ast.*;
+import stupaq.vhdl93.visitor.Visitor;
 
 public class NonTerminalsNoOpVisitor<T> implements Visitor {
   public T apply(Node n) {

@@ -4,7 +4,7 @@
 @%JAVA_HOME%\bin\java.exe ^
   -cp config;target\classes;..\lv-scripting-java\target\classes;target\dependency\* ^
   -Dscripting.tools.path=..\lv-scripting-java\lv-scripting ^
-  stupaq.lv2vhdl.TranslationDriver ^
+  stupaq.translation.lv2vhdl.TranslationDriver ^
   %source_dir%\work.main(behavioral).vi ^
   %destination_dir%
 
