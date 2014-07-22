@@ -360,10 +360,14 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       VHDL93PartialParser parser = parser(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
       if (node instanceof interface_constant_declaration) {
-        interface_constant_declaration generic = (interface_constant_declaration) node;
-        semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
-        formal_part formal = new formal_part(generic.identifier_list.identifier);
-        generics.add(new named_association_element(formal, actual));
+        // Generics without assigned value should be left alone.
+        // Assigning "open" makes no sense.
+        if (terminal.hasValue()) {
+          interface_constant_declaration generic = (interface_constant_declaration) node;
+          semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
+          formal_part formal = new formal_part(generic.identifier_list.identifier);
+          generics.add(new named_association_element(formal, actual));
+        }
       } else if (node instanceof interface_signal_declaration) {
         interface_signal_declaration port = (interface_signal_declaration) node;
         semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
