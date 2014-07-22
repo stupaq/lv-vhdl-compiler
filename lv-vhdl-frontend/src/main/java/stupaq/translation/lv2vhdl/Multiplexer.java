@@ -17,7 +17,7 @@ class Multiplexer extends ForwardingList<Endpoint> {
     this.delegate = endpoints;
   }
 
-  public static Multiplexer create(final EndpointsResolver terminals, List<UID> multiple) {
+  public static Multiplexer create(final EndpointsMap terminals, List<UID> multiple) {
     return new Multiplexer(from(multiple).transform(new Function<UID, Endpoint>() {
       @Override
       public Endpoint apply(UID input) {

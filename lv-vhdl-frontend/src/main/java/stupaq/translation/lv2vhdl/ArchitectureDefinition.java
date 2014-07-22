@@ -3,14 +3,10 @@ package stupaq.translation.lv2vhdl;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
 import com.google.common.base.Verify;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 import com.ni.labview.VIDump;
@@ -18,8 +14,6 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,8 +31,10 @@ import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.RingConstant;
 import stupaq.labview.hierarchy.SubVI;
 import stupaq.labview.hierarchy.Terminal;
+import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Unbundler;
 import stupaq.labview.hierarchy.Wire;
+import stupaq.labview.parsing.MultiplexerVisitor;
 import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
@@ -60,29 +56,29 @@ import static stupaq.vhdl93.builders.ASTBuilders.*;
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
+  private final EndpointsMap terminals = new EndpointsMap();
+  private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
+  private final SignalsInferenceRules inferenceRules = new SignalsInferenceRules();
   private final VHDLProject project;
   private final InterfaceDeclarationCache interfaceCache;
-  private final EndpointsResolver terminals = new EndpointsResolver();
-  private final Multimap<UID, Endpoint> wiresToEndpoints =
-      Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
-          new Supplier<List<Endpoint>>() {
-            @Override
-            public List<Endpoint> get() {
-              return Lists.newArrayList();
-            }
-          });
-  private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
   private final Set<ComponentName> emittedComponents = Sets.newHashSet();
   private final NodeListOptional architectureDeclarations = new NodeListOptional();
   private final NodeListOptional concurrentStatements = new NodeListOptional();
-  private Map<UID, Endpoint> clusteredControls;
   private int nextLabelNum = 0;
-  private context_clause architectureContext;
+  private context_clause context;
 
   public ArchitectureDefinition(VHDLProject project, VIDump theVi) throws Exception {
     this.project = project;
     this.interfaceCache = new InterfaceDeclarationCache(project);
-    VIParser.visitVI(theVi, this);
+    // Prepare all visitors using common order and run them.
+    MultiplexerVisitor multiplexer =
+        new MultiplexerVisitor(Terminal.XML_NAME, Tunnel.XML_NAME, Wire.XML_NAME,
+            FormulaNode.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME,
+            Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
+    multiplexer.addVisitor(new EndpointCollector(terminals));
+    multiplexer.addVisitor(universalVI);
+    multiplexer.addVisitor(this);
+    VIParser.visitVI(theVi, multiplexer);
   }
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
@@ -92,7 +88,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   }
 
   public Optional<context_clause> getContext() {
-    return Optional.fromNullable(architectureContext);
+    return Optional.fromNullable(context);
   }
 
   public design_unit emitAsArchitecture(ArchitectureName name, InterfaceDeclaration declaration)
@@ -111,37 +107,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
 
   @Override
   public Iterable<String> parsersOrder() {
-    return Arrays.asList(Terminal.XML_NAME, Wire.XML_NAME, FormulaNode.XML_NAME, Bundler.XML_NAME,
-        Unbundler.XML_NAME, ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME,
-        RingConstant.XML_NAME, SubVI.XML_NAME);
-  }
-
-  @Override
-  public void Terminal(UID ownerUID, UID uid, UID wireUID, boolean isSource, String name) {
-    Endpoint terminal = new Endpoint(uid, isSource, name);
-    terminals.put(uid, terminal);
-    wiresToEndpoints.put(wireUID, terminal);
-  }
-
-  @Override
-  public void Wire(UID ownerUID, UID uid, Optional<String> label) throws Exception {
-    // We know that there will be no more terminals.
-    Collection<Endpoint> terms = wiresToEndpoints.removeAll(uid);
-    for (Endpoint term1 : terms) {
-      for (Endpoint term2 : terms) {
-        if (term1.isSource() ^ term2.isSource()) {
-          term1.addConnected(term2);
-        }
-        // Otherwise do nothing.
-        // Note that this can happen for single source and multiple sinks,
-        // as wires in LV are undirected and the graph itself is a multi-graph.
-      }
-    }
-    if (label.isPresent()) {
-      for (Endpoint terminal : terms) {
-        terminal.value(label.get());
-      }
-    }
+    throw new VerifyException();
   }
 
   @Override
@@ -155,7 +121,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       // We are not interested in this.
       return;
     } else if (label.equals(ARCHITECTURE_CONTEXT)) {
-      architectureContext = parser.context_clause();
+      context = parser.context_clause();
     } else if (label.equals(ARCHITECTURE_EXTRA_DECLARATIONS)) {
       NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
       architectureDeclarations.nodes.addAll(extra.nodes);
@@ -202,40 +168,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   }
 
   @Override
-  public void Bundler(UID ownerUID, UID uid, UID outputUIDs, List<UID> inputUIDs) {
-    Endpoint terminal = terminals.get(outputUIDs);
-    Verify.verifyNotNull(terminal);
-    multiplexers.put(terminal, Multiplexer.create(terminals, inputUIDs));
-  }
-
-  @Override
-  public void Unbundler(UID ownerUID, UID uid, UID inputUID, List<UID> outputUIDs) {
-    Endpoint terminal = terminals.get(inputUID);
-    Verify.verifyNotNull(terminal);
-    multiplexers.put(terminal, Multiplexer.create(terminals, outputUIDs));
-  }
-
-  @Override
-  public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-      boolean isIndicator, List<UID> controlUIDs) {
-    if (clusteredControls == null) {
-      clusteredControls = Maps.newHashMap();
-    }
-    for (Endpoint other : terminals.get(terminalUID)) {
-      Multiplexer multiplexer = multiplexers.get(other);
-      if (multiplexer != null) {
-        semanticCheck(multiplexer.size() == controlUIDs.size(),
-            "Different size of (un)bundler and clustered control.");
-        for (int i = 0, n = controlUIDs.size(); i < n; ++i) {
-          UID control = controlUIDs.get(i);
-          Endpoint endpoint = multiplexer.get(i);
-          clusteredControls.put(control, endpoint);
-        }
-      }
-    }
-  }
-
-  @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
@@ -257,11 +189,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
     }
-    Iterable<Endpoint> connected;
-    if (clusteredControls != null) {
-      Endpoint virtual = clusteredControls.get(uid);
-      connected = Iterables.concat(virtual);
-    } else {
+    Iterable<Endpoint> connected = universalVI.findMultiplexedConnections(uid);
+    if (connected == null) {
       connected = terminals.get(terminalUID);
     }
     // Populate value through all connected wires.
@@ -331,12 +260,12 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       Verify.verify(termUIDs.size() == 2);
       Endpoint input = terminals.get(termUIDs.get(INPUTS_CONN_INDEX));
       semanticCheck(Iterables.size(input) == 1,
-          "Clustered SubVI should have one bundler attached.");
-      Multiplexer bundler = multiplexers.get(Iterables.get(input, 0));
+          "Clustered SubVI should have only one bundler attached.");
+      Multiplexer bundler = universalVI.findMultiplexer(Iterables.get(input, 0));
       Endpoint output = terminals.get(termUIDs.get(OUTPUTS_CONN_INDEX));
       semanticCheck(Iterables.size(output) == 1,
           "Clustered SubVI should have one unbundler attached.");
-      Multiplexer unbundler = multiplexers.get(Iterables.get(output, 0));
+      Multiplexer unbundler = universalVI.findMultiplexer(Iterables.get(output, 0));
       // To resolve (un)bundler terminal names, we will set them manually from
       // interface definition taken from the appropriate VI.
       IntegerMap<String> newNames = declaration.clusteredNames(INPUTS_CONN_INDEX);
@@ -360,8 +289,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     // Split them into generic and port lists and assign values.
     List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
     for (Endpoint terminal : endpoints) {
-      actual_part actual =
-          new actual_part(choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
       VHDL93PartialParser parser = parser(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
       if (node instanceof interface_constant_declaration) {
@@ -371,12 +298,20 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
           interface_constant_declaration generic = (interface_constant_declaration) node;
           semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
           formal_part formal = new formal_part(generic.identifier_list.identifier);
+          actual_part actual = new actual_part(choice(terminal.value()));
           generics.add(new named_association_element(formal, actual));
         }
       } else if (node instanceof interface_signal_declaration) {
         interface_signal_declaration port = (interface_signal_declaration) node;
         semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
         formal_part formal = new formal_part(port.identifier_list.identifier);
+        actual_part actual;
+        if (terminal.hasValue()) {
+          actual = new actual_part(choice(terminal.value()));
+        } else {
+          actual = new actual_part(
+              choice(inferenceRules.inferExpression(terminal).or(new actual_part_open())));
+        }
         ports.add(new named_association_element(formal, actual));
       } else {
         throw new MissingFeatureException("Interface element of specified type is not supported.");
