@@ -72,15 +72,12 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private final NodeListOptional architectureDeclarations = new NodeListOptional();
   private final NodeListOptional concurrentStatements = new NodeListOptional();
   private final VHDLProject project;
-  private final InterfaceDeclaration entity;
   private Map<UID, Endpoint> clusteredControls;
   private int nextLabelNum = 0;
   private context_clause architectureContext;
 
-  public ArchitectureDefinition(VHDLProject project, InterfaceDeclaration entity, VIDump theVi)
-      throws Exception {
+  public ArchitectureDefinition(VHDLProject project, VIDump theVi) throws Exception {
     this.project = project;
-    this.entity = entity;
     VIParser.visitVI(theVi, this);
   }
 
@@ -208,7 +205,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
 
   @Override
   public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-      boolean isIndicator, int controlIndex, List<UID> controlUIDs) {
+      boolean isIndicator, List<UID> controlUIDs) {
     if (clusteredControls == null) {
       clusteredControls = Maps.newHashMap();
     }
@@ -228,8 +225,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
 
   @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-      boolean isIndicator, ControlStyle style, int controlIndex, String description)
-      throws Exception {
+      boolean isIndicator, ControlStyle style, String description) throws Exception {
     semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
@@ -293,6 +289,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   @Override
   public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description)
       throws Exception {
+    InterfaceDeclaration declaration = new InterfaceDeclaration(project, viPath);
     InstantiableName element = Identifier.parse(viPath.getBaseName());
     instantiated_unit unit;
     if (element instanceof ComponentName) {
@@ -300,8 +297,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       // Emit block declarative item.
       if (!emittedComponents.contains(name)) {
         emittedComponents.add(name);
-        component_declaration component =
-            new InterfaceDeclaration(project, viPath).emitAsComponent(name);
+        component_declaration component = declaration.emitAsComponent(name);
         architectureDeclarations.addNode(new block_declarative_item(choice(component)));
       }
       unit = parser(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
@@ -313,7 +309,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     }
     // Determine whether this is a clustered VI.
     // Prepare all endpoints to process.
-    InterfaceDeclaration declaration = new InterfaceDeclaration(project, viPath);
     Iterable<Endpoint> endpoints;
     if (declaration.isClustered()) {
       LOGGER.debug("Clustered SubVI: {}.", viPath);
@@ -326,10 +321,9 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       semanticCheck(Iterables.size(output) == 1,
           "Clustered SubVI should have one unbundler attached.");
       Multiplexer unbundler = multiplexers.get(Iterables.get(output, 0));
-      // To resolve the problem with (un)bundler terminal names, we will set them manually from
+      // To resolve (un)bundler terminal names, we will set them manually from
       // interface definition taken from the appropriate VI.
-      // FIXME this obviously makes no sense, but for some reason LV is badly broken
-      IntegerMap<String> newNames = declaration.clusteredNames(OUTPUTS_CONN_INDEX);
+      IntegerMap<String> newNames = declaration.clusteredNames(INPUTS_CONN_INDEX);
       for (int index = 0; index < bundler.size(); ++index) {
         bundler.get(index).rename(newNames.getPresent(index));
       }

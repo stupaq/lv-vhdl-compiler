@@ -46,7 +46,7 @@ class VIInstance {
     VIDump theVi = VIParser.parseVI(project.tools(), path);
     VIParser.visitVI(theVi, PrintingVisitor.create());
     entity = new InterfaceDeclaration(theVi);
-    architecture = new ArchitectureDefinition(project, entity, theVi);
+    architecture = new ArchitectureDefinition(project, theVi);
   }
 
   public void emitAsVHDL() throws Exception {
@@ -61,10 +61,7 @@ class VIInstance {
       try (OutputStream output = new FileOutputStream(path.toFile())) {
         file.accept(new PositionResettingVisitor());
         file.accept(new VHDLTreeFormatter());
-        System.out.println("TO FILE: " + path);
-        file.accept(new TreeDumper(System.out));
-        System.out.println();
-        // TODO unit.accept(new TreeDumper(output));
+        file.accept(new TreeDumper(output));
       }
     }
   }
