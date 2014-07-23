@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import stupaq.labview.VIPath;
-import stupaq.labview.parsing.PrintingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.Identifier;
@@ -43,7 +42,6 @@ class VIInstance {
     }
     name = (ArchitectureName) element;
     VIDump theVi = VIParser.parseVI(project.tools(), path);
-    VIParser.visitVI(theVi, PrintingVisitor.create());
     entity = new InterfaceDeclaration(theVi);
     architecture = new ArchitectureDefinition(project, theVi);
   }

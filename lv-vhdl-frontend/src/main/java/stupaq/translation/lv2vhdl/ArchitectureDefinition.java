@@ -36,6 +36,7 @@ import stupaq.labview.hierarchy.Unbundler;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.MultiplexerVisitor;
 import stupaq.labview.parsing.NoOpVisitor;
+import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.naming.ArchitectureName;
@@ -72,10 +73,11 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     this.interfaceCache = new InterfaceDeclarationCache(project);
     // Prepare all visitors using common order and run them.
     MultiplexerVisitor multiplexer =
-        new MultiplexerVisitor(Terminal.XML_NAME, Tunnel.XML_NAME, Wire.XML_NAME,
+        new MultiplexerVisitor(Terminal.XML_NAME, Wire.XML_NAME, Tunnel.XML_NAME,
             FormulaNode.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME,
             Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
-    multiplexer.addVisitor(new EndpointCollector(terminals));
+    multiplexer.addVisitor(TracingVisitor.create());
+    multiplexer.addVisitor(new EndpointWiringRules(terminals));
     multiplexer.addVisitor(universalVI);
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
@@ -133,11 +135,18 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       semanticCheck(process.nodeChoice.choice instanceof process_statement,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
+      for (UID term : termUIDs) {
+        Endpoint terminal = terminals.get(term);
+        String param = terminal.name();
+        // Set parameter name as a fallback. This one should have very low priority.
+        for (Endpoint connected : terminal.connected()) {
+          connected.valueIfEmpty(param);
+        }
+      }
     } else {
       boolean lvalue = false, rvalue = false;
       for (UID term : termUIDs) {
         Endpoint terminal = terminals.get(term);
-        Verify.verifyNotNull(terminal);
         String param = terminal.name();
         lvalue |= param.equals(LVALUE_PARAMETER);
         rvalue |= param.equals(RVALUE_PARAMETER);
@@ -149,12 +158,12 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         if (lvalue || rvalue) {
           // This way we set the value in actual destination.
           // The terminal is just a reference to all receivers of the value in the formula.
-          for (Endpoint connected : terminal) {
+          for (Endpoint connected : terminal.connected()) {
             connected.valueOverride(expression);
           }
         } else {
           // Set parameter name as a fallback. This one should have very low priority.
-          for (Endpoint connected : terminal) {
+          for (Endpoint connected : terminal.connected()) {
             connected.valueIfEmpty(param);
           }
         }
@@ -191,7 +200,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     }
     Iterable<Endpoint> connected = universalVI.findMultiplexedConnections(uid);
     if (connected == null) {
-      connected = terminals.get(terminalUID);
+      connected = terminals.get(terminalUID).connected();
     }
     // Populate value through all connected wires.
     // If conflict found, fallback to existing one.
@@ -221,7 +230,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     Endpoint terminal = terminals.get(terminalUID);
     Verify.verify(terminal.isSource());
     // Set the value of all connected sinks.
-    for (Endpoint connected : terminal) {
+    for (Endpoint connected : terminal.connected()) {
       Verify.verify(!connected.isSource());
       connected.valueIfEmpty(valueString);
     }
@@ -259,13 +268,9 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       LOGGER.debug("Clustered SubVI: {}.", viPath);
       Verify.verify(termUIDs.size() == 2);
       Endpoint input = terminals.get(termUIDs.get(INPUTS_CONN_INDEX));
-      semanticCheck(Iterables.size(input) == 1,
-          "Clustered SubVI should have only one bundler attached.");
-      Multiplexer bundler = universalVI.findMultiplexer(Iterables.get(input, 0));
+      Multiplexer bundler = universalVI.findMultiplexer(input.onlyConnected());
       Endpoint output = terminals.get(termUIDs.get(OUTPUTS_CONN_INDEX));
-      semanticCheck(Iterables.size(output) == 1,
-          "Clustered SubVI should have one unbundler attached.");
-      Multiplexer unbundler = universalVI.findMultiplexer(Iterables.get(output, 0));
+      Multiplexer unbundler = universalVI.findMultiplexer(output.onlyConnected());
       // To resolve (un)bundler terminal names, we will set them manually from
       // interface definition taken from the appropriate VI.
       IntegerMap<String> newNames = declaration.clusteredNames(INPUTS_CONN_INDEX);

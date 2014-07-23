@@ -8,14 +8,21 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-import stupaq.NeverThrownException;
+import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NoOpVisitor;
 
-class EndpointCollector extends NoOpVisitor<NeverThrownException> {
+import static stupaq.SemanticException.semanticCheck;
+
+class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(EndpointWiringRules.class);
   private final Multimap<UID, Endpoint> wiresToEndpoints =
       Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
           new Supplier<List<Endpoint>>() {
@@ -25,8 +32,9 @@ class EndpointCollector extends NoOpVisitor<NeverThrownException> {
             }
           });
   private final EndpointsMap terminals;
+  private final Map<Endpoint, Endpoint> redirects = Maps.newHashMap();
 
-  public EndpointCollector(EndpointsMap terminals) {
+  public EndpointWiringRules(EndpointsMap terminals) {
     this.terminals = terminals;
   }
 
@@ -40,11 +48,6 @@ class EndpointCollector extends NoOpVisitor<NeverThrownException> {
     Endpoint terminal = new Endpoint(uid, isSource, name);
     terminals.put(uid, terminal);
     wiresToEndpoints.put(wireUID, terminal);
-  }
-
-  @Override
-  public void Tunnel(UID ownerUID, List<UID> insideTermUIDs, UID outsideTermUID) {
-    // FIXME
   }
 
   @Override
@@ -62,9 +65,27 @@ class EndpointCollector extends NoOpVisitor<NeverThrownException> {
       }
     }
     if (label.isPresent()) {
-      for (Endpoint terminal : terms) {
-        terminal.value(label.get());
+      for (Endpoint term : terms) {
+        term.value(label.get());
       }
     }
+  }
+
+  @Override
+  public void Tunnel(UID ownerUID, List<UID> insideTermUIDs, UID outsideTermUID) {
+    semanticCheck(insideTermUIDs.size() == 1, "Tunnel has multiple internal frames.");
+    Endpoint inside = terminals.get(insideTermUIDs.get(0));
+    Endpoint outside = terminals.get(outsideTermUID);
+    LOGGER.debug("Tunnel with endpoints: inside: {} outside: {}", inside, outside);
+    for (Endpoint term1 : inside.connected()) {
+      for (Endpoint term2 : outside.connected()) {
+        LOGGER.debug("Terminals connected through tunnel: {} and: {}", term1, term2);
+        if (term1.isSource() ^ term2.isSource()) {
+          LOGGER.debug("Closure for terminals: {} and: {}", term1, term2);
+          term1.addConnected(term2);
+        }
+      }
+    }
+    // FIXME place cables, remove these terminals
   }
 }

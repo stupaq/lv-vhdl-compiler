@@ -3,6 +3,7 @@ package stupaq.translation.lv2vhdl;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedInteger;
 
@@ -11,7 +12,6 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +24,9 @@ import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Panel;
+import stupaq.labview.parsing.MultiplexerVisitor;
 import stupaq.labview.parsing.NoOpVisitor;
-import stupaq.labview.parsing.PrintingVisitor;
+import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.naming.ComponentName;
@@ -59,8 +60,12 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   }
 
   public InterfaceDeclaration(VIDump theVi) throws Exception {
-    VIParser.visitVI(theVi, PrintingVisitor.create());
-    VIParser.visitVI(theVi, this);
+    MultiplexerVisitor<Exception> multiplexer =
+        new MultiplexerVisitor<>(Panel.XML_NAME, FormulaNode.XML_NAME, ConnectorPane.XML_NAME,
+            ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
+    multiplexer.addVisitor(TracingVisitor.create());
+    multiplexer.addVisitor(this);
+    VIParser.visitVI(theVi, multiplexer);
   }
 
   public boolean isClustered() {
@@ -123,8 +128,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
 
   @Override
   public Iterable<String> parsersOrder() {
-    return Arrays.asList(Panel.XML_NAME, FormulaNode.XML_NAME, ConnectorPane.XML_NAME,
-        ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
+    throw new VerifyException();
   }
 
   @Override

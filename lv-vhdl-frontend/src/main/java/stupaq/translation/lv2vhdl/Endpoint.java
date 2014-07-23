@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Set;
 
 import stupaq.labview.UID;
@@ -18,7 +18,7 @@ import stupaq.vhdl93.ast.expression;
 
 import static stupaq.SemanticException.semanticCheck;
 
-class Endpoint implements Iterable<Endpoint> {
+class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
   private final UID uid;
   private final boolean isSource;
@@ -82,9 +82,18 @@ class Endpoint implements Iterable<Endpoint> {
     connected.add(other);
   }
 
-  @Override
-  public Iterator<Endpoint> iterator() {
-    return connected.iterator();
+  public boolean removeConnected(Endpoint other) {
+    return connected.remove(other);
+  }
+
+  public Iterable<Endpoint> connected() {
+    return Collections.unmodifiableCollection(connected);
+  }
+
+  public Endpoint onlyConnected() {
+    semanticCheck(connected.size() == 1,
+        "Terminal is expected to be connected with only one other terminal.");
+    return connected.iterator().next();
   }
 
   public boolean hasValue() {
