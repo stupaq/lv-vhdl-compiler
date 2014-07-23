@@ -7,14 +7,14 @@ import com.google.common.base.Verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import stupaq.translation.MissingFeatureException;
-import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Loop;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.VI;
 import stupaq.labview.hierarchy.WhileLoop;
+import stupaq.translation.MissingFeatureException;
+import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
@@ -222,7 +222,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
 
   @Override
   public void visit(concurrent_procedure_call_statement n) {
-    // TODO for now we can rely on fallback
+    // We rely on fallback.
   }
 
   @Override
@@ -260,6 +260,6 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
 
   @Override
   public void visit(generate_statement n) {
-    // TODO for now we can rely on fallback
+    // We rely on fallback.
   }
 }

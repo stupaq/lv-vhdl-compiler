@@ -2,6 +2,7 @@ package stupaq.translation.semantic;
 
 import stupaq.translation.naming.IOReference;
 import stupaq.vhdl93.ast.attribute_designator;
+import stupaq.vhdl93.ast.function_name;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.procedure_name;
 import stupaq.vhdl93.ast.signature;
@@ -31,13 +32,11 @@ public abstract class RValueVisitor extends DepthFirstVisitor {
     // We are not interested in identifiers from some internal scope.
   }
 
-  /*
-  TODO we cannot differentiate between no-arg function and signal based on syntax.
   @Override
   public void visit(function_name n) {
-    // We are not interested in function or procedure names.
+    // We cannot differentiate between no-arg function and signal based on syntax.
+    visit(n.name);
   }
-  */
 
   @Override
   public void visit(procedure_name n) {

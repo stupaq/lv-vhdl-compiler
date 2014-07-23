@@ -86,6 +86,5 @@ class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
         }
       }
     }
-    // FIXME place cables, remove these terminals
   }
 }
