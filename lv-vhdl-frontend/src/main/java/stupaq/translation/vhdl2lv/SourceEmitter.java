@@ -23,8 +23,10 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
 import stupaq.translation.naming.IOReference;
+import stupaq.translation.semantic.ExpressionClassifier;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
+import stupaq.translation.semantic.RValueVisitor;
 
 import static com.google.common.base.Optional.of;
 

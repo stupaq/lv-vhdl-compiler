@@ -10,13 +10,13 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.UID;
+import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.parsing.NoOpVisitor;
 
 import static stupaq.translation.SemanticException.semanticCheck;
 
-public class UniversalVIReader extends NoOpVisitor<NeverThrownException> {
+class UniversalVIReader extends NoOpVisitor<NeverThrownException> {
   private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
   private final EndpointsMap terminals;
   private final Map<UID, Endpoint> controlToClusterEndpoint = Maps.newHashMap();

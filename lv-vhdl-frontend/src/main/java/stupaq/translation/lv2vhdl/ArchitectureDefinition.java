@@ -52,7 +52,7 @@ import static stupaq.translation.TranslationConventions.*;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
-import static stupaq.vhdl93.builders.ASTBuilders.*;
+import static stupaq.vhdl93.ast.Builders.*;
 
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);

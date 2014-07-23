@@ -3,7 +3,7 @@ import java.io.FileInputStream;
 import stupaq.translation.ExceptionPrinter;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
-import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;
+import stupaq.translation.semantic.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.TreeDumper;
 import stupaq.vhdl93.formatting.VHDLTreeFormatter;
 

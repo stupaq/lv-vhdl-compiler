@@ -6,9 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Map.Entry;
 
 import stupaq.translation.TranslationConventions;
-import stupaq.translation.concepts.ComponentBindingResolver;
-import stupaq.translation.concepts.ComponentDeclaration;
-import stupaq.translation.concepts.EntityDeclaration;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.translation.naming.ArchitectureName;
@@ -29,13 +26,13 @@ import stupaq.vhdl93.ast.design_unit;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
-import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;
+import stupaq.translation.semantic.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.SemanticException.semanticNotNull;
-import static stupaq.vhdl93.builders.ASTBuilders.sequence;
+import static stupaq.vhdl93.ast.Builders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {
   private static final Logger LOGGER = LoggerFactory.getLogger(DesignFileEmitter.class);

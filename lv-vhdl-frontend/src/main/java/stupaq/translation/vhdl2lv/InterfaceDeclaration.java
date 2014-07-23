@@ -1,4 +1,4 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
@@ -8,16 +8,16 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.translation.concepts.PortDeclaration.DirectionPredicate;
-import stupaq.translation.concepts.PortDeclaration.PortDirection;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.InterfaceName;
+import stupaq.translation.vhdl2lv.PortDeclaration.DirectionPredicate;
+import stupaq.translation.vhdl2lv.PortDeclaration.PortDirection;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-public abstract class InterfaceDeclaration {
+abstract class InterfaceDeclaration {
   protected final InterfaceName name;
   protected final List<GenericDeclaration> generics = Lists.newArrayList();
   protected final Map<IOReference, GenericDeclaration> genericsMap = Maps.newHashMap();

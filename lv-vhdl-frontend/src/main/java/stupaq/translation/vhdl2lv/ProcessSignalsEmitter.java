@@ -16,10 +16,12 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.translation.naming.IOReference;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.*;
+import stupaq.translation.semantic.LValueVisitor;
+import stupaq.translation.semantic.RValueVisitor;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
-import static stupaq.vhdl93.builders.ASTBuilders.sequence;
+import static stupaq.vhdl93.ast.Builders.sequence;
 
 class ProcessSignalsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private final Loop loop;

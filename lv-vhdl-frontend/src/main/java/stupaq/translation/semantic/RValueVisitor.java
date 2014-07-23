@@ -1,4 +1,4 @@
-package stupaq.translation.vhdl2lv;
+package stupaq.translation.semantic;
 
 import stupaq.translation.naming.IOReference;
 import stupaq.vhdl93.ast.attribute_designator;
@@ -8,7 +8,7 @@ import stupaq.vhdl93.ast.signature;
 import stupaq.vhdl93.ast.suffix;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-abstract class RValueVisitor extends DepthFirstVisitor {
+public abstract class RValueVisitor extends DepthFirstVisitor {
   protected abstract void topLevelScope(IOReference ref);
 
   @Override

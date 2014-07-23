@@ -25,7 +25,7 @@ import stupaq.vhdl93.ast.instantiation_label;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
-import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;
+import stupaq.translation.semantic.FlattenNestedListsVisitor;
 
 class VHDL93PartialParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDL93PartialParser.class);

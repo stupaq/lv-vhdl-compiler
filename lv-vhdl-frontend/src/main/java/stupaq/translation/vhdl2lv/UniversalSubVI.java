@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-import stupaq.translation.concepts.InterfaceDeclaration;
 import stupaq.labview.VIErrorException;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.Generic;

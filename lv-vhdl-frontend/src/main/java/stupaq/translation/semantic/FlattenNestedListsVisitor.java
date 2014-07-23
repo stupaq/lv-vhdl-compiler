@@ -1,4 +1,4 @@
-package stupaq.vhdl93.transformers;
+package stupaq.translation.semantic;
 
 import stupaq.vhdl93.ast.identifier_list;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;

@@ -1,4 +1,4 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import com.google.common.base.Predicate;
 
@@ -12,10 +12,10 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static stupaq.vhdl93.VHDL93ParserConstants.IN;
 import static stupaq.vhdl93.VHDL93ParserConstants.OUT;
 import static stupaq.vhdl93.VHDL93ParserConstants.SIGNAL;
-import static stupaq.vhdl93.builders.ASTBuilders.optional;
-import static stupaq.vhdl93.builders.ASTBuilders.token;
+import static stupaq.vhdl93.ast.Builders.optional;
+import static stupaq.vhdl93.ast.Builders.token;
 
-public class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
+class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private final interface_signal_declaration node;
   private PortDirection direction;
   private int connectorIndex;

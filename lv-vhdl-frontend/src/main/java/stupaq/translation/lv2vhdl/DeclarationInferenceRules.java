@@ -32,9 +32,9 @@ import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.ARCHITECTURE_EXTRA_DECLARATIONS;
 import static stupaq.translation.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
-import static stupaq.vhdl93.builders.ASTBuilders.choice;
-import static stupaq.vhdl93.builders.ASTBuilders.listOptional;
-import static stupaq.vhdl93.builders.ASTBuilders.optional;
+import static stupaq.vhdl93.ast.Builders.choice;
+import static stupaq.vhdl93.ast.Builders.listOptional;
+import static stupaq.vhdl93.ast.Builders.optional;
 
 class DeclarationInferenceRules extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeclarationInferenceRules.class);

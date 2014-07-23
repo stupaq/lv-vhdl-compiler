@@ -3,8 +3,6 @@ package stupaq.translation.vhdl2lv;
 import com.google.common.base.Optional;
 import com.google.common.base.Verify;
 
-import stupaq.translation.concepts.ConnectorPaneTerminal;
-import stupaq.translation.concepts.InterfaceDeclaration;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;

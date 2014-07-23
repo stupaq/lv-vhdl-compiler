@@ -1,8 +1,15 @@
 package stupaq.vhdl93.ast;
 
+import com.google.common.collect.Maps;
+
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
+
+import stupaq.vhdl93.VHDL93Parser;
+import stupaq.vhdl93.VHDL93ParserConstants;
 
 /**
  * Represents a single token in the grammar.  If the "-tk" option is used, also contains a Vector of
@@ -97,5 +104,29 @@ public class NodeToken extends SimpleNode implements Node {
   // Equal to the JavaCC token "kind" integer.
   // -1 if not available.
   public int kind;
+
+  private static final class TokenKindCache {
+    private TokenKindCache() {
+    }
+
+    private static Map<String, Integer> cache;
+
+    static {
+      Map<String, Integer> cache = Maps.newHashMap();
+      for (int kind = 0; kind < VHDL93ParserConstants.tokenImage.length; ++kind) {
+        String image = VHDL93ParserConstants.tokenImage[kind];
+        if (image.startsWith("\"") && image.endsWith("\"") && !image.contains("\\")) {
+          image = VHDL93Parser.tokenString(kind).toLowerCase();
+          cache.put(image, kind);
+        }
+      }
+      TokenKindCache.cache = Collections.unmodifiableMap(cache);
+    }
+
+    public static int resolveKind(String tokenImage) {
+      Integer kind = cache.get(tokenImage.trim().toLowerCase());
+      return kind == null ? -1 : kind;
+    }
+  }
 }
 

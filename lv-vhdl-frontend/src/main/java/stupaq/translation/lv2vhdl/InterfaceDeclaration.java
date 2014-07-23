@@ -40,7 +40,7 @@ import static stupaq.translation.TranslationConventions.ENTITY_EXTRA_DECLARATION
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
-import static stupaq.vhdl93.builders.ASTBuilders.*;
+import static stupaq.vhdl93.ast.Builders.*;
 
 class InterfaceDeclaration extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(InterfaceDeclaration.class);

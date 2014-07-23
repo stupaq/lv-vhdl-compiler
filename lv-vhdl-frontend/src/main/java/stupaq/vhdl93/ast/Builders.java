@@ -1,4 +1,4 @@
-package stupaq.vhdl93.builders;
+package stupaq.vhdl93.ast;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -7,16 +7,9 @@ import com.google.common.collect.Iterables;
 import java.util.Arrays;
 
 import stupaq.vhdl93.VHDL93Parser;
-import stupaq.vhdl93.ast.NodeChoice;
-import stupaq.vhdl93.ast.NodeList;
-import stupaq.vhdl93.ast.NodeListOptional;
-import stupaq.vhdl93.ast.NodeOptional;
-import stupaq.vhdl93.ast.NodeSequence;
-import stupaq.vhdl93.ast.NodeToken;
-import stupaq.vhdl93.ast.SimpleNode;
 
-public final class ASTBuilders {
-  private ASTBuilders() {
+public final class Builders {
+  private Builders() {
   }
 
   public static NodeToken token(int kind) {

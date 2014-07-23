@@ -1,8 +1,8 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import stupaq.translation.naming.IOReference;
 
-public interface ConnectorPaneTerminal {
+interface ConnectorPaneTerminal {
   public boolean isInput();
 
   public boolean isConstant();

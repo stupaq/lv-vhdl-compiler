@@ -1,4 +1,4 @@
-package stupaq.translation.vhdl2lv;
+package stupaq.translation.semantic;
 
 import com.google.common.collect.Lists;
 
@@ -10,9 +10,9 @@ import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
 
-import static stupaq.vhdl93.builders.ASTBuilders.sequence;
+import static stupaq.vhdl93.ast.Builders.sequence;
 
-class ExpressionClassifier {
+public class ExpressionClassifier {
   private static String unwrapParentheses(String expression) {
     if (expression.startsWith("(") && expression.endsWith(")")) {
       return unwrapParentheses(expression.substring(1, expression.length() - 1));

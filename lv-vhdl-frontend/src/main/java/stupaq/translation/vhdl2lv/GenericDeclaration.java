@@ -1,12 +1,12 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import stupaq.vhdl93.ast.interface_constant_declaration;
 
 import static stupaq.vhdl93.VHDL93ParserConstants.CONSTANT;
-import static stupaq.vhdl93.builders.ASTBuilders.optional;
-import static stupaq.vhdl93.builders.ASTBuilders.token;
+import static stupaq.vhdl93.ast.Builders.optional;
+import static stupaq.vhdl93.ast.Builders.token;
 
-public class GenericDeclaration extends ConstantDeclaration implements ConnectorPaneTerminal {
+class GenericDeclaration extends ConstantDeclaration implements ConnectorPaneTerminal {
   private final interface_constant_declaration node;
   private int connectorIndex;
 

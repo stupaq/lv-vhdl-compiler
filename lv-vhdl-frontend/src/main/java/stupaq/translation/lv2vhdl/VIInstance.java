@@ -23,7 +23,7 @@ import stupaq.vhdl93.formatting.VHDLTreeFormatter;
 import stupaq.vhdl93.visitor.TreeDumper;
 
 import static com.google.common.collect.Maps.immutableEntry;
-import static stupaq.vhdl93.builders.ASTBuilders.list;
+import static stupaq.vhdl93.ast.Builders.list;
 
 class VIInstance {
   private static final Logger LOGGER = LoggerFactory.getLogger(VIInstance.class);

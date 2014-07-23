@@ -1,4 +1,4 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;

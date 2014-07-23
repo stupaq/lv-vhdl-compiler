@@ -1,4 +1,4 @@
-package stupaq.translation.concepts;
+package stupaq.translation.naming;
 
 import stupaq.vhdl93.ast.subtype_indication;
 
@@ -9,12 +9,12 @@ public class TypeIndication {
     this.identifier = node.representation();
   }
 
-  public String identifier() {
+  public String indication() {
     return identifier;
   }
 
   @Override
   public String toString() {
-    return "TypeIndication{" + identifier() + '}';
+    return "TypeIndication{" + indication() + '}';
   }
 }

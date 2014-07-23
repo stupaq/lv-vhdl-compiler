@@ -17,7 +17,10 @@ import stupaq.vhdl93.ast.design_file;
 import static com.google.common.collect.FluentIterable.from;
 import static java.util.Collections.enumeration;
 
-public class TranslationDriver {
+public final class TranslationDriver {
+  private TranslationDriver() {
+  }
+
   public static void main(String args[]) {
     try {
       if (args.length >= 2) {

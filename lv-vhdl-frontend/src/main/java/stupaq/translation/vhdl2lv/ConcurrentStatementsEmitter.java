@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import stupaq.translation.MissingFeatureException;
 import stupaq.translation.TranslationConventions;
-import stupaq.translation.concepts.ComponentBindingResolver;
-import stupaq.translation.concepts.ConnectorPaneTerminal;
-import stupaq.translation.concepts.InterfaceDeclaration;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Loop;
@@ -29,7 +26,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.translation.SemanticException.semanticNotNull;
-import static stupaq.vhdl93.builders.ASTBuilders.sequence;
+import static stupaq.vhdl93.ast.Builders.sequence;
 
 class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentStatementsEmitter.class);

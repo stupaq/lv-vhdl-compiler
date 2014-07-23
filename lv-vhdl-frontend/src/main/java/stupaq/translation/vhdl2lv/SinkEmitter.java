@@ -15,8 +15,10 @@ import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Generic;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.translation.naming.IOReference;
+import stupaq.translation.semantic.ExpressionClassifier;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
+import stupaq.translation.semantic.LValueVisitor;
 
 class SinkEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);

@@ -2,8 +2,8 @@ package stupaq.translation.naming;
 
 import stupaq.vhdl93.ast.identifier;
 
-import static stupaq.vhdl93.builders.ASTBuilders.choice;
-import static stupaq.vhdl93.builders.ASTBuilders.token;
+import static stupaq.vhdl93.ast.Builders.choice;
+import static stupaq.vhdl93.ast.Builders.token;
 
 public class IOReference extends Identifier {
   private IOReference(String name) {

@@ -1,12 +1,13 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import stupaq.translation.naming.IOReference;
+import stupaq.translation.naming.TypeIndication;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.subtype_indication;
 
 abstract class TypedReferenceDeclaration {
-  private final TypeIndication type;
   private final IOReference reference;
+  private final TypeIndication type;
 
   public TypedReferenceDeclaration(identifier id, subtype_indication subtype) {
     reference = new IOReference(id);

@@ -1,12 +1,11 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import com.google.common.base.Verify;
 
-import stupaq.vhdl93.ast.interface_signal_declaration;
+import stupaq.vhdl93.ast.interface_constant_declaration;
 
-public abstract class SignalDeclaration
-    extends TypedReferenceDeclaration {
-  public SignalDeclaration(interface_signal_declaration node) {
+class ConstantDeclaration extends TypedReferenceDeclaration {
+  public ConstantDeclaration(interface_constant_declaration node) {
     super(node.identifier_list.identifier, node.subtype_indication);
     Verify.verify(!node.identifier_list.nodeListOptional.present(), "List not flattened.");
   }

@@ -1,4 +1,4 @@
-package stupaq.translation.vhdl2lv;
+package stupaq.translation.semantic;
 
 import com.google.common.base.Optional;
 
@@ -9,7 +9,7 @@ import stupaq.vhdl93.ast.name;
 import stupaq.vhdl93.ast.simple_expression;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-abstract class LValueVisitor extends DepthFirstVisitor {
+public abstract class LValueVisitor extends DepthFirstVisitor {
   private final Optional<RValueVisitor> rvalueVisitor;
 
   public LValueVisitor() {

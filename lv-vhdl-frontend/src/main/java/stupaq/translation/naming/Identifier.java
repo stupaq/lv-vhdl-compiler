@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import stupaq.translation.MissingFeatureException;
-import stupaq.translation.concepts.ComponentBindingResolver;
+import stupaq.translation.vhdl2lv.ComponentBindingResolver;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.component_declaration;

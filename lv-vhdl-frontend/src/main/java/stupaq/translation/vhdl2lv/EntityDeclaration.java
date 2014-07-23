@@ -1,4 +1,4 @@
-package stupaq.translation.concepts;
+package stupaq.translation.vhdl2lv;
 
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.naming.Identifier;
@@ -7,7 +7,7 @@ import stupaq.vhdl93.ast.entity_declaration;
 
 import static stupaq.translation.MissingFeatureException.missingIf;
 
-public class EntityDeclaration extends InterfaceDeclaration {
+class EntityDeclaration extends InterfaceDeclaration {
   private final entity_declaration node;
   private final context_clause context;
 
