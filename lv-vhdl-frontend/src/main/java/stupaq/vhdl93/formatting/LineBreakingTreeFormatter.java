@@ -11,11 +11,12 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
 
   public LineBreakingTreeFormatter(int indentAmt, int wrapWidth) {
     super(indentAmt, wrapWidth);
+    // Ensure that we have a line break after a semicolon unless there is a following comment.
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
-        int l = left.kind;
-        return (l == SEMICOLON);
+        int l = left.kind, r = right.kind;
+        return (l == SEMICOLON && r != COMMENT);
       }
     }, new Action() {
       @Override
@@ -23,11 +24,12 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
         ensureLineBreak();
       }
     });
+    // Insert line break before primary or secondary unit.
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
-        int r = right.kind;
-        return (r == ARCHITECTURE) || (r == ENTITY) || (r == LIBRARY);
+        int l = left.kind, r = right.kind;
+        return (l != END) && (r == ARCHITECTURE) || (r == ENTITY) || (r == LIBRARY);
       }
     }, new Action() {
       @Override
@@ -35,11 +37,12 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
         add(force());
       }
     });
+    // Break line and indent after block entry.
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
         int l = left.kind;
-        return (l == IS) || (l == BEGIN) || (l == THEN) || (l == ELSE);
+        return (l == BEGIN) || (l == THEN) || (l == ELSE);
       }
     }, new Action() {
       @Override
@@ -48,18 +51,7 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
         add(force());
       }
     });
-    preExecutor.put(new TokenPairMatcher() {
-      @Override
-      public boolean matches(NodeToken left, NodeToken right) {
-        int l = left.kind, r = right.kind;
-        return (r == END) || (r == BEGIN) || (l == ELSE) || (l == ELSIF);
-      }
-    }, new Action() {
-      @Override
-      public void execute() {
-        add(outdent());
-      }
-    });
+    // Same for some tokens in POST executor.
     postExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
@@ -71,6 +63,19 @@ public class LineBreakingTreeFormatter extends TokenSeparatingTreeFormatter {
       public void execute() {
         add(indent());
         add(force());
+      }
+    });
+    // Reduce indentation when exiting block.
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int r = right.kind;
+        return (r == END) || (r == BEGIN) || (r == ELSE) || (r == ELSIF);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        add(outdent());
       }
     });
   }

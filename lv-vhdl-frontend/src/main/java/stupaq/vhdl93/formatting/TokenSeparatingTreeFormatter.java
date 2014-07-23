@@ -1,9 +1,9 @@
 package stupaq.vhdl93.formatting;
 
-import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.Action;
-import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.TokenPairMatcher;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.ast.NodeToken;
+import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.Action;
+import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.TokenPairMatcher;
 import stupaq.vhdl93.visitor.FormatCommand;
 
 public class TokenSeparatingTreeFormatter extends UserDefinedTreeFormatter
@@ -17,8 +17,19 @@ public class TokenSeparatingTreeFormatter extends UserDefinedTreeFormatter
       public boolean matches(NodeToken left, NodeToken right) {
         int l = left.kind, r = right.kind;
         return (!(l == PERIOD || l == LPAREN || l == RPAREN) &&
-            !(r == SEMICOLON || r == PERIOD || r == COMMA || r == LPAREN || r == RPAREN)) ||
-            (l == ASSIGN) || (r == ASSIGN) || (l == LE) || (r == LE) || (r == IS) ||
+            !(r == SEMICOLON || r == PERIOD || r == COMMA || r == LPAREN || r == RPAREN));
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        ensureWhiteSpace();
+      }
+    });
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (l == ASSIGN) || (r == ASSIGN) || (l == LE) || (r == LE) || (r == IS) ||
             (l == PROCESS && r == LPAREN);
       }
     }, new Action() {

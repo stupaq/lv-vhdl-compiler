@@ -10,9 +10,9 @@ import com.google.common.collect.Multimaps;
 import java.util.Collection;
 import java.util.List;
 
+import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.Action;
 import stupaq.vhdl93.formatting.TokenMatchingActionExecutor.TokenPairMatcher;
-import stupaq.vhdl93.ast.NodeToken;
 
 public class TokenMatchingActionExecutor extends ForwardingMultimap<TokenPairMatcher, Action> {
   private final Multimap<TokenPairMatcher, Action> delegate =
@@ -31,9 +31,13 @@ public class TokenMatchingActionExecutor extends ForwardingMultimap<TokenPairMat
   }
 
   public void nextToken(NodeToken nextToken) {
+    NodeToken actualNextToken = nextToken;
+    if (nextToken.numSpecials() > 0) {
+      actualNextToken = nextToken.getSpecialAt(0);
+    }
     if (lastToken != null) {
       for (TokenPairMatcher matcher : delegate.keySet()) {
-        if (matcher.matches(lastToken, nextToken)) {
+        if (matcher.matches(lastToken, actualNextToken)) {
           for (Action action : delegate.get(matcher)) {
             action.execute();
           }
