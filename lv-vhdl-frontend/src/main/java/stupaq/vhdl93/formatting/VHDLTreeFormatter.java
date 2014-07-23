@@ -13,7 +13,7 @@ import stupaq.vhdl93.ast.process_declarative_part;
 import stupaq.vhdl93.ast.process_statement;
 
 public class VHDLTreeFormatter extends SpecialTokenHandlingFormatter {
-  private static final int INDENT_SPACES = 4, LINE_WIDTH = 120;
+  private static final int INDENT_SPACES = 4, LINE_WIDTH = 80;
 
   public VHDLTreeFormatter() {
     super(INDENT_SPACES, LINE_WIDTH);

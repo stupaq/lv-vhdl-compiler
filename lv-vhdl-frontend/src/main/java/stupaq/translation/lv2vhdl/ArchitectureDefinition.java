@@ -18,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import stupaq.translation.Configuration;
-import stupaq.translation.MissingFeatureException;
-import stupaq.translation.SemanticException;
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
@@ -39,6 +36,9 @@ import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
+import stupaq.translation.Configuration;
+import stupaq.translation.MissingFeatureException;
+import stupaq.translation.SemanticException;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.Identifier;
@@ -59,7 +59,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
   private final EndpointsMap terminals = new EndpointsMap();
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
-  private final SignalsInferenceRules inferenceRules = new SignalsInferenceRules();
+  private final DeclarationInferenceRules declarationInference = new DeclarationInferenceRules();
+  private final ValueInferenceRules valueInference = new ValueInferenceRules();
   private final VHDLProject project;
   private final InterfaceDeclarationCache interfaceCache;
   private final Set<ComponentName> emittedComponents = Sets.newHashSet();
@@ -79,8 +80,10 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(TracingVisitor.create());
     multiplexer.addVisitor(new EndpointWiringRules(terminals));
     multiplexer.addVisitor(universalVI);
+    multiplexer.addVisitor(declarationInference);
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
+    architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
   }
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
@@ -186,14 +189,10 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
-      semanticCheck(!generic.identifier_list.nodeListOptional.present(),
-          "Multiple identifiers in generic declaration.");
       signal = generic.identifier_list.identifier;
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
-      semanticCheck(!port.identifier_list.nodeListOptional.present(),
-          "Multiple identifiers in port declaration.");
       signal = port.identifier_list.identifier;
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
@@ -310,13 +309,11 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         interface_signal_declaration port = (interface_signal_declaration) node;
         semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
         formal_part formal = new formal_part(port.identifier_list.identifier);
-        actual_part actual;
-        if (terminal.hasValue()) {
-          actual = new actual_part(choice(terminal.value()));
-        } else {
-          actual = new actual_part(
-              choice(inferenceRules.inferExpression(terminal).or(new actual_part_open())));
-        }
+        // Apply signal inference rules to instance endpoints.
+        valueInference.inferValue(terminal);
+        declarationInference.inferDeclaration(terminal);
+        actual_part actual = new actual_part(
+            choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
         ports.add(new named_association_element(formal, actual));
       } else {
         throw new MissingFeatureException("Interface element of specified type is not supported.");

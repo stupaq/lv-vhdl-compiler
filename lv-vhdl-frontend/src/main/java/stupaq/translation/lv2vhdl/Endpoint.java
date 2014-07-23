@@ -45,7 +45,7 @@ class Endpoint {
   }
 
   public expression value() throws ParseException {
-    VHDL93Parser parser = new VHDL93Parser(new StringReader(this.value.get()));
+    VHDL93Parser parser = new VHDL93Parser(new StringReader(valueString()));
     expression value = parser.expression();
     parser.eof();
     return value;
@@ -75,6 +75,10 @@ class Endpoint {
   public void value(String valueString) {
     semanticCheck(!hasValue(), "Multiple value specifications for terminal.");
     valueInternal(valueString);
+  }
+
+  public String valueString() {
+    return value.get();
   }
 
   public void addConnected(Endpoint other) {

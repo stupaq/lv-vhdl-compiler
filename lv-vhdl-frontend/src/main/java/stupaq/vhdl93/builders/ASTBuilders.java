@@ -23,6 +23,10 @@ public final class ASTBuilders {
     return new NodeToken(VHDL93Parser.tokenString(kind), kind, -1, -1, -1, -1);
   }
 
+  public static NodeToken token(String image) {
+    return new NodeToken(image);
+  }
+
   public static Supplier<NodeToken> tokenSupplier(final int kind) {
     return new Supplier<NodeToken>() {
       @Override

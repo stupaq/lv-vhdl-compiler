@@ -17,11 +17,15 @@ import stupaq.vhdl93.ast.context_clause;
 import stupaq.vhdl93.ast.entity_declarative_part;
 import stupaq.vhdl93.ast.entity_identifier;
 import stupaq.vhdl93.ast.entity_name;
+import stupaq.vhdl93.ast.expression;
+import stupaq.vhdl93.ast.identifier;
+import stupaq.vhdl93.ast.identifier_list;
 import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.ast.instantiation_label;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
+import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;
 
 class VHDL93PartialParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDL93PartialParser.class);
@@ -51,12 +55,14 @@ class VHDL93PartialParser {
   public interface_constant_declaration interface_constant_declaration() throws ParseException {
     interface_constant_declaration r = parser.interface_constant_declaration();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
   public interface_signal_declaration interface_signal_declaration() throws ParseException {
     interface_signal_declaration r = parser.interface_signal_declaration();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
@@ -69,6 +75,7 @@ class VHDL93PartialParser {
   public entity_declarative_part entity_declarative_part() throws ParseException {
     entity_declarative_part r = parser.entity_declarative_part();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
@@ -87,24 +94,28 @@ class VHDL93PartialParser {
   public architecture_declarative_part architecture_declarative_part() throws ParseException {
     architecture_declarative_part r = parser.architecture_declarative_part();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
   public architecture_statement_part architecture_statement_part() throws ParseException {
     architecture_statement_part r = parser.architecture_statement_part();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
   public concurrent_statement concurrent_statement() throws ParseException {
     concurrent_statement r = parser.concurrent_statement();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
   public constant_declaration constant_declaration() throws ParseException {
     constant_declaration r = parser.constant_declaration();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
@@ -117,12 +128,32 @@ class VHDL93PartialParser {
   public interface_declaration interface_declaration() throws ParseException {
     interface_declaration r = parser.interface_declaration();
     parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 
   public instantiation_label instantiation_label() throws ParseException {
     instantiation_label r = parser.instantiation_label();
     parser.eof();
+    return r;
+  }
+
+  public expression expression() throws ParseException {
+    expression r = parser.expression();
+    parser.eof();
+    return r;
+  }
+
+  public identifier identifier() throws ParseException {
+    identifier r = parser.identifier();
+    parser.eof();
+    return r;
+  }
+
+  public identifier_list identifier_list() throws ParseException {
+    identifier_list r = parser.identifier_list();
+    parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
     return r;
   }
 }

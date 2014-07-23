@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.translation.SemanticException;
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
@@ -29,6 +28,7 @@ import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
+import stupaq.translation.SemanticException;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.project.VHDLProject;
@@ -206,14 +206,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
-      semanticCheck(!generic.identifier_list.nodeListOptional.present(),
-          "Multiple identifiers in generic declaration.");
       generics.put(connPaneIndex, generic);
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
-      semanticCheck(!port.identifier_list.nodeListOptional.present(),
-          "Multiple identifiers in port declaration.");
       ports.put(connPaneIndex, port);
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
