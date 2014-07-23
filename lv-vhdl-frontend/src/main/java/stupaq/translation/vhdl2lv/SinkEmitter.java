@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.TranslationConventions;
+import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Generic;

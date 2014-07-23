@@ -16,7 +16,7 @@ import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.expression;
 
-import static stupaq.SemanticException.semanticCheck;
+import static stupaq.translation.SemanticException.semanticCheck;
 
 class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);

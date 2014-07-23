@@ -3,7 +3,7 @@ package stupaq.vhdl93.transformers;
 import stupaq.vhdl93.ast.identifier_list;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-import static stupaq.MissingFeatureException.missingIf;
+import static stupaq.translation.MissingFeatureException.missingIf;
 
 public class FlattenNestedListsVisitor extends DepthFirstVisitor {
   @Override

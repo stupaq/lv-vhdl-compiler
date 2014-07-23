@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.TranslationConventions;
+import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.CompoundArithmetic;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;

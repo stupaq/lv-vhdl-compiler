@@ -7,8 +7,8 @@ import com.google.common.base.Verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import stupaq.MissingFeatureException;
-import stupaq.TranslationConventions;
+import stupaq.translation.MissingFeatureException;
+import stupaq.translation.TranslationConventions;
 import stupaq.translation.concepts.ComponentBindingResolver;
 import stupaq.translation.concepts.ConnectorPaneTerminal;
 import stupaq.translation.concepts.InterfaceDeclaration;
@@ -28,7 +28,7 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
-import static stupaq.SemanticException.semanticNotNull;
+import static stupaq.translation.SemanticException.semanticNotNull;
 import static stupaq.vhdl93.builders.ASTBuilders.sequence;
 
 class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {

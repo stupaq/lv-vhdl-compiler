@@ -15,10 +15,10 @@ import stupaq.labview.hierarchy.Unbundler;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProject;
 
-import static stupaq.TranslationConventions.INPUTS_CONN_INDEX;
-import static stupaq.TranslationConventions.INPUTS_CONTROL;
-import static stupaq.TranslationConventions.OUTPUTS_CONN_INDEX;
-import static stupaq.TranslationConventions.OUTPUTS_CONTROL;
+import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
+import static stupaq.translation.TranslationConventions.INPUTS_CONTROL;
+import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
+import static stupaq.translation.TranslationConventions.OUTPUTS_CONTROL;
 import static stupaq.translation.vhdl2lv.UniversalVI.isClusteredVI;
 
 class UniversalSubVI extends SubVI {

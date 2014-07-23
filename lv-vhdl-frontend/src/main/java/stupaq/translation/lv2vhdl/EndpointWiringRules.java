@@ -19,7 +19,7 @@ import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NoOpVisitor;
 
-import static stupaq.SemanticException.semanticCheck;
+import static stupaq.translation.SemanticException.semanticCheck;
 
 class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointWiringRules.class);

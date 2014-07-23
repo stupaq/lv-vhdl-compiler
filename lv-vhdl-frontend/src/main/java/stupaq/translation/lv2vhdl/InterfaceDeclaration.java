@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.SemanticException;
+import stupaq.translation.SemanticException;
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
@@ -34,9 +34,9 @@ import stupaq.translation.naming.EntityName;
 import stupaq.translation.project.VHDLProject;
 import stupaq.vhdl93.ast.*;
 
-import static stupaq.SemanticException.semanticCheck;
-import static stupaq.TranslationConventions.ENTITY_CONTEXT;
-import static stupaq.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
+import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.TranslationConventions.ENTITY_CONTEXT;
+import static stupaq.translation.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;

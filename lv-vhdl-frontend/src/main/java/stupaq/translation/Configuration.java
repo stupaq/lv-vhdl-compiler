@@ -1,4 +1,4 @@
-package stupaq;
+package stupaq.translation;
 
 public abstract class Configuration extends stupaq.labview.Configuration {
   private static final String PREFIX = "translation.";

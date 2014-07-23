@@ -7,7 +7,7 @@ import com.google.common.base.Verify;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import stupaq.MissingFeatureException;
+import stupaq.translation.MissingFeatureException;
 import stupaq.translation.concepts.ComponentBindingResolver;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
@@ -21,9 +21,9 @@ import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static java.util.regex.Pattern.compile;
-import static stupaq.MissingFeatureException.missingIf;
-import static stupaq.SemanticException.semanticCheck;
-import static stupaq.SemanticException.semanticNotNull;
+import static stupaq.translation.MissingFeatureException.missingIf;
+import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.SemanticException.semanticNotNull;
 import static stupaq.translation.naming.LibraryName.DEFAULT_LIBRARY;
 import static stupaq.translation.naming.LibraryName.LIBRARY_SEPARATOR;
 

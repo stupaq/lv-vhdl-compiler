@@ -5,7 +5,7 @@ import com.google.common.base.Function;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import stupaq.ExceptionPrinter;
+import stupaq.translation.ExceptionPrinter;
 import stupaq.labview.VIPath;
 import stupaq.translation.project.VHDLProject;
 

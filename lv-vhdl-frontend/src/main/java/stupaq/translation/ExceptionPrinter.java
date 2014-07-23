@@ -1,4 +1,4 @@
-package stupaq;
+package stupaq.translation;
 
 import java.io.PrintStream;
 

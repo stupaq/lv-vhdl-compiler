@@ -1,4 +1,4 @@
-package stupaq;
+package stupaq.translation;
 
 import com.google.common.base.Optional;
 

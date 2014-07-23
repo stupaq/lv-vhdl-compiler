@@ -1,6 +1,6 @@
 import java.io.FileInputStream;
 
-import stupaq.ExceptionPrinter;
+import stupaq.translation.ExceptionPrinter;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.transformers.FlattenNestedListsVisitor;

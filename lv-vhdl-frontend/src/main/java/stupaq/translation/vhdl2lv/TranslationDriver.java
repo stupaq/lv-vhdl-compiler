@@ -9,7 +9,7 @@ import java.io.SequenceInputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import stupaq.ExceptionPrinter;
+import stupaq.translation.ExceptionPrinter;
 import stupaq.translation.project.LVProject;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.design_file;

@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import stupaq.Configuration;
-import stupaq.MissingFeatureException;
-import stupaq.SemanticException;
+import stupaq.translation.Configuration;
+import stupaq.translation.MissingFeatureException;
+import stupaq.translation.SemanticException;
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
@@ -47,8 +47,8 @@ import stupaq.translation.project.VHDLProject;
 import stupaq.vhdl93.ast.*;
 
 import static com.google.common.collect.FluentIterable.from;
-import static stupaq.SemanticException.semanticCheck;
-import static stupaq.TranslationConventions.*;
+import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.TranslationConventions.*;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;

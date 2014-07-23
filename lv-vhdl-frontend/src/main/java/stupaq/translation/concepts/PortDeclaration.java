@@ -2,7 +2,7 @@ package stupaq.translation.concepts;
 
 import com.google.common.base.Predicate;
 
-import stupaq.MissingFeatureException;
+import stupaq.translation.MissingFeatureException;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
