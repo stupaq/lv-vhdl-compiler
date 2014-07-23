@@ -31,7 +31,6 @@ begin
 	end process;
 end architecture behavioral;
 
--- UNIT
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -78,7 +77,6 @@ begin
 	end process;
 end architecture behavioral;
 
--- UNIT
 library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.all;
@@ -120,7 +118,6 @@ begin
 	output <= temp(16)(35 downto 16);
 end behavioral;
 
--- UNIT
 library ieee;
 use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
@@ -166,7 +163,6 @@ begin
 	end process;
 end behavioral;
 
--- UNIT
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -248,7 +244,6 @@ begin
 	ovf    <= s_ovf;
 end behavioral;
 
--- UNIT
 library ieee;
 use ieee.std_logic_1164.all;
 
