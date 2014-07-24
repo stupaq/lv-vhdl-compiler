@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.CompoundArithmetic;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
@@ -22,11 +21,12 @@ import stupaq.labview.hierarchy.RingConstant;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
+import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
+import stupaq.translation.semantic.RValueVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
-import stupaq.translation.semantic.RValueVisitor;
 
 import static com.google.common.base.Optional.of;
 
@@ -35,13 +35,11 @@ class SourceEmitter {
   private final Generic owner;
   private final IOSinks danglingSinks;
   private final Set<IOReference> blacklist;
-  private final ExpressionClassifier classifier;
 
   public SourceEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
     blacklist = Sets.newHashSet();
-    classifier = new ExpressionClassifier();
   }
 
   private static CompoundArithmetic branchNode(Generic owner) {
@@ -65,13 +63,13 @@ class SourceEmitter {
   }
 
   public void emitWithSink(expression n, Terminal sink) {
-    List<IOReference> references = classifier.topLevelScopeReferences(n);
+    List<IOReference> references = ExpressionClassifier.topLevelReferences(n);
     if (references.isEmpty()) {
       Terminal source = emitAsConstant(n, Optional.<String>absent());
       source.connectTo(sink, Optional.<String>absent());
     } else if (references.size() == 1) {
       IOReference ref = references.get(0);
-      if (classifier.isIdentifier(n)) {
+      if (ExpressionClassifier.isIdentifier(n)) {
         emitAsIdentifier(ref, sink);
       } else {
         emitAsReference(ref, n, sink);

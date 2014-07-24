@@ -9,16 +9,16 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 
-import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.Formula;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Generic;
 import stupaq.labview.hierarchy.Terminal;
+import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
+import stupaq.translation.semantic.LValueVisitor;
 import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
-import stupaq.translation.semantic.LValueVisitor;
 
 class SinkEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SinkEmitter.class);
@@ -26,14 +26,12 @@ class SinkEmitter {
   private final IOSinks danglingSinks;
   private final IOSources namedSources;
   private final Set<Object> blacklist;
-  private final ExpressionClassifier classifier;
 
   public SinkEmitter(Generic owner, IOSinks danglingSinks, IOSources namedSources) {
     this.owner = owner;
     this.danglingSinks = danglingSinks;
     this.namedSources = namedSources;
     blacklist = Sets.newHashSet();
-    classifier = new ExpressionClassifier();
   }
 
   private Terminal emitAsLValue(SimpleNode n) {
@@ -52,12 +50,12 @@ class SinkEmitter {
   }
 
   public void emitWithSource(Terminal source, expression n) {
-    List<IOReference> references = classifier.topLevelScopeReferences(n);
+    List<IOReference> references = ExpressionClassifier.topLevelReferences(n);
     if (references.isEmpty()) {
       LOGGER.error("Sink expression: {} is a constant", n.representation());
     } else if (references.size() == 1) {
       IOReference ref = references.get(0);
-      if (classifier.isIdentifier(n)) {
+      if (ExpressionClassifier.isIdentifier(n)) {
         emitAsIdentifier(source, ref);
       } else {
         emitAsReference(source, ref, n);

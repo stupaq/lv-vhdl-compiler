@@ -3,14 +3,14 @@ package stupaq.translation.naming;
 import stupaq.vhdl93.ast.subtype_indication;
 
 public class TypeIndication {
-  private final String identifier;
+  private final subtype_indication indication;
 
   public TypeIndication(subtype_indication node) {
-    this.identifier = node.representation();
+    this.indication = node;
   }
 
-  public String indication() {
-    return identifier;
+  public subtype_indication indication() {
+    return indication;
   }
 
   @Override

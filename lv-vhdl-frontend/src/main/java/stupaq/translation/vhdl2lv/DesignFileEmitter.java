@@ -26,6 +26,7 @@ import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.design_unit;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.expression;
+import stupaq.vhdl93.ast.signal_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
@@ -103,6 +104,10 @@ class DesignFileEmitter extends DepthFirstVisitor {
         LOGGER.debug("\t{}", entry);
       }
     }
+    // Collect information about inferrability fo signals declarations.
+    final InferrableDeclarations inferrableDeclarations =
+        new InferrableDeclarations(resolver, arch);
+    n.architecture_statement_part.accept(inferrableDeclarations);
     // Emit entries from architecture declarative part.
     final StringBuilder declarativePartFallbacked = new StringBuilder();
     n.architecture_declarative_part.accept(new DepthFirstVisitor() {
@@ -140,6 +145,18 @@ class DesignFileEmitter extends DepthFirstVisitor {
       public void visit(component_declaration n) {
         declarativePartFallback = false;
         // These will be emitted as a separate files.
+      }
+
+      @Override
+      public void visit(signal_declaration n) {
+        IOReference ref = new IOReference(n.identifier_list.identifier);
+        if (inferrableDeclarations.contains(ref)) {
+          // We skip this declaration.
+          declarativePartFallback = false;
+          LOGGER.info("Excluding declaration of: {}, it is inferrable.", ref);
+        }
+        // Otherwise we follow the fallback path which involves emitting declaration among other
+        // ones from architecture declarative part.
       }
 
       @Override
