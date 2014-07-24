@@ -1,4 +1,4 @@
-@CALL ..\lv-vhdl-frontend\vhdl2lv.bat ^
+@CALL ..\vhdl2lv.bat ^
   vhdl\main.vhd ^
   vhdl2lv
 

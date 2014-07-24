@@ -8,7 +8,8 @@
  *   functionality to actual implementing packages and classes.
  * </p>
  * <ul>
- *   <li></li>
+ *   <li>VHDL to LabVIEW translation classes are located in {@link stupaq.translation.vhdl2lv}</li>
+ *   <li>LabVIEW to VHDL translation classes are located in {@link stupaq.translation.lv2vhdl}</li>
  * </ul>
  */
 package stupaq.translation;
