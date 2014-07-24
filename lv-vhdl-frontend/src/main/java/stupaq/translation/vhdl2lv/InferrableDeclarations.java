@@ -34,7 +34,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static stupaq.translation.SemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
-public class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
+class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(InferrableDeclarations.class);
   private final Set<IOReference> inferrable = Sets.newHashSet();
   private final ComponentBindingResolver resolver;
