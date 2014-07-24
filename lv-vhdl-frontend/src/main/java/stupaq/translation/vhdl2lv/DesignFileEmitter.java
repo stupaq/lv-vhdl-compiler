@@ -5,13 +5,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map.Entry;
 
-import stupaq.translation.TranslationConventions;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Terminal;
+import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.project.LVProject;
+import stupaq.translation.semantic.FlattenNestedListsVisitor;
 import stupaq.translation.vhdl2lv.IOSinks.Sink;
 import stupaq.translation.vhdl2lv.IOSources.Source;
 import stupaq.translation.vhdl2lv.WiringRules.PassLabels;
@@ -26,7 +27,6 @@ import stupaq.vhdl93.ast.design_unit;
 import stupaq.vhdl93.ast.entity_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
-import stupaq.translation.semantic.FlattenNestedListsVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;

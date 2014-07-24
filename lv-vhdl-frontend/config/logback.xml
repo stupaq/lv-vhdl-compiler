@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <logger name="stupaq.labview.parsing.TracingVisitor" level="TRACE"
+    <logger name="stupaq.labview.parsing.TracingVisitor" level="DEBUG"
             additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>

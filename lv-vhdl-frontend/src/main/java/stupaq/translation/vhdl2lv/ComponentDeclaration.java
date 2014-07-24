@@ -5,7 +5,7 @@ import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.Identifier;
 import stupaq.vhdl93.ast.component_declaration;
 
- class ComponentDeclaration extends InterfaceDeclaration {
+class ComponentDeclaration extends InterfaceDeclaration {
   public ComponentDeclaration(ArchitectureName arch, component_declaration node) {
     super(Identifier.component(arch, node), node.component_header);
   }

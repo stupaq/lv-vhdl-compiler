@@ -18,13 +18,13 @@ import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
 abstract class InterfaceDeclaration {
-  protected final InterfaceName name;
-  protected final List<GenericDeclaration> generics = Lists.newArrayList();
-  protected final Map<IOReference, GenericDeclaration> genericsMap = Maps.newHashMap();
-  protected final List<PortDeclaration> ports = Lists.newArrayList();
-  protected final Map<IOReference, PortDeclaration> portsMap = Maps.newHashMap();
-  protected int inputs;
-  protected int outputs;
+  private final InterfaceName name;
+  private final List<GenericDeclaration> generics = Lists.newArrayList();
+  private final Map<IOReference, GenericDeclaration> genericsMap = Maps.newHashMap();
+  private final List<PortDeclaration> ports = Lists.newArrayList();
+  private final Map<IOReference, PortDeclaration> portsMap = Maps.newHashMap();
+  private int inputs;
+  private int outputs;
 
   protected InterfaceDeclaration(InterfaceName name, SimpleNode header) {
     this.name = name;
