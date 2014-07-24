@@ -149,11 +149,14 @@ class DesignFileEmitter extends DepthFirstVisitor {
 
       @Override
       public void visit(signal_declaration n) {
-        IOReference ref = new IOReference(n.identifier_list.identifier);
-        if (inferrableDeclarations.contains(ref)) {
-          // We skip this declaration.
-          declarativePartFallback = false;
-          LOGGER.info("Excluding declaration of: {}, it is inferrable.", ref);
+        if (!n.nodeOptional.present() && !n.nodeOptional1.present()) {
+          // Signals of special kind or with assigned value are not inferrable.
+          IOReference ref = new IOReference(n.identifier_list.identifier);
+          if (inferrableDeclarations.contains(ref)) {
+            // We skip this declaration.
+            declarativePartFallback = false;
+            LOGGER.info("Excluding declaration of: {}, it is inferrable.", ref);
+          }
         }
         // Otherwise we follow the fallback path which involves emitting declaration among other
         // ones from architecture declarative part.
