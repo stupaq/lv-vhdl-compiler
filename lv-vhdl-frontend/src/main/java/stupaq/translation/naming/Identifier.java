@@ -30,6 +30,8 @@ import static stupaq.translation.naming.LibraryName.LIBRARY_SEPARATOR;
 public class Identifier {
   private static final Pattern INSTANTIABLE_NAME_PATTERN = compile(
       "(?:|(?<lib>[^()]+))\\.(?<ent>[^.()]+)\\((?<arch>[^.()]+)\\)(?:|\\.(?<comp>[^.()]+))");
+  private static final Pattern ENTITY_INSTANTIATION_PATTERN =
+      compile("(?:|(?<lib>[^()]+))\\.(?<ent>[^.()]+)(?:|\\((?<arch>[^.()]+)\\))");
   private final String string;
 
   public Identifier(identifier n) {
@@ -80,9 +82,20 @@ public class Identifier {
 
       @Override
       public void visit(entity_name n) {
-        EntityName entity = entity(n);
-        name = resolver.defaultArchitecture(entity);
-        semanticNotNull(name, n, "Missing default architecture for: %s", entity);
+        String string = n.representation();
+        Matcher matcher = ENTITY_INSTANTIATION_PATTERN.matcher(string);
+        semanticCheck(matcher.matches(), "Invalid entity instantiation: %s.", string);
+        String library = matcher.group("lib"), entity = matcher.group("ent"), architecture =
+            matcher.group("arch");
+        missingIf(!DEFAULT_LIBRARY.toString().equals(library),
+            "Non-default libraries: %s are not supported.", library);
+        EntityName entityName = new EntityName(DEFAULT_LIBRARY, new Identifier(entity));
+        if (architecture != null) {
+          name = new ArchitectureName(entityName, new Identifier(architecture));
+        } else {
+          name = resolver.defaultArchitecture(entityName);
+          semanticNotNull(name, n, "Missing default architecture for: %s", entity);
+        }
       }
 
       @Override
@@ -97,7 +110,6 @@ public class Identifier {
     semanticCheck(matcher.matches(), "Invalid instantiable name: %s.", string);
     String library = matcher.group("lib"), entity = matcher.group("ent"), architecture =
         matcher.group("arch"), component = matcher.group("comp");
-    library = library == null ? DEFAULT_LIBRARY.toString() : library;
     missingIf(!DEFAULT_LIBRARY.toString().equals(library),
         "Non-default libraries: %s are not supported.", library);
     EntityName entityName = new EntityName(DEFAULT_LIBRARY, new Identifier(entity));
