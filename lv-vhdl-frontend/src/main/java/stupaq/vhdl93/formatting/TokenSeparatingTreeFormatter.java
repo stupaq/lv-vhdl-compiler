@@ -12,12 +12,11 @@ public class TokenSeparatingTreeFormatter extends UserDefinedTreeFormatter
 
   public TokenSeparatingTreeFormatter(int indentAmt, int wrapWidth) {
     super(indentAmt, wrapWidth);
+    // We default to at least one space between tokens.
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
-        int l = left.kind, r = right.kind;
-        return (!(l == PERIOD || l == LPAREN || l == RPAREN) &&
-            !(r == SEMICOLON || r == PERIOD || r == COMMA || r == LPAREN || r == RPAREN));
+        return true;
       }
     }, new Action() {
       @Override
@@ -25,12 +24,39 @@ public class TokenSeparatingTreeFormatter extends UserDefinedTreeFormatter
         ensureWhiteSpace();
       }
     });
+    // But in some cases remove it.
     preExecutor.put(new TokenPairMatcher() {
       @Override
       public boolean matches(NodeToken left, NodeToken right) {
         int l = left.kind, r = right.kind;
-        return (l == ASSIGN) || (r == ASSIGN) || (l == LE) || (r == LE) || (r == IS) ||
-            (l == PROCESS && r == LPAREN);
+        return (l == PERIOD || l == LPAREN || l == TICK) ||
+            (r == SEMICOLON || r == COMMA || r == PERIOD || r == RPAREN || r == TICK);
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        stripSpaces();
+      }
+    });
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return (l == MAP || l == basic_identifier || l == extended_identifier) && r == LPAREN;
+      }
+    }, new Action() {
+      @Override
+      public void execute() {
+        stripSpaces();
+      }
+    });
+    // And in other enforce.
+    preExecutor.put(new TokenPairMatcher() {
+      @Override
+      public boolean matches(NodeToken left, NodeToken right) {
+        int l = left.kind, r = right.kind;
+        return l == ASSIGN || r == ASSIGN || l == LE || r == LE || r == IS || l == ELSIF ||
+            l == PROCESS;
       }
     }, new Action() {
       @Override

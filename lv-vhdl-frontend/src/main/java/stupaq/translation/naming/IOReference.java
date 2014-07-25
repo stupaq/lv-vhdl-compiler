@@ -1,9 +1,12 @@
 package stupaq.translation.naming;
 
-import stupaq.vhdl93.ast.identifier;
+import com.google.common.base.VerifyException;
 
-import static stupaq.vhdl93.ast.Builders.choice;
-import static stupaq.vhdl93.ast.Builders.token;
+import java.io.StringReader;
+
+import stupaq.vhdl93.ParseException;
+import stupaq.vhdl93.VHDL93Parser;
+import stupaq.vhdl93.ast.identifier;
 
 public class IOReference extends Identifier {
   private IOReference(String name) {
@@ -15,6 +18,11 @@ public class IOReference extends Identifier {
   }
 
   public identifier asIdentifier() {
-    return new identifier(choice(token(toString())));
+    try {
+      return new VHDL93Parser(new StringReader(toString())).identifier();
+    } catch (ParseException e) {
+      // This can not happen.
+      throw new VerifyException("Cannot parse reference as an identifier.");
+    }
   }
 }
