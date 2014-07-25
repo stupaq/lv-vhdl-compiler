@@ -51,7 +51,7 @@ class VIInstance {
         immutableEntry(project.allocate(name.entity(), true),
             new design_file(list(entity.emitAsEntity(name.entity())))),
         immutableEntry(project.allocate(name, true),
-            new design_file(list(architecture.emitAsArchitecture(name, entity)))));
+            new design_file(list(architecture.emitAsArchitecture(name)))));
     for (Entry<Path, design_file> entry : files) {
       Path path = entry.getKey();
       design_file file = entry.getValue();

@@ -96,10 +96,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     return Optional.fromNullable(context);
   }
 
-  public design_unit emitAsArchitecture(ArchitectureName name, InterfaceDeclaration declaration)
-      throws Exception {
-    context_clause context =
-        getContext().or(declaration.getContext()).or(new context_clause(listOptional()));
+  public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
+    context_clause context = getContext().or(new context_clause(listOptional()));
     architecture_identifier identifier =
         parser(name.architecture().toString()).architecture_identifier();
     entity_name entity = parser(name.entity().entity().toString()).entity_name();
