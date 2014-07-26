@@ -86,7 +86,9 @@ class DesignFileEmitter extends DepthFirstVisitor {
     // Emit all locally declared components.
     for (ComponentDeclaration component : resolver.getLocalComponents()) {
       // Create all generics, ports and eventually the VI itself.
-      new UniversalVI(project, component.name(), component, namedSources, danglingSinks);
+      // Note that we create separate dangling sinks and sources, since this will be a whole
+      // different VI.
+      new UniversalVI(project, component.name(), component, new IOSources(), new IOSinks());
     }
     // Emit architecture body.
     ConcurrentStatementsEmitter concurrentStatements =
