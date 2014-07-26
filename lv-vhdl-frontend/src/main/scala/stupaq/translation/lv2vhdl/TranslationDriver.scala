@@ -6,7 +6,7 @@ import stupaq.labview.VIPath
 import stupaq.translation.ExceptionPrinter
 import stupaq.translation.project.VHDLProject
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object TranslationDriver {
 
@@ -14,8 +14,8 @@ object TranslationDriver {
     try {
       if (args.length >= 2) {
         val roots = args.toStream dropRight 1 map (new VIPath(_))
-        val project = new VHDLProject(Paths get args.last, roots)
-        for (path <- project iterator()) {
+        val project = new VHDLProject(Paths get args.last, roots asJava)
+        for (path <- project.iterator.asScala) {
           new VIInstance(project, path) emitAsVHDL()
         }
       } else {

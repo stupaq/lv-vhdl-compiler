@@ -8,7 +8,7 @@ import stupaq.translation.project.LVProject
 import stupaq.vhdl93.VHDL93Parser
 import stupaq.vhdl93.ast.{NodeList, design_file}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object TranslationDriver {
 
@@ -16,7 +16,7 @@ object TranslationDriver {
     try {
       if (args.length >= 2) {
         val units = args.toStream dropRight 1 map (new FileInputStream(_)) flatMap
-                    (new VHDL93Parser(_).design_file().nodeList.nodes.toIterable)
+                    (new VHDL93Parser(_).design_file().nodeList.nodes.asScala)
         val list = new NodeList()
         for (unit <- units) {
           list addNode unit
