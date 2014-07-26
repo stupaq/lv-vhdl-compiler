@@ -1,5 +1,6 @@
 package stupaq.translation.project;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -15,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.ScriptingTools;
@@ -24,8 +24,9 @@ import stupaq.labview.scripting.fake.FakeScriptingTools;
 
 public class VHDLProject implements Iterable<VIPath>, Iterator<VIPath> {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDLProject.class);
-  private static final Pattern IDENTIFIER_SEPARATOR = Pattern.compile("(?:\\.|\\(|\\))");
-  private static final String IDENTIFIER_SEPARATOR_FILE = "__";
+  private static final CharMatcher FILE_FORBIDDEN_CHARS = CharMatcher.anyOf(".(");
+  private static final CharMatcher FILE_REMOVE_CHARS = CharMatcher.anyOf(")");
+  private static final CharSequence FILE_IDENTIFIER_SEPARATOR = "-";
   private final ScriptingTools tools;
   private final Path root;
   private final Set<VIPath> done = Sets.newHashSet();
@@ -58,12 +59,13 @@ public class VHDLProject implements Iterable<VIPath>, Iterator<VIPath> {
   }
 
   public Path resolve(ProjectElementName lvName) {
-    String name = lvName.elementName();
-    if (name.contains("__")) {
+    String original = lvName.elementName();
+    if (original.contains(FILE_IDENTIFIER_SEPARATOR)) {
       LOGGER.warn("Element name contains identifier separator used in file names");
     }
-    return root.resolve(
-        IDENTIFIER_SEPARATOR.matcher(name).replaceAll(IDENTIFIER_SEPARATOR_FILE) + ".vhd");
+    String name = FILE_REMOVE_CHARS.removeFrom(
+        FILE_FORBIDDEN_CHARS.replaceFrom(original, FILE_IDENTIFIER_SEPARATOR));
+    return root.resolve(name + ".vhd");
   }
 
   public ScriptingTools tools() {

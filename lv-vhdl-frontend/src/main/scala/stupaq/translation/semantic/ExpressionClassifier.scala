@@ -10,8 +10,11 @@ import stupaq.vhdl93.ast.{SimpleNode, identifier, subtype_indication}
 import stupaq.vhdl93.visitor.DepthFirstVisitor
 import stupaq.vhdl93.{ParseException, VHDL93Parser}
 
+import scala.annotation.tailrec
+
 object ExpressionClassifier {
 
+  @tailrec
   private def unwrapParentheses(expression: String): String = {
     if ((expression startsWith "(") && (expression endsWith ")")) {
       unwrapParentheses(expression substring(1, expression.length - 1))
