@@ -16,7 +16,7 @@ object vhdl2vhdl {
         val root = parser.design_file()
         root.accept(new TreeDumper(System.out))
         println()
-        println(new String(new Array[Char](40)).replace('\0', '-'))
+        println(new String(new Array[Char](40)).replace('\u0000', '-'))
         root.accept(new FlattenNestedListsVisitor())
         root.accept(new VHDLTreeFormatter())
         root.accept(new TreeDumper(System.out))

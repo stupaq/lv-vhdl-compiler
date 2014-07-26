@@ -14,6 +14,7 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,6 +98,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   }
 
   public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
+    Collections.sort(concurrentStatements.nodes, new NodesFirstTokenComparator());
     context_clause context = getContext().or(new context_clause(listOptional()));
     architecture_identifier identifier =
         parser(name.architecture().toString()).architecture_identifier();
