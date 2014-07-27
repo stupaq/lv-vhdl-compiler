@@ -7,10 +7,10 @@ import com.google.common.cache.LoadingCache;
 import java.util.concurrent.ExecutionException;
 
 import stupaq.labview.VIPath;
-import stupaq.translation.project.VHDLProject;
+import stupaq.translation.project.LVProjectReader;
 
 class InterfaceDeclarationCache {
-  private final VHDLProject project;
+  private final LVProjectReader project;
   private final LoadingCache<VIPath, InterfaceDeclaration> cache = CacheBuilder.newBuilder()
       .concurrencyLevel(1)
       .build(new CacheLoader<VIPath, InterfaceDeclaration>() {
@@ -20,7 +20,7 @@ class InterfaceDeclarationCache {
         }
       });
 
-  public InterfaceDeclarationCache(VHDLProject project) {
+  public InterfaceDeclarationCache(LVProjectReader project) {
     this.project = project;
   }
 

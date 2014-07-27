@@ -31,7 +31,7 @@ import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
-import stupaq.translation.project.VHDLProject;
+import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
 import static stupaq.translation.SemanticException.semanticCheck;
@@ -52,10 +52,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   private final Map<UID, Integer> controlToClusterIndex = Maps.newHashMap();
   private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
   private UID rootPanel;
-  private boolean clustered;
+  private boolean clustered = false;
   private context_clause entityContext;
 
-  public InterfaceDeclaration(VHDLProject project, VIPath viPath) throws Exception {
+  public InterfaceDeclaration(LVProjectReader project, VIPath viPath) throws Exception {
     this(VIParser.parseVI(project.tools(), viPath));
   }
 
@@ -162,7 +162,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   @Override
   public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, List<UID> controlUIDs) {
-    clustered = true;
+    if (!clustered) {
+      clustered = true;
+      LOGGER.debug("Interface is clustered.");
+    }
     int index = 0;
     Optional<Integer> connPaneIndex = connPaneIndex(uid);
     semanticCheck(connPaneIndex.isPresent(), "Control is not connected to the ConnPane.");

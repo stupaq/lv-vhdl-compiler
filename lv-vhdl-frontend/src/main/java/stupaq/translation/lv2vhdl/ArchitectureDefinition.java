@@ -44,7 +44,7 @@ import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
-import stupaq.translation.project.VHDLProject;
+import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
 import static com.google.common.collect.FluentIterable.from;
@@ -62,7 +62,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
   private final DeclarationInferenceRules declarationInference = new DeclarationInferenceRules();
   private final ValueInferenceRules valueInference = new ValueInferenceRules();
-  private final VHDLProject project;
+  private final LVProjectReader project;
   private final InterfaceDeclarationCache interfaceCache;
   private final Set<ComponentName> emittedComponents = Sets.newHashSet();
   private final NodeListOptional architectureDeclarations = new NodeListOptional();
@@ -70,7 +70,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private int nextLabelNum = 0;
   private context_clause context;
 
-  public ArchitectureDefinition(VHDLProject project, VIDump theVi) throws Exception {
+  public ArchitectureDefinition(LVProjectReader project, VIDump theVi) throws Exception {
     this.project = project;
     this.interfaceCache = new InterfaceDeclarationCache(project);
     // Prepare all visitors using common order and run them.
@@ -254,7 +254,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       ArchitectureName name = (ArchitectureName) element;
       // Schedule for processing.
       if (FOLLOW_DEPENDENCIES) {
-        project.add(viPath);
+        project.addDependency(viPath);
       }
       unit = parser(tokenString(ENTITY) + ' ' + name.toString()).instantiated_unit();
     } else {
