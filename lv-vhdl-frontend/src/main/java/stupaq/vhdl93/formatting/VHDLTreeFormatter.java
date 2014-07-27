@@ -2,6 +2,7 @@ package stupaq.vhdl93.formatting;
 
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.case_statement;
+import stupaq.vhdl93.ast.component_declaration;
 import stupaq.vhdl93.ast.component_instantiation_statement;
 import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.design_unit;
@@ -68,6 +69,20 @@ public class VHDLTreeFormatter extends SpecialTokenHandlingFormatter {
   @Override
   public void visit(entity_declarative_part n) {
     processOptionalList(null, n.nodeListOptional, force());
+  }
+
+  @Override
+  public void visit(component_declaration n) {
+    n.nodeToken.accept(this);
+    n.component_identifier.accept(this);
+    n.nodeOptional.accept(this);
+    add(indent());
+    add(force());
+    n.component_header.accept(this);
+    n.nodeToken1.accept(this);
+    n.nodeToken2.accept(this);
+    n.nodeOptional1.accept(this);
+    n.nodeToken3.accept(this);
   }
 
   @Override

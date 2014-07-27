@@ -14,7 +14,7 @@ object TranslationDriver {
     try {
       if (args.length >= 2) {
         val roots = args.toStream dropRight 1 map (new VIPath(_))
-        val project = new VHDLProject(Paths get args.last, roots asJava)
+        val project = new VHDLProject(Paths get args.last, roots.asJava)
         for (path <- project.iterator.asScala) {
           new VIInstance(project, path) emitAsVHDL()
         }
