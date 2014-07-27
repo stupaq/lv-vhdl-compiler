@@ -168,7 +168,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     }
     int index = 0;
     Optional<Integer> connPaneIndex = connPaneIndex(uid);
-    semanticCheck(connPaneIndex.isPresent(), "Control is not connected to the ConnPane.");
+    semanticCheck(connPaneIndex.isPresent(), uid, "Control is not connected to the ConnPane.");
     IntegerMap<String> names = new IntegerMap<>();
     paneIndexToNames.put(connPaneIndex.get(), names);
     controlOwnerToNames.put(uid, names);
@@ -182,10 +182,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
     Verify.verifyNotNull(rootPanel);
-    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
     int connPaneIndex;
     if (clustered) {
-      semanticCheck(!rootPanel.equals(ownerUID),
+      semanticCheck(!rootPanel.equals(ownerUID), uid,
           "VI is clustered, but some control has front panel as an owner.");
       // Fill information about clustered control.
       IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
@@ -198,10 +198,10 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
             "Control description: %s does not contain port or generic index.", description);
       }
     } else {
-      semanticCheck(rootPanel.equals(ownerUID),
+      semanticCheck(rootPanel.equals(ownerUID), uid,
           "VI is not clustered, but some control has owner other than front panel.");
       Optional<Integer> index = connPaneIndex(uid);
-      semanticCheck(index.isPresent(), "Control is not connected to the ConnPane.");
+      semanticCheck(index.isPresent(), uid, "Control is not connected to the ConnPane.");
       connPaneIndex = index.get();
     }
     String declaration = label.get().trim();

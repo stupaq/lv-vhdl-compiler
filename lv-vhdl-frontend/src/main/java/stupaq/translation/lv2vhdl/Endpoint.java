@@ -73,7 +73,7 @@ class Endpoint {
   }
 
   public void value(String valueString) {
-    semanticCheck(!hasValue(), "Multiple value specifications for terminal.");
+    semanticCheck(!hasValue(), uid, "Multiple value specifications for terminal.");
     valueInternal(valueString);
   }
 
@@ -95,7 +95,7 @@ class Endpoint {
   }
 
   public Endpoint onlyConnected() {
-    semanticCheck(connected.size() == 1,
+    semanticCheck(connected.size() == 1, uid,
         "Terminal is expected to be connected with only one other terminal.");
     return connected.iterator().next();
   }

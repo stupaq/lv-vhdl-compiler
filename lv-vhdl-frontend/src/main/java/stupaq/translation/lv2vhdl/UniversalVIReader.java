@@ -66,7 +66,7 @@ class UniversalVIReader extends NoOpVisitor<NeverThrownException> {
     for (Endpoint other : terminal.connected()) {
       Multiplexer multiplexer = multiplexers.get(other);
       if (multiplexer != null) {
-        semanticCheck(multiplexer.size() == controlUIDs.size(),
+        semanticCheck(multiplexer.size() == controlUIDs.size(), uid,
             "Different size of (un)bundler and clustered control.");
         for (int i = 0, n = controlUIDs.size(); i < n; ++i) {
           UID control = controlUIDs.get(i);

@@ -15,8 +15,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.UID;
+import stupaq.labview.parsing.NeverThrownException;
 import stupaq.labview.parsing.NoOpVisitor;
 
 import static stupaq.translation.SemanticException.semanticCheck;
@@ -72,8 +72,8 @@ class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
   }
 
   @Override
-  public void Tunnel(UID ownerUID, List<UID> insideTermUIDs, UID outsideTermUID) {
-    semanticCheck(insideTermUIDs.size() == 1, "Tunnel has multiple internal frames.");
+  public void Tunnel(UID ownerUID, UID uid, List<UID> insideTermUIDs, UID outsideTermUID) {
+    semanticCheck(insideTermUIDs.size() == 1, uid, "Tunnel has multiple internal frames.");
     Endpoint inside = terminals.get(insideTermUIDs.get(0));
     Endpoint outside = terminals.get(outsideTermUID);
     LOGGER.debug("Tunnel with endpoints: inside: {} outside: {}", inside, outside);

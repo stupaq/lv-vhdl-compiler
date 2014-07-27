@@ -135,7 +135,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       concurrentStatements.nodes.addAll(extra.nodes);
     } else if (label.equals(PROCESS_STATEMENT)) {
       concurrent_statement process = parser.concurrent_statement();
-      semanticCheck(process.nodeChoice.choice instanceof process_statement,
+      semanticCheck(process.nodeChoice.choice instanceof process_statement, uid,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
       for (UID term : termUIDs) {
@@ -152,14 +152,14 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         Endpoint terminal = terminals.get(term);
         String param = terminal.name();
         if (param.equals(LVALUE_PARAMETER)) {
-          semanticCheck(!terminal.isSource(), "L-value must be data sink.");
+          semanticCheck(!terminal.isSource(), uid, "L-value must be data sink.");
           lvalue = true;
           // This way we set the value in actual destination.
           for (Endpoint connected : terminal.connected()) {
             connected.valueOverride(expression);
           }
         } else if (param.equals(RVALUE_PARAMETER)) {
-          semanticCheck(terminal.isSource(), "R-value must be data source.");
+          semanticCheck(terminal.isSource(), uid, "R-value must be data source.");
           rvalue = true;
           // This way we set the value in actual destination.
           for (Endpoint connected : terminal.connected()) {
@@ -172,7 +172,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
           }
         }
       }
-      semanticCheck(!lvalue || !rvalue, "Expression cannot be both l- and r-value.");
+      semanticCheck(!lvalue || !rvalue, uid, "Expression cannot be both l- and r-value.");
       if (!lvalue && !rvalue) {
         // It must be a concurrent statement then...
         concurrentStatements.nodes.add(parser.concurrent_statement());
@@ -183,7 +183,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
-    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
     identifier signal;
@@ -221,7 +221,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       constant_declaration constant = parser.constant_declaration();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       identifier_list identifiers = constant.identifier_list;
-      semanticCheck(!identifiers.nodeListOptional.present(),
+      semanticCheck(!identifiers.nodeListOptional.present(), uid,
           "Multiple identifiers in constant declaration.");
       valueString = identifiers.representation();
     } else {
@@ -301,14 +301,14 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         // Assigning "open" makes no sense.
         if (terminal.hasValue()) {
           interface_constant_declaration generic = (interface_constant_declaration) node;
-          semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
+          semanticCheck(generic.nodeOptional.present(), uid, "Missing signal/constant specifier.");
           formal_part formal = new formal_part(generic.identifier_list.identifier);
           actual_part actual = new actual_part(choice(terminal.value()));
           generics.add(new named_association_element(formal, actual));
         }
       } else if (node instanceof interface_signal_declaration) {
         interface_signal_declaration port = (interface_signal_declaration) node;
-        semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
+        semanticCheck(port.nodeOptional.present(), uid, "Missing signal/constant specifier.");
         formal_part formal = new formal_part(port.identifier_list.identifier);
         // Apply signal inference rules to instance endpoints.
         valueInference.inferValue(terminal);

@@ -13,7 +13,7 @@ import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProjectReader;
 import stupaq.translation.project.VHDLProjectWriter;
 
-class TranslationContext {
+public class TranslationContext {
   private static final Logger LOGGER = LoggerFactory.getLogger(TranslationContext.class);
   private final LVProjectReader projectFrom;
   private final VHDLProjectWriter projectTo;

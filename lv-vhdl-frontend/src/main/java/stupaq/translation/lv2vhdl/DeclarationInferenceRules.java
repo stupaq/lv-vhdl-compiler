@@ -82,7 +82,7 @@ class DeclarationInferenceRules extends NoOpVisitor<Exception> {
   @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
-    semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
     if (style == ControlStyle.NUMERIC_I32) {
