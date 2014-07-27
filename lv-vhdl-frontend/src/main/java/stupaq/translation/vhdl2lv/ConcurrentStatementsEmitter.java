@@ -131,6 +131,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         IOReference ref = new IOReference(n.formal_part.identifier);
         ConnectorPaneTerminal terminal =
             isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
+        semanticNotNull(terminal, n, "Missing terminal for name: {}.", ref);
         portIsSink = terminal.isInput();
         portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
@@ -143,6 +144,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
         LOGGER.debug("Port assignment: {}", n.representation());
         ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
             : entity.resolvePort(elementIndex);
+        semanticNotNull(terminal, n, "Missing terminal for index: {}.", elementIndex);
         portIsSink = terminal.isInput();
         portTerminal = subVI.terminal(terminal.connectorIndex());
         n.actual_part.accept(this);
