@@ -151,16 +151,17 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       for (UID term : termUIDs) {
         Endpoint terminal = terminals.get(term);
         String param = terminal.name();
-        lvalue |= param.equals(LVALUE_PARAMETER);
-        rvalue |= param.equals(RVALUE_PARAMETER);
-        if (lvalue) {
+        if (param.equals(LVALUE_PARAMETER)) {
           semanticCheck(!terminal.isSource(), "L-value must be data sink.");
-        } else if (rvalue) {
-          semanticCheck(terminal.isSource(), "R-value must be data source.");
-        }
-        if (lvalue || rvalue) {
+          lvalue = true;
           // This way we set the value in actual destination.
-          // The terminal is just a reference to all receivers of the value in the formula.
+          for (Endpoint connected : terminal.connected()) {
+            connected.valueOverride(expression);
+          }
+        } else if (param.equals(RVALUE_PARAMETER)) {
+          semanticCheck(terminal.isSource(), "R-value must be data source.");
+          rvalue = true;
+          // This way we set the value in actual destination.
           for (Endpoint connected : terminal.connected()) {
             connected.valueOverride(expression);
           }
