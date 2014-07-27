@@ -3,6 +3,7 @@ package stupaq.translation.project;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.EntityName;
@@ -29,6 +31,7 @@ public class VHDLProjectWriter {
   private static final String FILE_EXTENSION = ".vhd";
   private final Path root;
   private final Map<EntityName, File> entities = Maps.newHashMap();
+  private final Set<ArchitectureName> architectures = Sets.newHashSet();
 
   public VHDLProjectWriter(Path root) {
     this.root = root;
@@ -64,6 +67,11 @@ public class VHDLProjectWriter {
   }
 
   public void writeArchitecture(ArchitectureName name, design_unit unit) throws IOException {
+    if (architectures.contains(name)) {
+      LOGGER.warn("Multiple entity: {} declarations, skipping all but first one.", name);
+      return;
+    }
+    architectures.add(name);
     File file = entities.get(name.entity());
     Preconditions.checkState(file != null, "Missing file for entity: {}.", name.entity());
     writeVHDL(file, unit, true);
