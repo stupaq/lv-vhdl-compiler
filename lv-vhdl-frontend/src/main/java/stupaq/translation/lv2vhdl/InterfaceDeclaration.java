@@ -209,10 +209,14 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
+      // Make the output less verbose.
+      generic.nodeOptional = optional();
+      generic.nodeOptional1 = optional();
       generics.put(connPaneIndex, generic);
     } else if (style == ControlStyle.NUMERIC_DBL) {
       // This is a port.
       interface_signal_declaration port = labelParser.interface_signal_declaration();
+      port.nodeOptional = optional();
       ports.put(connPaneIndex, port);
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
