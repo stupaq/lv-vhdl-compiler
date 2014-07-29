@@ -218,6 +218,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     if (label.isPresent()) {
       VHDL93PartialParser parser =
           parser(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
+      // FIXME depending on the length of the string we might want to emit a FormulaNode
       constant_declaration constant = parser.constant_declaration();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       identifier_list identifiers = constant.identifier_list;

@@ -42,7 +42,10 @@ class DeclarationInferenceRules extends NoOpVisitor<Exception> {
   private final List<block_declarative_item> inferred = Lists.newArrayList();
 
   public void inferDeclaration(Endpoint terminal) {
-    // Infer declaration if necessary.
+    // Infer declaration if necessary and possible.
+    if (!terminal.hasValue()) {
+      return;
+    }
     String valueString = terminal.valueString();
     IOReference ref;
     try {

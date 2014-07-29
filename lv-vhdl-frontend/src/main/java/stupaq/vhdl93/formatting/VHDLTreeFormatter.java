@@ -4,6 +4,7 @@ import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.case_statement;
 import stupaq.vhdl93.ast.component_declaration;
 import stupaq.vhdl93.ast.component_instantiation_statement;
+import stupaq.vhdl93.ast.conditional_signal_assignment;
 import stupaq.vhdl93.ast.design_file;
 import stupaq.vhdl93.ast.design_unit;
 import stupaq.vhdl93.ast.entity_declaration;
@@ -122,6 +123,17 @@ public class VHDLTreeFormatter extends SpecialTokenHandlingFormatter {
     n.nodeToken3.accept(this);
     n.nodeOptional1.accept(this);
     n.nodeToken4.accept(this);
+  }
+
+  @Override
+  public void visit(conditional_signal_assignment n) {
+    n.target.accept(this);
+    n.nodeToken.accept(this);
+    n.options_.accept(this);
+    add(indent());
+    n.conditional_waveforms.accept(this);
+    add(outdent());
+    n.nodeToken1.accept(this);
   }
 
   @Override
