@@ -29,9 +29,9 @@ public final class Builders {
     };
   }
 
-  public static NodeSequence sequence(SimpleNode... args) {
+  public static NodeSequence sequence(Node... args) {
     NodeSequence node = new NodeSequence(args.length);
-    for (SimpleNode n : args) {
+    for (Node n : args) {
       node.addNode(n);
     }
     return node;
@@ -41,40 +41,40 @@ public final class Builders {
     return new NodeOptional();
   }
 
-  public static NodeOptional optional(SimpleNode node) {
+  public static NodeOptional optional(Node node) {
     return new NodeOptional(node);
   }
 
-  public static NodeChoice choice(SimpleNode node) {
+  public static NodeChoice choice(Node node) {
     return new NodeChoice(node);
   }
 
-  public static <T extends SimpleNode> NodeListOptional listOptional(Iterable<T> args) {
+  public static <T extends Node> NodeListOptional listOptional(Iterable<T> args) {
     NodeListOptional node = new NodeListOptional();
-    for (SimpleNode n : args) {
+    for (Node n : args) {
       node.addNode(n);
     }
     return node;
   }
 
-  public static NodeListOptional listOptional(SimpleNode... args) {
+  public static NodeListOptional listOptional(Node... args) {
     return listOptional(Arrays.asList(args));
   }
 
-  public static NodeList list(SimpleNode... args) {
+  public static NodeList list(Node... args) {
     return list(Arrays.asList(args));
   }
 
-  private static <T extends SimpleNode> NodeList list(Iterable<T> args) {
+  private static <T extends Node> NodeList list(Iterable<T> args) {
     NodeList node = new NodeList();
-    for (SimpleNode n : args) {
+    for (Node n : args) {
       node.addNode(n);
     }
     return node;
   }
 
-  public static <T extends SimpleNode> T split(Iterable<T> elements,
-      Supplier<? extends SimpleNode> separator, NodeListOptional rest) {
+  public static <T extends Node> T split(Iterable<T> elements, Supplier<? extends Node> separator,
+      NodeListOptional rest) {
     Preconditions.checkArgument(!Iterables.isEmpty(elements));
     T first = Iterables.get(elements, 0);
     for (T elem : Iterables.skip(elements, 1)) {

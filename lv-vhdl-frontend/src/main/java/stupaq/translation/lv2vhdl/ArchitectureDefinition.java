@@ -60,6 +60,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
   private final EndpointsMap terminals = new EndpointsMap();
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
+  private final FormulaClassifier formulas = new FormulaClassifier(terminals);
   private final DeclarationInferenceRules declarationInference = new DeclarationInferenceRules();
   private final ValueInferenceRules valueInference = new ValueInferenceRules();
   private final LVProjectReader project;
@@ -85,6 +86,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
     architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
+    DeclarationsSorter.sort(architectureDeclarations);
   }
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
@@ -221,10 +223,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
       // FIXME depending on the length of the string we might want to emit a FormulaNode
       constant_declaration constant = parser.constant_declaration();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
-      identifier_list identifiers = constant.identifier_list;
-      semanticCheck(!identifiers.nodeListOptional.present(), uid,
-          "Multiple identifiers in constant declaration.");
-      valueString = identifiers.representation();
+      valueString = constant.identifier_list.identifier.representation();
     } else {
       valueString = constantString;
     }

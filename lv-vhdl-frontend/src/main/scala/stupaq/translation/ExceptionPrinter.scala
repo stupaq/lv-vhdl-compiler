@@ -13,8 +13,6 @@ object ExceptionPrinter {
         stream println ex.getMessage
       case _: MissingFeatureException =>
         stream println ex.getMessage
-      case _: ParseException =>
-        stream println ex.getMessage
       case _ =>
         ex printStackTrace stream
     }

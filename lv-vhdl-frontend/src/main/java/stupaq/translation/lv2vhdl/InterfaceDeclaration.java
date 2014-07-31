@@ -66,6 +66,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(TracingVisitor.create());
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
+    DeclarationsSorter.sort(entityDeclarations);
   }
 
   public boolean isClustered() {

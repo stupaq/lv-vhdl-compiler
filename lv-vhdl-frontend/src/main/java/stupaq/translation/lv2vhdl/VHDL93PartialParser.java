@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.StringReader;
 
+import stupaq.translation.semantic.FlattenNestedListsVisitor;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.ast.architecture_declarative_part;
@@ -25,7 +26,6 @@ import stupaq.vhdl93.ast.instantiation_label;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
-import stupaq.translation.semantic.FlattenNestedListsVisitor;
 
 class VHDL93PartialParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDL93PartialParser.class);
