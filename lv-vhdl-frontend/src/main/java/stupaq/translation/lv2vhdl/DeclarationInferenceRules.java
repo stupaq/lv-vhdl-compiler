@@ -39,10 +39,6 @@ class DeclarationInferenceRules extends FormulaClassifier<Exception> {
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();
 
-  public DeclarationInferenceRules(EndpointsMap terminals) {
-    super(terminals);
-  }
-
   public void inferDeclaration(Endpoint terminal) {
     // Infer declaration if necessary and possible.
     if (!terminal.hasValue()) {
@@ -91,7 +87,8 @@ class DeclarationInferenceRules extends FormulaClassifier<Exception> {
   @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
-    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid,
+        "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
     if (style == ControlStyle.NUMERIC_I32) {

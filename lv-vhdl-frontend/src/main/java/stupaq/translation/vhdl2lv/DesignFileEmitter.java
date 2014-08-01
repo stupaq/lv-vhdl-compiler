@@ -1,5 +1,7 @@
 package stupaq.translation.vhdl2lv;
 
+import com.google.common.base.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,8 +195,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     }
     // Emit statement part leftovers.
     for (StringBuilder text : concurrentStatements.fallbackText().asSet()) {
-      new FormulaNode(currentVi, text.toString(),
-          TranslationConventions.ARCHITECTURE_EXTRA_STATEMENTS);
+      new FormulaNode(currentVi, text.toString(), Optional.<String>absent());
     }
     // All references and labels are resolved now.
     new WiringRules(currentVi, namedSources, danglingSinks, new PassLabels(),

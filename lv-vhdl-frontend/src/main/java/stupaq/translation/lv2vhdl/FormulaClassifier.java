@@ -4,10 +4,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Sets;
 
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NoOpVisitor;
@@ -20,7 +22,12 @@ import static stupaq.translation.TranslationConventions.*;
 
 abstract class FormulaClassifier<E extends Exception> extends NoOpVisitor<E> {
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(FormulaClassifier.class);
+  private final Set<UID> whileLoops = Sets.newHashSet();
   private final EndpointsMap terminals;
+
+  public FormulaClassifier() {
+    terminals = null;
+  }
 
   public FormulaClassifier(EndpointsMap terminals) {
     this.terminals = terminals;
@@ -32,14 +39,13 @@ abstract class FormulaClassifier<E extends Exception> extends NoOpVisitor<E> {
   }
 
   @Override
+  public void WhileLoop(UID owner, UID uid) {
+    whileLoops.add(uid);
+  }
+
+  @Override
   public final void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
       List<UID> termUIDs) throws E {
-    FluentIterable<Endpoint> parameters = from(termUIDs).transform(new Function<UID, Endpoint>() {
-      @Override
-      public Endpoint apply(UID uid) {
-        return terminals.get(uid);
-      }
-    });
     if (label.equals(ENTITY_CONTEXT)) {
       entityContext(uid, expression);
     } else if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
@@ -48,11 +54,21 @@ abstract class FormulaClassifier<E extends Exception> extends NoOpVisitor<E> {
       architectureContext(uid, expression);
     } else if (label.equals(ARCHITECTURE_EXTRA_DECLARATIONS)) {
       architectureDeclarations(uid, expression);
-    } else if (label.equals(ARCHITECTURE_EXTRA_STATEMENTS)) {
-      concurrentStatements(uid, expression, parameters);
-    } else if (label.equals(PROCESS_STATEMENT)) {
-      processStatement(uid, expression, parameters);
     } else {
+      if (terminals == null) {
+        LOGGER.warn("Cannot classify node: {}, missing endpoints map.", uid);
+        return;
+      }
+      FluentIterable<Endpoint> parameters = from(termUIDs).transform(new Function<UID, Endpoint>() {
+        @Override
+        public Endpoint apply(UID uid) {
+          return terminals.get(uid);
+        }
+      });
+      if (whileLoops.contains(ownerUID)) {
+        processStatement(uid, expression, parameters);
+        return;
+      }
       Endpoint lvalue = null, rvalue = null;
       for (Endpoint param : parameters) {
         if (param.name().equals(LVALUE_PARAMETER)) {
@@ -72,6 +88,7 @@ abstract class FormulaClassifier<E extends Exception> extends NoOpVisitor<E> {
       } else {
         concurrentStatements(uid, expression, parameters);
       }
+
     }
   }
 

@@ -31,6 +31,7 @@ import stupaq.labview.hierarchy.SubVI;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Unbundler;
+import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.MultiplexerVisitor;
 import stupaq.labview.parsing.NoOpVisitor;
@@ -63,8 +64,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final int STATEMENTS_SORTING_LOOKUP = 6;
   private final EndpointsMap terminals = new EndpointsMap();
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
-  private final DeclarationInferenceRules declarationInference =
-      new DeclarationInferenceRules(terminals);
+  private final DeclarationInferenceRules declarationInference = new DeclarationInferenceRules();
   private final ValueInferenceRules valueInference = new ValueInferenceRules();
   private final LVProjectReader project;
   private final InterfaceDeclarationCache interfaceCache;
@@ -80,8 +80,9 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     // Prepare all visitors using common order and run them.
     MultiplexerVisitor multiplexer =
         new MultiplexerVisitor(Terminal.XML_NAME, Wire.XML_NAME, Tunnel.XML_NAME,
-            FormulaNode.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME,
-            Control.NUMERIC_XML_NAME, RingConstant.XML_NAME, SubVI.XML_NAME);
+            WhileLoop.XML_NAME, FormulaNode.XML_NAME, Bundler.XML_NAME, Unbundler.XML_NAME,
+            ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME, RingConstant.XML_NAME,
+            SubVI.XML_NAME);
     multiplexer.addVisitor(TracingVisitor.create());
     multiplexer.addVisitor(new EndpointWiringRules(terminals));
     multiplexer.addVisitor(universalVI);

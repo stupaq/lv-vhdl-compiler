@@ -22,7 +22,7 @@ begin
         temp(i + 1) (0) <= '0';
     end generate layer_for;
     output <= temp(16) (35 downto 16);
-    temp(0) (36 downto 16) <= (others => '0');
     temp(0) (15 downto 0) <= input;
+    temp(0) (36 downto 16) <= (others => '0');
 end;
 

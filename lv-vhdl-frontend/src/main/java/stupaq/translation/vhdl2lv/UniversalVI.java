@@ -18,9 +18,9 @@ import stupaq.translation.project.LVProject;
 
 import static com.google.common.base.Optional.of;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
-import static stupaq.translation.TranslationConventions.INPUTS_CONTROL;
+import static stupaq.translation.vhdl2lv.TranslationConventions.INPUTS_CONTROL;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
-import static stupaq.translation.TranslationConventions.OUTPUTS_CONTROL;
+import static stupaq.translation.vhdl2lv.TranslationConventions.OUTPUTS_CONTROL;
 import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;

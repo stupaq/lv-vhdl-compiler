@@ -14,7 +14,6 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.VI;
 import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.translation.MissingFeatureException;
-import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
@@ -195,8 +194,8 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     applyFallback = false;
     Loop loop = new WhileLoop(theVi, Optional.<String>absent());
     // Emit process body AND declarations.
-    Formula formula = new FormulaNode(loop.diagram(), n.representation(),
-        TranslationConventions.PROCESS_STATEMENT);
+    Formula formula =
+        new FormulaNode(loop.diagram(), n.representation(), Optional.<String>absent());
     // Connect wires, emit latches.
     new ProcessSignalsEmitter(loop, formula, danglingSinks, namedSources, wiresBlacklist).visit(n);
     formula.cleanupFormula();
