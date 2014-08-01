@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity many_ports_outer is
-    port (signal ctrl : in std_logic_vector(1 downto 0);
-        signal in0 : in std_logic;
-        signal out0 : out std_logic);
+    port (ctrl : in std_logic_vector(1 downto 0);
+        in0 : in std_logic;
+        out0 : out std_logic);
 end;
 
 architecture behavioral of many_ports_outer is

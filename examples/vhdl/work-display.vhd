@@ -3,11 +3,11 @@ use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.ALL;
 
 entity display is
-    port (signal input : in std_logic_vector(15 downto 0);
-        signal clk : in std_logic;
-        signal active : in std_logic;
-        signal seg : out std_logic_vector(7 downto 0);
-        signal an : out std_logic_vector(3 downto 0));
+    port (input : in std_logic_vector(15 downto 0);
+        clk : in std_logic;
+        active : in std_logic;
+        seg : out std_logic_vector(7 downto 0);
+        an : out std_logic_vector(3 downto 0));
 end;
 
 architecture behavioral of display is

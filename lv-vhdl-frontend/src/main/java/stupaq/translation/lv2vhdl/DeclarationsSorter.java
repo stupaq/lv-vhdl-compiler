@@ -118,9 +118,11 @@ final class DeclarationsSorter {
   private static final class DeclarationComparator implements Comparator<Node> {
     private final DeclarationLHSExtractor lhsExtractor = new DeclarationLHSExtractor();
     private final TopologicalComparator<IOReference> comparator;
+    private final Comparator<Node> fallback;
 
     public DeclarationComparator(TopologicalComparator<IOReference> comparator) {
       this.comparator = comparator;
+      fallback = new NodesFirstTokenComparator();
     }
 
     @Override
@@ -131,7 +133,11 @@ final class DeclarationsSorter {
       } else if (ref2 == null) {
         return -1;
       } else {
-        return comparator.compare(ref1, ref2);
+        int cmp = comparator.compare(ref1, ref2);
+        if (cmp == 0) {
+          cmp = fallback.compare(o1, o2);
+        }
+        return cmp;
       }
     }
   }

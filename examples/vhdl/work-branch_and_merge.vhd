@@ -10,12 +10,12 @@ architecture behavioral of branch_and_merge is
     signal ccc : std_logic_vector(7 downto 0);
     signal ddd : std_logic_vector(7 downto 0);
     component sink is
-        generic (constant n : in integer := 4);
-        port (signal input : in std_logic_vector(n downto 0));
+        generic (n : integer := 4);
+        port (input : in std_logic_vector(n downto 0));
     end component;
     component source is
-        generic (constant n : in integer := 4);
-        port (signal output : out std_logic_vector(n downto 0));
+        generic (n : integer := 4);
+        port (output : out std_logic_vector(n downto 0));
     end component;
 begin
     dst0 : component sink

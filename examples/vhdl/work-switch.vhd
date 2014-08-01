@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity switch is
-    generic (constant init : std_logic);
-    port (signal toggle : in std_logic;
-        signal output : out std_logic := init);
+    generic (init : std_logic);
+    port (toggle : in std_logic;
+        output : out std_logic := init);
 end;
 
 architecture behavioral of switch is

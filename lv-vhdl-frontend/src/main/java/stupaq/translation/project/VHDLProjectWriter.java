@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +34,8 @@ public class VHDLProjectWriter {
   private final Map<EntityName, File> entities = Maps.newHashMap();
   private final Set<ArchitectureName> architectures = Sets.newHashSet();
 
-  public VHDLProjectWriter(Path root) {
+  public VHDLProjectWriter(Path root) throws IOException {
+    Files.createDirectories(root);
     this.root = root;
   }
 

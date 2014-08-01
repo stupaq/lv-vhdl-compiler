@@ -3,11 +3,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity divider is
-    generic (constant n : natural := 25;
-        constant top : natural := 24999999);
-    port (signal clk_in : in std_logic;
-        signal reset : in std_logic;
-        signal clk_out : out std_logic);
+    generic (n : natural := 25;
+        top : natural := 24999999);
+    port (clk_in : in std_logic;
+        reset : in std_logic;
+        clk_out : out std_logic);
 end;
 
 architecture behavioral of divider is

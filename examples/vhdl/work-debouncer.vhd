@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity debouncer is
-    port (signal input : in std_logic;
-        signal clk : in std_logic;
-        signal output : out std_logic := '0');
+    port (input : in std_logic;
+        clk : in std_logic;
+        output : out std_logic := '0');
 end;
 
 architecture counter of debouncer is

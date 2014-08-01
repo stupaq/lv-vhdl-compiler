@@ -2,12 +2,12 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity process_outer is
-    port (signal clk : in std_logic;
-        signal in1 : in std_logic;
-        signal in2 : in std_logic;
-        signal out1 : out std_logic;
-        signal out2 : out std_logic;
-        signal out3 : out std_logic);
+    port (clk : in std_logic;
+        in1 : in std_logic;
+        in2 : in std_logic;
+        out1 : out std_logic;
+        out2 : out std_logic;
+        out3 : out std_logic);
 end;
 
 architecture behavioral of process_outer is

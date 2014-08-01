@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Set;
 
 import stupaq.labview.UID;
-import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
 import stupaq.translation.naming.IOReference;
@@ -29,17 +28,19 @@ import stupaq.vhdl93.ast.subtype_indication;
 import stupaq.vhdl93.ast.variable_declaration;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.TranslationConventions.ARCHITECTURE_EXTRA_DECLARATIONS;
-import static stupaq.translation.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
 
-class DeclarationInferenceRules extends NoOpVisitor<Exception> {
+class DeclarationInferenceRules extends FormulaClassifier<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeclarationInferenceRules.class);
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();
+
+  public DeclarationInferenceRules(EndpointsMap terminals) {
+    super(terminals);
+  }
 
   public void inferDeclaration(Endpoint terminal) {
     // Infer declaration if necessary and possible.
@@ -55,7 +56,7 @@ class DeclarationInferenceRules extends NoOpVisitor<Exception> {
       return;
     }
     if (!declared.contains(ref)) {
-      subtype_indication type = null;
+      subtype_indication type;
       try {
         type = parser(terminal.name()).interface_signal_declaration().subtype_indication;
       } catch (ParseException e) {
@@ -102,18 +103,20 @@ class DeclarationInferenceRules extends NoOpVisitor<Exception> {
   }
 
   @Override
-  public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
-      List<UID> termUIDs) throws ParseException {
+  protected void entityDeclarations(UID uid, String expression) throws Exception {
     VHDL93PartialParser parser = parser(expression);
-    NodeListOptional declarations;
-    if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
-      declarations = parser.entity_declarative_part().nodeListOptional;
-    } else if (label.equals(ARCHITECTURE_EXTRA_DECLARATIONS)) {
-      declarations = parser.architecture_declarative_part().nodeListOptional;
-    } else {
-      // We're not interested in anything else.
-      return;
-    }
+    NodeListOptional declarations = parser.entity_declarative_part().nodeListOptional;
+    addDeclarations(declarations);
+  }
+
+  @Override
+  protected void architectureDeclarations(UID uid, String expression) throws Exception {
+    VHDL93PartialParser parser = parser(expression);
+    NodeListOptional declarations = parser.architecture_declarative_part().nodeListOptional;
+    addDeclarations(declarations);
+  }
+
+  private void addDeclarations(NodeListOptional declarations) {
     for (Node node : declarations.nodes) {
       Node declaration = ((block_declarative_item) node).nodeChoice.choice;
       if (declaration instanceof signal_declaration) {

@@ -3,8 +3,8 @@ use ieee.std_logic_1164.ALL;
 use ieee.numeric_std.all;
 
 entity bin2dec is
-    port (signal input : in std_logic_vector(15 downto 0);
-        signal output : out std_logic_vector(19 downto 0));
+    port (input : in std_logic_vector(15 downto 0);
+        output : out std_logic_vector(19 downto 0));
 end;
 
 architecture behavioral of bin2dec is
@@ -22,7 +22,7 @@ begin
         temp(i + 1) (0) <= '0';
     end generate layer_for;
     output <= temp(16) (35 downto 16);
-    temp(0) (36 downto 16) <= (others => '0');
     temp(0) (15 downto 0) <= input;
+    temp(0) (36 downto 16) <= (others => '0');
 end;
 

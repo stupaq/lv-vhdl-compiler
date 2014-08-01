@@ -1,7 +1,8 @@
 @CALL ..\vhdl2lv.bat ^
-  vhdl\branch_and_merge.vhd ^
-  vhdl\many_ports.vhd ^
-  vhdl\process_outer.vhd ^
+  vhdl\work-branch_and_merge.vhd ^
+  vhdl\work-many_ports.vhd ^
+  vhdl\work-many_ports_outer.vhd ^
+  vhdl\work-process_outer.vhd ^
   vhdl2lv
 
 @PAUSE

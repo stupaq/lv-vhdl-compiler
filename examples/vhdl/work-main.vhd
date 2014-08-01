@@ -2,12 +2,12 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity main is
-    port (signal mclk : in std_logic;
-        signal btn : in std_logic_vector(3 downto 0);
-        signal sw : in std_logic_vector(7 downto 0);
-        signal led : out std_logic_vector(7 downto 0) := (others => '0');
-        signal seg : out std_logic_vector(7 downto 0);
-        signal an : out std_logic_vector(3 downto 0));
+    port (mclk : in std_logic;
+        btn : in std_logic_vector(3 downto 0);
+        sw : in std_logic_vector(7 downto 0);
+        led : out std_logic_vector(7 downto 0) := (others => '0');
+        seg : out std_logic_vector(7 downto 0);
+        an : out std_logic_vector(3 downto 0));
 end;
 
 architecture behavioral of main is

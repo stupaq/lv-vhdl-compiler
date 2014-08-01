@@ -3,15 +3,15 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity stopwatch is
-    generic (constant n : natural := 8);
-    port (signal input : std_logic_vector(n - 1 downto 0);
-        signal clk : in std_logic;
-        signal rst : in std_logic;
-        signal toggle : in std_logic;
-        signal dir : in std_logic;
-        signal output : out std_logic_vector(n - 1 downto 0);
-        signal active : out std_logic;
-        signal ovf : out std_logic);
+    generic (n : natural := 8);
+    port (input : std_logic_vector(n - 1 downto 0);
+        clk : in std_logic;
+        rst : in std_logic;
+        toggle : in std_logic;
+        dir : in std_logic;
+        output : out std_logic_vector(n - 1 downto 0);
+        active : out std_logic;
+        ovf : out std_logic);
 end;
 
 architecture behavioral of stopwatch is
