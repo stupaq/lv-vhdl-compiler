@@ -1,18 +1,18 @@
 package stupaq.translation.lv2vhdl;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 
-import stupaq.commons.TopologicalComparator;
+import stupaq.commons.TopologicalOrdering;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.RValueVisitor;
 import stupaq.vhdl93.ast.Node;
@@ -34,14 +34,11 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static stupaq.vhdl93.ast.Builders.optional;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
-final class DeclarationsSorter {
-  private DeclarationsSorter() {
-  }
+class DeclarationOrdering extends Ordering<Node> {
+  private static final int DECLARATIONS_SORTING_LOOKUP = 2;
+  private final Ordering<Node> ordering;
 
-  public static void sort(final NodeListOptional declarations) {
-    if (!declarations.present()) {
-      return;
-    }
+  public DeclarationOrdering(NodeListOptional declarations) {
     final Set<IOReference> allLHS = Sets.newHashSet();
     final Multimap<IOReference, IOReference> outgoing =
         Multimaps.newSetMultimap(Maps.<IOReference, Collection<IOReference>>newHashMap(),
@@ -110,36 +107,21 @@ final class DeclarationsSorter {
         it.remove();
       }
     }
-    // Sort declarations.
-    Collections.sort(declarations.nodes,
-        new DeclarationComparator(new TopologicalComparator<>(outgoing, allLHS, true)));
+    // Create our ordering.
+    ordering = new TopologicalOrdering<>(outgoing, allLHS, true).onResultOf(
+        new Function<Node, IOReference>() {
+          DeclarationLHSExtractor lhsExtractor = new DeclarationLHSExtractor();
+
+          @Override
+          public IOReference apply(Node node) {
+            return lhsExtractor.apply(node);
+          }
+        }).nullsLast().compound(new FirstFewTokensOrdering(DECLARATIONS_SORTING_LOOKUP));
   }
 
-  private static final class DeclarationComparator implements Comparator<Node> {
-    private final DeclarationLHSExtractor lhsExtractor = new DeclarationLHSExtractor();
-    private final TopologicalComparator<IOReference> comparator;
-    private final Comparator<Node> fallback;
-
-    public DeclarationComparator(TopologicalComparator<IOReference> comparator) {
-      this.comparator = comparator;
-      fallback = new NodesFirstTokenComparator();
-    }
-
-    @Override
-    public int compare(Node o1, Node o2) {
-      IOReference ref1 = lhsExtractor.apply(o1), ref2 = lhsExtractor.apply(o2);
-      if (ref1 == null) {
-        return 1;
-      } else if (ref2 == null) {
-        return -1;
-      } else {
-        int cmp = comparator.compare(ref1, ref2);
-        if (cmp == 0) {
-          cmp = fallback.compare(o1, o2);
-        }
-        return cmp;
-      }
-    }
+  @Override
+  public int compare(Node o1, Node o2) {
+    return ordering.compare(o1, o2);
   }
 
   private static class DeclarationLHSExtractor extends NonTerminalsNoOpVisitor<IOReference> {

@@ -12,6 +12,7 @@ import com.ni.labview.VIDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(TracingVisitor.create());
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
-    DeclarationsSorter.sort(entityDeclarations);
+    Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
   }
 
   public boolean isClustered() {

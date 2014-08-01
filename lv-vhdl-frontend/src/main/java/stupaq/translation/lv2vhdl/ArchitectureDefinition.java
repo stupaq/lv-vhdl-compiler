@@ -60,6 +60,7 @@ import static stupaq.vhdl93.ast.Builders.*;
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
+  private static final int STATEMENTS_SORTING_LOOKUP = 4;
   private final EndpointsMap terminals = new EndpointsMap();
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
   private final DeclarationInferenceRules declarationInference =
@@ -89,8 +90,10 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
     architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
-    DeclarationsSorter.sort(architectureDeclarations);
-    Collections.sort(concurrentStatements.nodes, new NodesFirstTokenComparator());
+    Collections.sort(architectureDeclarations.nodes,
+        new DeclarationOrdering(architectureDeclarations));
+    Collections.sort(concurrentStatements.nodes,
+        new FirstFewTokensOrdering(STATEMENTS_SORTING_LOOKUP));
   }
 
   private static association_list emitAssociationList(List<named_association_element> elements) {
