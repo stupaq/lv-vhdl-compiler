@@ -15,10 +15,10 @@ entity stopwatch is
 end;
 
 architecture behavioral of stopwatch is
-    signal s_counter : unsigned(n - 1 downto 0) := (others => '0');
-    signal s_ref : std_logic := '0';
-    signal s_ovf : std_logic := '0';
     constant one : unsigned(n - 1 downto 0) := (0 => '1', others => '0');
+    signal s_counter : unsigned(n - 1 downto 0) := (others => '0');
+    signal s_ovf : std_logic := '0';
+    signal s_ref : std_logic := '0';
     signal s_toggle : std_logic;
 begin
     output <= std_logic_vector(s_counter);

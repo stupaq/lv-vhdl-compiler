@@ -1,7 +1,6 @@
 package stupaq.commons;
 
 import com.google.common.base.Suppliers;
-import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -23,17 +22,17 @@ public class TopologicalOrdering<T> extends Ordering<T> {
     Queue<T> queue = Queues.newArrayDeque();
     for (T v : vertices) {
       if (inDegrees.getDefault(v) == 0) {
+        sortedIndices.put(v, 0);
         queue.add(v);
       }
     }
-    int nextIndex = 0;
     while (!queue.isEmpty()) {
       T v = queue.poll();
-      Verify.verify(!sortedIndices.containsKey(v));
-      sortedIndices.put(v, ++nextIndex);
+      int nextIndex = sortedIndices.get(v) + 1;
       for (T u : edges.get(v)) {
         inDegrees.put(u, inDegrees.getDefault(u) - 1);
         if (inDegrees.getDefault(u) == 0) {
+          sortedIndices.put(u, nextIndex);
           queue.add(u);
         }
       }

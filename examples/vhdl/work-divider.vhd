@@ -11,8 +11,8 @@ entity divider is
 end;
 
 architecture behavioral of divider is
-    signal s_count : unsigned(n - 1 downto 0);
     signal s_clk : std_logic;
+    signal s_count : unsigned(n - 1 downto 0);
 begin
     clk_out <= s_clk;
     process (clk_in, reset)

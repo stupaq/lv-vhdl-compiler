@@ -8,8 +8,8 @@ entity many_ports_outer is
 end;
 
 architecture behavioral of many_ports_outer is
-    signal output : std_logic;
     signal input : std_logic;
+    signal output : std_logic;
 begin
     input <= '1';
     many_ports :
@@ -21,7 +21,7 @@ begin
             in0, in21 => in0, in22 => in0, in23 => in0, in24 => in0, in25 =>
             in0, in26 => in0, extra_in => input, extra_out => out0);
     output <= out0 when ctrl = "10" else
-    '0' when ctrl = "01" else
-    '1';
+        '0' when ctrl = "01" else
+        '1';
 end;
 

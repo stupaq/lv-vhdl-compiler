@@ -12,9 +12,8 @@ end;
 
 architecture behavioral of display is
     signal s_seg : unsigned(1 downto 0) := "00";
-    type SEGMENT is array (3 downto 0) of std_logic_vector(3 downto 0);
     type DIGIT is array (9 downto 0) of std_logic_vector(6 downto 0);
-    constant SEGMENTS : SEGMENT := ("0111", "1011", "1101", "1110");
+    type SEGMENT is array (3 downto 0) of std_logic_vector(3 downto 0);
     constant DIGITS : DIGIT := ("0010000", -- 9
     "0000000", -- 8
     "1111000", -- 7
@@ -25,6 +24,7 @@ architecture behavioral of display is
     "0100100", -- 2
     "1111001", -- 1
     "1000000");
+    constant SEGMENTS : SEGMENT := ("0111", "1011", "1101", "1110");
 begin
     process (clk)
     begin

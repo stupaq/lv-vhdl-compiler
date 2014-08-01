@@ -11,13 +11,13 @@ entity main is
 end;
 
 architecture behavioral of main is
-    signal input : std_logic_vector(15 downto 0);
-    signal sclk : std_logic;
     signal active : std_logic;
-    signal output : std_logic_vector(15 downto 0);
-    signal disp : std_logic_vector(19 downto 0);
-    signal toggle : std_logic;
     signal dclk : std_logic;
+    signal disp : std_logic_vector(19 downto 0);
+    signal input : std_logic_vector(15 downto 0);
+    signal output : std_logic_vector(15 downto 0);
+    signal sclk : std_logic;
+    signal toggle : std_logic;
 begin
     clock_1khz :
     entity work.divider(behavioral)
@@ -33,8 +33,8 @@ begin
     entity work.display(behavioral)
         port map(input => disp(19 downto 4), clk => sclk, active => active, seg
             => seg, an => an);
-    input(8 downto 0) <= (others => '0');
     input(15 downto 9) <= sw(7 downto 1);
+    input(8 downto 0) <= (others => '0');
     led(6 downto 0) <= (others => '0');
     sclk <= dclk;
     watch :

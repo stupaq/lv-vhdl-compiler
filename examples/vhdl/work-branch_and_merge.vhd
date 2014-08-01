@@ -5,10 +5,6 @@ entity branch_and_merge is
 end;
 
 architecture behavioral of branch_and_merge is
-    signal aaa : std_logic_vector(7 downto 0);
-    signal bbb : std_logic_vector(7 downto 0);
-    signal ccc : std_logic_vector(7 downto 0);
-    signal ddd : std_logic_vector(7 downto 0);
     component sink is
         generic (n : integer := 4);
         port (input : in std_logic_vector(n downto 0));
@@ -17,6 +13,10 @@ architecture behavioral of branch_and_merge is
         generic (n : integer := 4);
         port (output : out std_logic_vector(n downto 0));
     end component;
+    signal aaa : std_logic_vector(7 downto 0);
+    signal bbb : std_logic_vector(7 downto 0);
+    signal ccc : std_logic_vector(7 downto 0);
+    signal ddd : std_logic_vector(7 downto 0);
 begin
     dst0 : component sink
         port map(input => aaa(3 downto 0));

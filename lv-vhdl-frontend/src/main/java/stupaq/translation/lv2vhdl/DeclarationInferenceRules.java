@@ -16,6 +16,7 @@ import stupaq.labview.UID;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
 import stupaq.translation.naming.IOReference;
+import stupaq.translation.semantic.ExpressionClassifier;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.NodeListOptional;
@@ -61,6 +62,10 @@ class DeclarationInferenceRules extends FormulaClassifier<Exception> {
         type = parser(terminal.name()).interface_signal_declaration().subtype_indication;
       } catch (ParseException e) {
         LOGGER.debug("Skipping declaration inference (not a declaration) for: {}.", terminal);
+        return;
+      }
+      if (ExpressionClassifier.isParametrisedType(type)) {
+        LOGGER.debug("Skipping declaration inference (parameters) for: {}.", terminal);
         return;
       }
       declared.add(ref);

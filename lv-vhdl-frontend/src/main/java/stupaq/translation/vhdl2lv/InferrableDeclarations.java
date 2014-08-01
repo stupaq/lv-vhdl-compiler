@@ -95,18 +95,20 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
       public void visit(named_association_element n) {
         Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
         IOReference ref = new IOReference(n.formal_part.identifier);
-        // We do not infer anything for generics.
+        // We do not infer anything for generics, therefore we know we are dealing with port.
         portDeclaration = entity.resolvePort(ref);
         n.actual_part.accept(this);
+        portDeclaration = null;
       }
 
       @Override
       public void visit(positional_association_element n) {
         Preconditions.checkState(elementIndex >= 0);
-        // We do not infer anything for generics.
+        // We do not infer anything for generics, therefore we know we are dealing with port.
         portDeclaration = entity.resolvePort(elementIndex);
         n.actual_part.accept(this);
         ++elementIndex;
+        portDeclaration = null;
       }
 
       @Override

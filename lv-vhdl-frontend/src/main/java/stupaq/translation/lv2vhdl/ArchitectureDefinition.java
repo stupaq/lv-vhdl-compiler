@@ -60,7 +60,7 @@ import static stupaq.vhdl93.ast.Builders.*;
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
-  private static final int STATEMENTS_SORTING_LOOKUP = 4;
+  private static final int STATEMENTS_SORTING_LOOKUP = 6;
   private final EndpointsMap terminals = new EndpointsMap();
   private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
   private final DeclarationInferenceRules declarationInference =
