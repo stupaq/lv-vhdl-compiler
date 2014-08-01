@@ -127,7 +127,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   @Override
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
-    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid,
+        "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
     VHDL93PartialParser labelParser = parser(declaration);
     identifier signal;
@@ -162,7 +163,6 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     if (label.isPresent()) {
       VHDL93PartialParser parser =
           parser(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
-      // FIXME depending on the length of the string we might want to emit a FormulaNode
       constant_declaration constant = parser.constant_declaration();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       valueString = constant.identifier_list.identifier.representation();
@@ -347,6 +347,13 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         connected.valueOverride(expression);
       }
       setNamesAsFallback(otherParameters);
+    }
+
+    @Override
+    protected void declaredConstant(UID owner, constant_declaration constant,
+        Iterable<Endpoint> parameters) throws Exception {
+      architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
+      setNamesAsFallback(parameters);
     }
 
     private void setNamesAsFallback(Iterable<Endpoint> parameters) {

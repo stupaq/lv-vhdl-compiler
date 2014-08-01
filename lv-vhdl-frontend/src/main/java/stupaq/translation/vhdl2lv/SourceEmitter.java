@@ -21,7 +21,6 @@ import stupaq.labview.hierarchy.RingConstant;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.scripting.tools.ArithmeticMode;
 import stupaq.labview.scripting.tools.DataRepresentation;
-import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
 import stupaq.translation.semantic.RValueVisitor;
@@ -29,6 +28,7 @@ import stupaq.vhdl93.ast.SimpleNode;
 import stupaq.vhdl93.ast.expression;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.translation.TranslationConventions.RVALUE_PARAMETER;
 
 class SourceEmitter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SourceEmitter.class);
@@ -46,10 +46,20 @@ class SourceEmitter {
     return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
   }
 
-  public Terminal emitAsConstant(SimpleNode n, Optional<String> label) {
-    RingConstant constant = new RingConstant(owner, Collections.singletonMap(n.representation(), 0),
-        DataRepresentation.I32, label);
-    return constant.terminal();
+  public Terminal emitAsConstant(SimpleNode n, Optional<String> label, String name) {
+    String rep = n.representation();
+    if (asRingConstant(rep)) {
+      RingConstant constant =
+          new RingConstant(owner, Collections.singletonMap(rep, 0), DataRepresentation.I32, label);
+      return constant.terminal();
+    } else {
+      FormulaNode formula = new FormulaNode(owner, rep, label);
+      return formula.addOutput(name);
+    }
+  }
+
+  private static boolean asRingConstant(String rep) {
+    return rep.length() < RingConstant.NAME_LENGTH_LIMIT;
   }
 
   private void emitAsIdentifier(IOReference ref, Terminal sink) {
@@ -65,7 +75,7 @@ class SourceEmitter {
   public void emitWithSink(expression n, Terminal sink) {
     List<IOReference> references = ExpressionClassifier.topLevelReferences(n);
     if (references.isEmpty()) {
-      Terminal source = emitAsConstant(n, Optional.<String>absent());
+      Terminal source = emitAsConstant(n, Optional.<String>absent(), RVALUE_PARAMETER);
       source.connectTo(sink, Optional.<String>absent());
     } else if (references.size() == 1) {
       IOReference ref = references.get(0);
@@ -84,7 +94,7 @@ class SourceEmitter {
     Formula formula = new FormulaNode(owner, n.representation(), Optional.<String>absent());
     addTerminals(formula, n);
     formula.cleanupFormula();
-    return formula.addOutput(TranslationConventions.RVALUE_PARAMETER);
+    return formula.addOutput(RVALUE_PARAMETER);
   }
 
   public void addTerminals(final Formula formula, SimpleNode n) {

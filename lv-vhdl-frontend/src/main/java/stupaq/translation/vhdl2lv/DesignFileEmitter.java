@@ -121,7 +121,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       @Override
       public void visit(constant_declaration n) {
         declarativePartFallback = false;
-        IOReference ref = new IOReference(n.identifier_list.identifier);
+        final IOReference ref = new IOReference(n.identifier_list.identifier);
         final String label = sequence(n.nodeToken, n.identifier_list, n.nodeToken1,
             n.subtype_indication).representation();
         Terminal terminal = (new NonTerminalsNoOpVisitor<Terminal>() {
@@ -136,7 +136,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
           @Override
           public void visit(expression n) {
             terminal = new SourceEmitter(currentVi, danglingSinks, namedSources).emitAsConstant(n,
-                of(label));
+                of(label), ref.toString());
           }
         }).apply(n.nodeOptional);
         semanticNotNull(terminal, n, "Missing value for constant: %s.", ref);
