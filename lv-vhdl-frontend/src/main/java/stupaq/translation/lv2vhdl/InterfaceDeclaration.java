@@ -74,10 +74,6 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
     return clustered;
   }
 
-  public Optional<context_clause> getContext() {
-    return Optional.fromNullable(entityContext);
-  }
-
   private Optional<Integer> connPaneIndex(UID control) {
     return Optional.fromNullable(controlToPaneIndex.get(control));
   }
@@ -184,7 +180,8 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
       boolean isIndicator, ControlStyle style, String description) throws Exception {
     Verify.verifyNotNull(rootPanel);
-    semanticCheck(label.isPresent(), uid, "Missing control label (should contain port declaration).");
+    semanticCheck(label.isPresent(), uid,
+        "Missing control label (should contain port declaration).");
     int connPaneIndex;
     if (clustered) {
       semanticCheck(!rootPanel.equals(ownerUID), uid,
