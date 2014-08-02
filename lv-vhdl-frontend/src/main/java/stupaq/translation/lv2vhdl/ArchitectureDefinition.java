@@ -87,7 +87,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     multiplexer.addVisitor(new EndpointWiringRules(terminals));
     multiplexer.addVisitor(universalVI);
     multiplexer.addVisitor(declarationInference);
-    multiplexer.addVisitor(new ExtendingFormulaClassifier(terminals));
+    multiplexer.addVisitor(new ExtendingFormulaInterpreter());
+    multiplexer.addVisitor(new ExtendingWireInterpreter());
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
     architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
@@ -273,8 +274,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         new component_instantiation_statement(instantiationLabel, unit, genericAspect, portAspect));
   }
 
-  private class ExtendingFormulaClassifier extends FormulaClassifier<Exception> {
-    public ExtendingFormulaClassifier(EndpointsMap terminals) {
+  private class ExtendingFormulaInterpreter extends FormulaInterpreter<Exception> {
+    public ExtendingFormulaInterpreter() {
       super(terminals);
     }
 
@@ -364,6 +365,14 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
           connected.valueIfEmpty(param);
         }
       }
+    }
+  }
+
+  private class ExtendingWireInterpreter extends WireInterpreter {
+    @Override
+    protected void wireWithSignalDeclaration(UID uid, String label,
+        signal_declaration declaration) {
+      architectureDeclarations.addNode(new block_declarative_item(choice(declaration)));
     }
   }
 }

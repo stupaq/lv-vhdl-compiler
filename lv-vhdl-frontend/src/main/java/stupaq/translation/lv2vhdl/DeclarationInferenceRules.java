@@ -34,7 +34,7 @@ import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
 
-class DeclarationInferenceRules extends FormulaClassifier<Exception> {
+class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeclarationInferenceRules.class);
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();

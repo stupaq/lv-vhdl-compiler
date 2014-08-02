@@ -25,7 +25,6 @@ import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Panel;
 import stupaq.labview.parsing.MultiplexerVisitor;
-import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
@@ -36,14 +35,12 @@ import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.TranslationConventions.ENTITY_CONTEXT;
-import static stupaq.translation.TranslationConventions.ENTITY_EXTRA_DECLARATIONS;
 import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;
 
-class InterfaceDeclaration extends NoOpVisitor<Exception> {
+class InterfaceDeclaration extends FormulaInterpreter<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(InterfaceDeclaration.class);
   private final NodeListOptional entityDeclarations = new NodeListOptional();
   private final IntegerMap<interface_constant_declaration> generics = new IntegerMap<>();
@@ -65,6 +62,7 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
         new MultiplexerVisitor<>(Panel.XML_NAME, FormulaNode.XML_NAME, ConnectorPane.XML_NAME,
             ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
     multiplexer.addVisitor(TracingVisitor.create());
+    multiplexer.addVisitor(new ExtendingFormulaInterpreter());
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
     Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
@@ -138,18 +136,6 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
   }
 
   @Override
-  public void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
-      List<UID> termUIDs) throws Exception {
-    VHDL93PartialParser parser = parser(expression);
-    if (label.equals(ENTITY_CONTEXT)) {
-      entityContext = parser.context_clause();
-    } else if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
-      NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
-      entityDeclarations.nodes.addAll(extra.nodes);
-    }
-  }
-
-  @Override
   public void ConnectorPane(List<UID> controls) {
     int index = 0;
     for (UID control : controls) {
@@ -219,6 +205,21 @@ class InterfaceDeclaration extends NoOpVisitor<Exception> {
       ports.put(connPaneIndex, port);
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
+    }
+  }
+
+  private class ExtendingFormulaInterpreter extends FormulaInterpreter {
+    @Override
+    protected void entityDeclarations(UID uid, String expression) throws Exception {
+      VHDL93PartialParser parser = parser(expression);
+      NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
+      entityDeclarations.nodes.addAll(extra.nodes);
+    }
+
+    @Override
+    protected void entityContext(UID uid, String expression) throws Exception {
+      VHDL93PartialParser parser = parser(expression);
+      entityContext = parser.context_clause();
     }
   }
 }

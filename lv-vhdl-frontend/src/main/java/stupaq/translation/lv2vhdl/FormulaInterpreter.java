@@ -26,16 +26,16 @@ import static stupaq.vhdl93.VHDL93Parser.tokenString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 
-abstract class FormulaClassifier<E extends Exception> extends NoOpVisitor<E> {
-  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(FormulaClassifier.class);
+abstract class FormulaInterpreter<E extends Exception> extends NoOpVisitor<E> {
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(FormulaInterpreter.class);
   private final Set<UID> whileLoops = Sets.newHashSet();
   private final EndpointsMap terminals;
 
-  public FormulaClassifier() {
+  public FormulaInterpreter() {
     terminals = null;
   }
 
-  public FormulaClassifier(EndpointsMap terminals) {
+  public FormulaInterpreter(EndpointsMap terminals) {
     this.terminals = terminals;
   }
 

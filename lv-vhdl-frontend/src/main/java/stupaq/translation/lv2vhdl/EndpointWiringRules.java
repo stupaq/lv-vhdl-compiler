@@ -1,6 +1,5 @@
 package stupaq.translation.lv2vhdl;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.Lists;
@@ -13,15 +12,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NeverThrownException;
-import stupaq.labview.parsing.NoOpVisitor;
+import stupaq.vhdl93.ast.expression;
+import stupaq.vhdl93.ast.signal_declaration;
 
 import static stupaq.translation.SemanticException.semanticCheck;
 
-class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
+class EndpointWiringRules extends WireInterpreter<NeverThrownException> {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointWiringRules.class);
   private final Multimap<UID, Endpoint> wiresToEndpoints =
       Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
@@ -32,7 +31,6 @@ class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
             }
           });
   private final EndpointsMap terminals;
-  private final Map<Endpoint, Endpoint> redirects = Maps.newHashMap();
 
   public EndpointWiringRules(EndpointsMap terminals) {
     this.terminals = terminals;
@@ -51,7 +49,28 @@ class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
   }
 
   @Override
-  public void Wire(UID ownerUID, UID uid, Optional<String> label) {
+  protected void wirePlain(UID uid) {
+    connectWithWire(uid);
+  }
+
+  @Override
+  protected void wireWithExpression(UID uid, String label, expression expression) {
+    Collection<Endpoint> terms = connectWithWire(uid);
+    for (Endpoint term : terms) {
+      term.value(label);
+    }
+  }
+
+  @Override
+  protected void wireWithSignalDeclaration(UID uid, String label, signal_declaration declaration) {
+    Collection<Endpoint> terms = connectWithWire(uid);
+    String valueString = declaration.identifier_list.identifier.representation();
+    for (Endpoint term : terms) {
+      term.value(valueString);
+    }
+  }
+
+  private Collection<Endpoint> connectWithWire(UID uid) {
     // We know that there will be no more terminals.
     Collection<Endpoint> terms = wiresToEndpoints.removeAll(uid);
     for (Endpoint term1 : terms) {
@@ -64,11 +83,7 @@ class EndpointWiringRules extends NoOpVisitor<NeverThrownException> {
         // as wires in LV are undirected and the graph itself is a multi-graph.
       }
     }
-    if (label.isPresent()) {
-      for (Endpoint term : terms) {
-        term.value(label.get());
-      }
-    }
+    return terms;
   }
 
   @Override

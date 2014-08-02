@@ -26,6 +26,7 @@ import stupaq.vhdl93.ast.instantiation_label;
 import stupaq.vhdl93.ast.interface_constant_declaration;
 import stupaq.vhdl93.ast.interface_declaration;
 import stupaq.vhdl93.ast.interface_signal_declaration;
+import stupaq.vhdl93.ast.signal_declaration;
 
 class VHDL93PartialParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(VHDL93PartialParser.class);
@@ -152,6 +153,13 @@ class VHDL93PartialParser {
 
   public identifier_list identifier_list() throws ParseException {
     identifier_list r = parser.identifier_list();
+    parser.eof();
+    r.accept(new FlattenNestedListsVisitor());
+    return r;
+  }
+
+  public signal_declaration signal_declaration() throws ParseException {
+    signal_declaration r = parser.signal_declaration();
     parser.eof();
     r.accept(new FlattenNestedListsVisitor());
     return r;
