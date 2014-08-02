@@ -3,18 +3,18 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity rotary_decoder is
-    port (signal rst : in std_logic;
-        signal clk : in std_logic;
-        signal rot_a : in std_logic;
-        signal rot_b : in std_logic;
-        signal rot_change : out signed(1 downto 0));
+    port (rst : in std_logic;
+        clk : in std_logic;
+        rot_a : in std_logic;
+        rot_b : in std_logic;
+        rot_change : out signed(1 downto 0));
 end;
 
 architecture behavioral of rotary_decoder is
-    signal prev_rot_ab : std_logic_vector(1 downto 0);
-    signal trigger : std_logic;
-    signal prev_trigger : std_logic;
     signal dir_left : std_logic;
+    signal prev_rot_ab : std_logic_vector(1 downto 0);
+    signal prev_trigger : std_logic;
+    signal trigger : std_logic;
 begin
     event_encoder : process (rst, clk)
         variable state : std_logic_vector(2 downto 0);
