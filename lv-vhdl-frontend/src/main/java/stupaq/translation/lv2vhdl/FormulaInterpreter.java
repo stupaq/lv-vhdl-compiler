@@ -21,10 +21,10 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.*;
-import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
-import static stupaq.vhdl93.VHDL93Parser.tokenString;
+import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
+import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 
 abstract class FormulaInterpreter<E extends Exception> extends NoOpVisitor<E> {
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(FormulaInterpreter.class);
@@ -84,8 +84,8 @@ abstract class FormulaInterpreter<E extends Exception> extends NoOpVisitor<E> {
       }
     if (label.isPresent()) {
       try {
-        VHDL93PartialParser parser =
-            parser(label.get() + tokenString(ASSIGN) + expression + tokenString(SEMICOLON));
+        VHDL93ParserPartial parser =
+            forString(label.get() + tokenString(ASSIGN) + expression + tokenString(SEMICOLON));
         constant_declaration constant = parser.constant_declaration();
         declaredConstant(uid, constant, parameters);
         return;

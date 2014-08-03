@@ -3,13 +3,13 @@ options
   STATIC=false;
 }
 
-PARSER_BEGIN(VHDL93Parser)
+PARSER_BEGIN(VHDL93ParserTotal)
 
 package stupaq.vhdl93;
 
 import stupaq.vhdl93.errors.*;
 
-public class VHDL93Parser
+public class VHDL93ParserTotal implements VHDL93Parser
 {
   private ErrorHandler errorHandler;
 
@@ -22,12 +22,12 @@ public class VHDL93Parser
   }
 
   public static String tokenString(int token) {
-    String string = VHDL93ParserConstants.tokenImage[token];
+    String string = VHDL93ParserTotalConstants.tokenImage[token];
     return string.substring(1, string.length() - 1);
   }
 }
 
-PARSER_END(VHDL93Parser)
+PARSER_END(VHDL93ParserTotal)
 
 /** LEXICAL ELEMENTS */
 SKIP :

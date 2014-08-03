@@ -7,13 +7,14 @@ import com.google.common.collect.Iterables;
 import java.util.Arrays;
 
 import stupaq.vhdl93.VHDL93Parser;
+import stupaq.vhdl93.VHDL93ParserTotal;
 
 public final class Builders {
   private Builders() {
   }
 
   public static NodeToken token(int kind) {
-    return new NodeToken(VHDL93Parser.tokenString(kind), kind, -1, -1, -1, -1);
+    return new NodeToken(VHDL93ParserTotal.tokenString(kind), kind, -1, -1, -1, -1);
   }
 
   public static NodeToken token(String image) {

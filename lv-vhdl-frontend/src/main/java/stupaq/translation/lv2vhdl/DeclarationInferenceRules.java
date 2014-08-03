@@ -29,7 +29,7 @@ import stupaq.vhdl93.ast.subtype_indication;
 import stupaq.vhdl93.ast.variable_declaration;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
+import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
@@ -47,7 +47,7 @@ class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
     String valueString = terminal.valueString();
     IOReference ref;
     try {
-      ref = new IOReference(parser(valueString).identifier());
+      ref = new IOReference(forString(valueString).identifier());
     } catch (ParseException e) {
       LOGGER.debug("Skipping declaration inference (not an identifier) for: {}.", terminal);
       return;
@@ -55,7 +55,7 @@ class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
     if (!declared.contains(ref)) {
       subtype_indication type;
       try {
-        type = parser(terminal.name()).interface_signal_declaration().subtype_indication;
+        type = forString(terminal.name()).interface_signal_declaration().subtype_indication;
       } catch (ParseException e) {
         LOGGER.debug("Skipping declaration inference (not a declaration) for: {}.", terminal);
         return;
@@ -90,7 +90,7 @@ class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
     semanticCheck(label.isPresent(), uid,
         "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
-    VHDL93PartialParser labelParser = parser(declaration);
+    VHDL93ParserPartial labelParser = forString(declaration);
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
@@ -106,14 +106,14 @@ class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
 
   @Override
   protected void entityDeclarations(UID uid, String expression) throws Exception {
-    VHDL93PartialParser parser = parser(expression);
+    VHDL93ParserPartial parser = forString(expression);
     NodeListOptional declarations = parser.entity_declarative_part().nodeListOptional;
     addDeclarations(declarations);
   }
 
   @Override
   protected void architectureDeclarations(UID uid, String expression) throws Exception {
-    VHDL93PartialParser parser = parser(expression);
+    VHDL93ParserPartial parser = forString(expression);
     NodeListOptional declarations = parser.architecture_declarative_part().nodeListOptional;
     addDeclarations(declarations);
   }

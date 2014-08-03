@@ -35,7 +35,7 @@ import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
+import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;
@@ -84,7 +84,7 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
   public design_unit emitAsEntity(EntityName name) throws Exception {
     context_clause context =
         entityContext != null ? entityContext : new context_clause(listOptional());
-    entity_identifier identifier = parser(name.entity().toString()).entity_identifier();
+    entity_identifier identifier = forString(name.entity().toString()).entity_identifier();
     entity_header header = new entity_header(createGenerics(), createPorts());
     entity_declaration declaration =
         new entity_declaration(identifier, header, new entity_declarative_part(entityDeclarations),
@@ -94,7 +94,7 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
   }
 
   public component_declaration emitAsComponent(ComponentName name) throws Exception {
-    component_identifier identifier = parser(name.component().toString()).component_identifier();
+    component_identifier identifier = forString(name.component().toString()).component_identifier();
     component_header header = new component_header(createGenerics(), createPorts());
     return new component_declaration(identifier, optional(token(IS)), header, optional());
   }
@@ -190,7 +190,7 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
       connPaneIndex = index.get();
     }
     String declaration = label.get().trim();
-    VHDL93PartialParser labelParser = parser(declaration);
+    VHDL93ParserPartial labelParser = forString(declaration);
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
       interface_constant_declaration generic = labelParser.interface_constant_declaration();
@@ -211,14 +211,14 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
   private class ExtendingFormulaInterpreter extends FormulaInterpreter {
     @Override
     protected void entityDeclarations(UID uid, String expression) throws Exception {
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
       entityDeclarations.nodes.addAll(extra.nodes);
     }
 
     @Override
     protected void entityContext(UID uid, String expression) throws Exception {
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       entityContext = parser.context_clause();
     }
   }

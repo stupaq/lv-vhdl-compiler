@@ -8,7 +8,7 @@ import stupaq.translation.naming.IOReference
 import stupaq.vhdl93.ast.Builders.sequence
 import stupaq.vhdl93.ast.{SimpleNode, identifier, subtype_indication}
 import stupaq.vhdl93.visitor.DepthFirstVisitor
-import stupaq.vhdl93.{ParseException, VHDL93Parser}
+import stupaq.vhdl93.{ParseException, VHDL93ParserTotal}
 
 import scala.annotation.tailrec
 
@@ -39,7 +39,7 @@ object ExpressionClassifier {
   def asIdentifier(n: SimpleNode): Optional[identifier] = {
     val rep = unwrapParentheses(n representation())
     try {
-      val parser = new VHDL93Parser(new StringReader(rep))
+      val parser = new VHDL93ParserTotal(new StringReader(rep))
       val id = parser identifier()
       parser eof()
       Optional of id

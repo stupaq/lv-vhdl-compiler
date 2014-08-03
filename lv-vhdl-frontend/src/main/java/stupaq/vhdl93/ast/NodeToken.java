@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.VHDL93ParserConstants;
+import stupaq.vhdl93.VHDL93ParserTotal;
 
 /**
  * Represents a single token in the grammar.  If the "-tk" option is used, also contains a Vector of
@@ -116,7 +117,7 @@ public class NodeToken extends SimpleNode implements Node {
       for (int kind = 0; kind < VHDL93ParserConstants.tokenImage.length; ++kind) {
         String image = VHDL93ParserConstants.tokenImage[kind];
         if (image.startsWith("\"") && image.endsWith("\"") && !image.contains("\\")) {
-          image = VHDL93Parser.tokenString(kind).toLowerCase();
+          image = VHDL93ParserTotal.tokenString(kind).toLowerCase();
           cache.put(image, kind);
         }
       }

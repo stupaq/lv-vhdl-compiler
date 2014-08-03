@@ -4,6 +4,7 @@ import com.google.common.base.Predicate;
 
 import stupaq.translation.MissingFeatureException;
 import stupaq.vhdl93.VHDL93Parser;
+import stupaq.vhdl93.VHDL93ParserTotal;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.ast.interface_signal_declaration;
 import stupaq.vhdl93.ast.mode;
@@ -37,7 +38,7 @@ class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal
             break;
           default:
             throw new MissingFeatureException(n,
-                "Port direction: " + VHDL93Parser.tokenString(mode) + " is not supported.");
+                "Port direction: " + VHDL93ParserTotal.tokenString(mode) + " is not supported.");
         }
       }
     });

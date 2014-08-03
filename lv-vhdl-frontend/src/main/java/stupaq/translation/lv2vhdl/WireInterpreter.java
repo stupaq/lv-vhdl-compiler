@@ -10,9 +10,9 @@ import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
-import static stupaq.vhdl93.VHDL93Parser.tokenString;
+import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
+import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 
 abstract class WireInterpreter<E extends Exception> extends NoOpVisitor<E> {
   @Override
@@ -28,13 +28,13 @@ abstract class WireInterpreter<E extends Exception> extends NoOpVisitor<E> {
         if (!declString.endsWith(tokenString(SEMICOLON))) {
           declString += tokenString(SEMICOLON);
         }
-        signal_declaration declaration = parser(declString).signal_declaration();
+        signal_declaration declaration = forString(declString).signal_declaration();
         wireWithSignalDeclaration(uid, label.get(), declaration);
         return;
       } catch (ParseException ignored) {
       }
       try {
-        expression expression = parser(label.get()).expression();
+        expression expression = forString(label.get()).expression();
         wireWithExpression(uid, label.get(), expression);
         return;
       } catch (ParseException ignored) {

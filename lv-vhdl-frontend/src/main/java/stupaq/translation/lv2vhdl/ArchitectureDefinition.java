@@ -53,9 +53,9 @@ import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
-import static stupaq.translation.lv2vhdl.VHDL93PartialParser.parser;
-import static stupaq.vhdl93.VHDL93Parser.tokenString;
+import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
+import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 import static stupaq.vhdl93.ast.Builders.*;
 
 class ArchitectureDefinition extends NoOpVisitor<Exception> {
@@ -111,8 +111,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
     context_clause context = getContext().or(new context_clause(listOptional()));
     architecture_identifier identifier =
-        parser(name.architecture().toString()).architecture_identifier();
-    entity_name entity = parser(name.entity().entity().toString()).entity_name();
+        forString(name.architecture().toString()).architecture_identifier();
+    entity_name entity = forString(name.entity().entity().toString()).entity_name();
     architecture_declaration definition = new architecture_declaration(identifier, entity,
         new architecture_declarative_part(architectureDeclarations),
         new architecture_statement_part(concurrentStatements), optional(), optional());
@@ -131,7 +131,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     semanticCheck(label.isPresent(), uid,
         "Missing control label (should contain port declaration).");
     String declaration = label.get().trim();
-    VHDL93PartialParser labelParser = parser(declaration);
+    VHDL93ParserPartial labelParser = forString(declaration);
     identifier signal;
     if (style == ControlStyle.NUMERIC_I32) {
       // This is a generic.
@@ -162,8 +162,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     String constantString = stringsAndValues.keySet().iterator().next();
     String valueString;
     if (label.isPresent()) {
-      VHDL93PartialParser parser =
-          parser(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
+      VHDL93ParserPartial parser =
+          forString(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
       constant_declaration constant = parser.constant_declaration();
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       valueString = constant.identifier_list.identifier.representation();
@@ -193,14 +193,15 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         component_declaration component = declaration.emitAsComponent(name);
         architectureDeclarations.addNode(new block_declarative_item(choice(component)));
       }
-      unit = parser(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
+      unit =
+          forString(tokenString(COMPONENT) + ' ' + name.component().toString()).instantiated_unit();
     } else if (element instanceof ArchitectureName) {
       ArchitectureName name = (ArchitectureName) element;
       // Schedule for processing.
       if (FOLLOW_DEPENDENCIES) {
         project.addDependency(viPath);
       }
-      unit = parser(tokenString(ENTITY) + ' ' + name.toString()).instantiated_unit();
+      unit = forString(tokenString(ENTITY) + ' ' + name.toString()).instantiated_unit();
     } else {
       throw new VerifyException("Unknown instantiable name.");
     }
@@ -237,7 +238,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     // Split them into generic and port lists and assign values.
     List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
     for (Endpoint terminal : endpoints) {
-      VHDL93PartialParser parser = parser(terminal.name());
+      VHDL93ParserPartial parser = forString(terminal.name());
       Node node = parser.interface_declaration().nodeChoice.choice;
       if (node instanceof interface_constant_declaration) {
         // Generics without assigned value should be left alone.
@@ -263,8 +264,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         throw new MissingFeatureException("Interface element of specified type is not supported.");
       }
     }
-    VHDL93PartialParser parser =
-        parser(description.isEmpty() ? "label" + ++nextLabelNum : description);
+    VHDL93ParserPartial parser =
+        forString(description.isEmpty() ? "label" + ++nextLabelNum : description);
     instantiation_label instantiationLabel = parser.instantiation_label();
     NodeOptional genericAspect = generics.isEmpty() ? optional()
         : optional(new generic_map_aspect(emitAssociationList(generics)));
@@ -291,13 +292,13 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
 
     @Override
     protected void architectureContext(UID uid, String expression) throws ParseException {
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       context = parser.context_clause();
     }
 
     @Override
     protected void architectureDeclarations(UID uid, String expression) throws ParseException {
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
       architectureDeclarations.nodes.addAll(extra.nodes);
     }
@@ -312,7 +313,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
           connected.valueIfEmpty(valueString);
         }
       }
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       concurrentStatements.nodes.addAll(
           parser.architecture_statement_part().nodeListOptional.nodes);
     }
@@ -320,7 +321,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     @Override
     protected void processStatement(UID uid, String expression, Iterable<Endpoint> parameters)
         throws ParseException {
-      VHDL93PartialParser parser = parser(expression);
+      VHDL93ParserPartial parser = forString(expression);
       concurrent_statement process = parser.concurrent_statement();
       semanticCheck(process.nodeChoice.choice instanceof process_statement, uid,
           "Statement is not a process declaration contrary to what label claims.");

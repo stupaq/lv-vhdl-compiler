@@ -14,6 +14,7 @@ import java.util.Set;
 import stupaq.labview.UID;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.VHDL93Parser;
+import stupaq.vhdl93.VHDL93ParserTotal;
 import stupaq.vhdl93.ast.expression;
 
 import static stupaq.translation.SemanticException.semanticCheck;
@@ -45,7 +46,7 @@ class Endpoint {
   }
 
   public expression value() throws ParseException {
-    VHDL93Parser parser = new VHDL93Parser(new StringReader(valueString()));
+    VHDL93Parser parser = new VHDL93ParserTotal(new StringReader(valueString()));
     expression value = parser.expression();
     parser.eof();
     return value;
