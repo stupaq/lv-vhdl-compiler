@@ -33,9 +33,14 @@ import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 public abstract class VIContextualVisitor<E extends Exception> extends NoOpVisitor<E> {
   private static final Logger LOGGER = LoggerFactory.getLogger(VIContextualVisitor.class);
   private final Set<UID> whileLoops = Sets.newHashSet();
+  private final EndpointsMap endpoints;
 
-  protected EndpointsMap endpointsMap() {
-    return null;
+  protected VIContextualVisitor() {
+    endpoints = null;
+  }
+
+  protected VIContextualVisitor(EndpointsMap endpoints) {
+    this.endpoints = endpoints;
   }
 
   @Override
@@ -62,15 +67,6 @@ public abstract class VIContextualVisitor<E extends Exception> extends NoOpVisit
     WirePlain(uid);
   }
 
-  protected void WirePlain(UID uid) {
-  }
-
-  protected void WireWithExpression(UID uid, String label, expression expression) {
-  }
-
-  protected void WireWithSignalDeclaration(UID uid, String label, signal_declaration declaration) {
-  }
-
   @Override
   public final void WhileLoop(UID owner, UID uid) {
     whileLoops.add(uid);
@@ -95,16 +91,16 @@ public abstract class VIContextualVisitor<E extends Exception> extends NoOpVisit
       FormulaWithArchitectureDeclarations(uid, expression);
       return;
     }
-    if (endpointsMap() == null) {
-      LOGGER.warn("Cannot classify node: {}, missing endpoints map.", uid);
+    if (endpoints == null) {
+      LOGGER.warn("Skipping classification for formula: {}.", uid);
       return;
     }
     FluentIterable<Endpoint> parameters = from(termUIDs).transform(new Function<UID, Endpoint>() {
       @Override
       public Endpoint apply(UID uid) {
-        return endpointsMap().get(uid);
+        return endpoints.get(uid);
       }
-      });
+    });
     if (whileLoops.contains(ownerUID)) {
       FormulaWithProcessStatement(uid, expression, parameters);
       return;
@@ -138,6 +134,15 @@ public abstract class VIContextualVisitor<E extends Exception> extends NoOpVisit
     } else {
       FormulaWithConcurrentStatements(uid, expression, parameters);
     }
+  }
+
+  protected void WirePlain(UID uid) {
+  }
+
+  protected void WireWithExpression(UID uid, String label, expression expression) {
+  }
+
+  protected void WireWithSignalDeclaration(UID uid, String label, signal_declaration declaration) {
   }
 
   protected void FormulaWithEntityContext(UID uid, String expression) throws E {

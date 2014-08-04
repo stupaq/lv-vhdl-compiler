@@ -27,8 +27,9 @@ import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
 import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
 import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
+import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.project.LVProjectReader;
@@ -41,16 +42,12 @@ import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;
 
-public class InterfaceDeclaration extends VIContextualVisitor<Exception> {
+public class InterfaceDeclaration {
   private static final Logger LOGGER = LoggerFactory.getLogger(InterfaceDeclaration.class);
   private final NodeListOptional entityDeclarations = new NodeListOptional();
   private final IntegerMap<interface_constant_declaration> generics = new IntegerMap<>();
   private final IntegerMap<interface_signal_declaration> ports = new IntegerMap<>();
-  private final Map<UID, Integer> controlToPaneIndex = Maps.newHashMap();
   private final IntegerMap<IntegerMap<String>> paneIndexToNames = new IntegerMap<>();
-  private final Map<UID, Integer> controlToClusterIndex = Maps.newHashMap();
-  private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
-  private UID rootPanel;
   private boolean clustered = false;
   private context_clause entityContext;
 
@@ -59,16 +56,12 @@ public class InterfaceDeclaration extends VIContextualVisitor<Exception> {
   }
 
   public InterfaceDeclaration(VIDump theVi) throws Exception {
-    VIParser.visitVI(theVi, this);
+    VIContextualParser.visitVI(theVi, new BuilderVisitor());
     Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
   }
 
   public boolean isClustered() {
     return clustered;
-  }
-
-  private Optional<Integer> connPaneIndex(UID control) {
-    return Optional.fromNullable(controlToPaneIndex.get(control));
   }
 
   public IntegerMap<String> clusteredNames(int connPaneIndex) {
@@ -117,103 +110,114 @@ public class InterfaceDeclaration extends VIContextualVisitor<Exception> {
     }
   }
 
-  @Override
-  public Iterable<String> parsersOrder() {
-    return asList(Panel.XML_NAME, ConnectorPane.XML_NAME, FormulaNode.XML_NAME,
-        ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
-  }
+  private class BuilderVisitor extends VIContextualVisitor<Exception> {
+    private final Map<UID, Integer> controlToPaneIndex = Maps.newHashMap();
+    private final Map<UID, Integer> controlToClusterIndex = Maps.newHashMap();
+    private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
+    private UID rootPanel;
 
-  @Override
-  public void Panel(Optional<UID> ownerUID, UID uid) {
-    if (!ownerUID.isPresent()) {
-      Verify.verify(rootPanel == null);
-      rootPanel = uid;
+    private Optional<Integer> connPaneIndex(UID control) {
+      return Optional.fromNullable(controlToPaneIndex.get(control));
     }
-  }
 
-  @Override
-  public void ConnectorPane(List<UID> controls) {
-    int index = 0;
-    for (UID control : controls) {
-      controlToPaneIndex.put(control, index++);
+    @Override
+    public Iterable<String> parsersOrder() {
+      return asList(Panel.XML_NAME, ConnectorPane.XML_NAME, FormulaNode.XML_NAME,
+          ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
     }
-  }
 
-  @Override
-  protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
-    VHDL93ParserPartial parser = forString(expression);
-    NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
-    entityDeclarations.nodes.addAll(extra.nodes);
-  }
-
-  @Override
-  protected void FormulaWithEntityContext(UID uid, String expression) throws Exception {
-    VHDL93ParserPartial parser = forString(expression);
-    entityContext = parser.context_clause();
-  }
-
-  @Override
-  public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-      boolean isIndicator, List<UID> controlUIDs) {
-    if (!clustered) {
-      clustered = true;
-      LOGGER.debug("Interface is clustered.");
-    }
-    int index = 0;
-    Optional<Integer> connPaneIndex = connPaneIndex(uid);
-    semanticCheck(connPaneIndex.isPresent(), uid, "Control is not connected to the ConnPane.");
-    IntegerMap<String> names = new IntegerMap<>();
-    paneIndexToNames.put(connPaneIndex.get(), names);
-    controlOwnerToNames.put(uid, names);
-    for (UID control : controlUIDs) {
-      controlToClusterIndex.put(control, index);
-      ++index;
-    }
-  }
-
-  @Override
-  public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-      boolean isIndicator, ControlStyle style, String description) throws Exception {
-    Verify.verifyNotNull(rootPanel);
-    semanticCheck(label.isPresent(), uid,
-        "Missing control label (should contain port declaration).");
-    int connPaneIndex;
-    if (clustered) {
-      semanticCheck(!rootPanel.equals(ownerUID), uid,
-          "VI is clustered, but some control has front panel as an owner.");
-      // Fill information about clustered control.
-      IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
-      names.put(controlToClusterIndex.get(uid), label.get());
-      // Read virtual controlIndex.
-      try {
-        connPaneIndex = UnsignedInteger.valueOf(description.trim()).intValue();
-      } catch (NumberFormatException e) {
-        throw new SemanticException(
-            "Control description: %s does not contain port or generic index.", description);
+    @Override
+    public void Panel(Optional<UID> ownerUID, UID uid) {
+      if (!ownerUID.isPresent()) {
+        Verify.verify(rootPanel == null);
+        rootPanel = uid;
       }
-    } else {
-      semanticCheck(rootPanel.equals(ownerUID), uid,
-          "VI is not clustered, but some control has owner other than front panel.");
-      Optional<Integer> index = connPaneIndex(uid);
-      semanticCheck(index.isPresent(), uid, "Control is not connected to the ConnPane.");
-      connPaneIndex = index.get();
     }
-    String declaration = label.get().trim();
-    VHDL93ParserPartial labelParser = forString(declaration);
-    if (style == ControlStyle.NUMERIC_I32) {
-      // This is a generic.
-      interface_constant_declaration generic = labelParser.interface_constant_declaration();
-      // Make the output less verbose.
-      generic.nodeOptional = optional();
-      generic.nodeOptional1 = optional();
-      generics.put(connPaneIndex, generic);
-    } else if (style == ControlStyle.NUMERIC_DBL) {
-      // This is a port.
-      interface_signal_declaration port = labelParser.interface_signal_declaration();
-      port.nodeOptional = optional();
-      ports.put(connPaneIndex, port);
-    } else {
-      throw new SemanticException("Control style not recognised: %s", style);
+
+    @Override
+    public void ConnectorPane(List<UID> controls) {
+      int index = 0;
+      for (UID control : controls) {
+        controlToPaneIndex.put(control, index++);
+      }
+    }
+
+    @Override
+    public void ControlCluster(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
+        boolean isIndicator, List<UID> controlUIDs) {
+      if (!clustered) {
+        clustered = true;
+        LOGGER.debug("Interface is clustered.");
+      }
+      int index = 0;
+      Optional<Integer> connPaneIndex = connPaneIndex(uid);
+      semanticCheck(connPaneIndex.isPresent(), uid, "Control is not connected to the ConnPane.");
+      IntegerMap<String> names = new IntegerMap<>();
+      paneIndexToNames.put(connPaneIndex.get(), names);
+      controlOwnerToNames.put(uid, names);
+      for (UID control : controlUIDs) {
+        controlToClusterIndex.put(control, index);
+        ++index;
+      }
+    }
+
+    @Override
+    public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
+        boolean isIndicator, ControlStyle style, String description) throws Exception {
+      Verify.verifyNotNull(rootPanel);
+      semanticCheck(label.isPresent(), uid,
+          "Missing control label (should contain port declaration).");
+      int connPaneIndex;
+      if (clustered) {
+        semanticCheck(!rootPanel.equals(ownerUID), uid,
+            "VI is clustered, but some control has front panel as an owner.");
+        // Fill information about clustered control.
+        IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
+        names.put(controlToClusterIndex.get(uid), label.get());
+        // Read virtual controlIndex.
+        try {
+          connPaneIndex = UnsignedInteger.valueOf(description.trim()).intValue();
+        } catch (NumberFormatException e) {
+          throw new SemanticException(
+              "Control description: %s does not contain port or generic index.", description);
+        }
+      } else {
+        semanticCheck(rootPanel.equals(ownerUID), uid,
+            "VI is not clustered, but some control has owner other than front panel.");
+        Optional<Integer> index = connPaneIndex(uid);
+        semanticCheck(index.isPresent(), uid, "Control is not connected to the ConnPane.");
+        connPaneIndex = index.get();
+      }
+      String declaration = label.get().trim();
+      VHDL93ParserPartial labelParser = forString(declaration);
+      if (style == ControlStyle.NUMERIC_I32) {
+        // This is a generic.
+        interface_constant_declaration generic = labelParser.interface_constant_declaration();
+        // Make the output less verbose.
+        generic.nodeOptional = optional();
+        generic.nodeOptional1 = optional();
+        generics.put(connPaneIndex, generic);
+      } else if (style == ControlStyle.NUMERIC_DBL) {
+        // This is a port.
+        interface_signal_declaration port = labelParser.interface_signal_declaration();
+        port.nodeOptional = optional();
+        ports.put(connPaneIndex, port);
+      } else {
+        throw new SemanticException("Control style not recognised: %s", style);
+      }
+    }
+
+    @Override
+    protected void FormulaWithEntityContext(UID uid, String expression) throws Exception {
+      VHDL93ParserPartial parser = forString(expression);
+      entityContext = parser.context_clause();
+    }
+
+    @Override
+    protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
+      VHDL93ParserPartial parser = forString(expression);
+      NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
+      entityDeclarations.nodes.addAll(extra.nodes);
     }
   }
 }

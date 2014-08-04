@@ -15,20 +15,20 @@ import stupaq.labview.UID;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.Unbundler;
-import stupaq.labview.parsing.NoOpVisitor;
-import stupaq.labview.parsing.VIParser;
+import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
+import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.SemanticException.semanticCheck;
 
-public class UniversalVI {
+public class MultiplexersMap {
   private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
   private final EndpointsMap terminals;
   private final Map<UID, Endpoint> controlToClusterEndpoint = Maps.newHashMap();
 
-  public UniversalVI(EndpointsMap terminals, VIDump theVi) throws Exception {
+  public MultiplexersMap(EndpointsMap terminals, VIDump theVi) throws Exception {
     this.terminals = terminals;
-    VIParser.visitVI(theVi, new BuilderVisitor());
+    VIContextualParser.visitVI(theVi, new BuilderVisitor());
   }
 
   public Iterable<Endpoint> findMultiplexedConnections(UID controlUID) {
@@ -46,7 +46,7 @@ public class UniversalVI {
     return multiplexers.get(single);
   }
 
-  private class BuilderVisitor extends NoOpVisitor<Exception> {
+  private class BuilderVisitor extends VIContextualVisitor<Exception> {
     @Override
     public Iterable<String> parsersOrder() {
       return asList(Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME);

@@ -22,7 +22,7 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.NeverThrownException;
-import stupaq.labview.parsing.VIParser;
+import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
 import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
@@ -35,7 +35,7 @@ public class EndpointsMap {
   private final Map<UID, Endpoint> delegate = Maps.newHashMap();
 
   public EndpointsMap(VIDump theVi) {
-    VIParser.visitVI(theVi, new BuilderVisitor());
+    VIContextualParser.visitVI(theVi, new BuilderVisitor());
   }
 
   public Endpoint get(UID uid) {
@@ -70,6 +70,23 @@ public class EndpointsMap {
       Endpoint terminal = new Endpoint(uid, isSource, name);
       EndpointsMap.this.put(uid, terminal);
       wiresToEndpoints.put(wireUID, terminal);
+    }
+
+    @Override
+    public void Tunnel(UID ownerUID, UID uid, List<UID> insideTermUIDs, UID outsideTermUID) {
+      semanticCheck(insideTermUIDs.size() == 1, uid, "Tunnel has multiple internal frames.");
+      Endpoint inside = EndpointsMap.this.get(insideTermUIDs.get(0));
+      Endpoint outside = EndpointsMap.this.get(outsideTermUID);
+      LOGGER.debug("Tunnel with endpoints: inside: {} outside: {}", inside, outside);
+      for (Endpoint term1 : inside.connected()) {
+        for (Endpoint term2 : outside.connected()) {
+          LOGGER.debug("Terminals connected through tunnel: {} and: {}", term1, term2);
+          if (term1.isSource() ^ term2.isSource()) {
+            LOGGER.debug("Closure for terminals: {} and: {}", term1, term2);
+            term1.addConnected(term2);
+          }
+        }
+      }
     }
 
     @Override
@@ -109,23 +126,6 @@ public class EndpointsMap {
         }
       }
       return terms;
-    }
-
-    @Override
-    public void Tunnel(UID ownerUID, UID uid, List<UID> insideTermUIDs, UID outsideTermUID) {
-      semanticCheck(insideTermUIDs.size() == 1, uid, "Tunnel has multiple internal frames.");
-      Endpoint inside = EndpointsMap.this.get(insideTermUIDs.get(0));
-      Endpoint outside = EndpointsMap.this.get(outsideTermUID);
-      LOGGER.debug("Tunnel with endpoints: inside: {} outside: {}", inside, outside);
-      for (Endpoint term1 : inside.connected()) {
-        for (Endpoint term2 : outside.connected()) {
-          LOGGER.debug("Terminals connected through tunnel: {} and: {}", term1, term2);
-          if (term1.isSource() ^ term2.isSource()) {
-            LOGGER.debug("Closure for terminals: {} and: {}", term1, term2);
-            term1.addConnected(term2);
-          }
-        }
-      }
     }
   }
 }

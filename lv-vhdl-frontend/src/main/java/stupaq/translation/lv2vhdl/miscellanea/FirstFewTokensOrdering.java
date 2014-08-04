@@ -32,8 +32,8 @@ public class FirstFewTokensOrdering extends Ordering<Node> {
   }
 
   private static class TokensFindingVisitor extends DepthFirstVisitor {
-    private int lookupLimit;
     private final List<NodeToken> tokens = Lists.newArrayList();
+    private int lookupLimit;
 
     public TokensFindingVisitor(int lookupLimit, Node n) {
       this.lookupLimit = lookupLimit;

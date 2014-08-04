@@ -134,6 +134,26 @@ public class DeclarationOrdering extends Ordering<Node> {
     }
 
     @Override
+    public void visit(full_type_declaration n) {
+      reference = new IOReference(n.identifier);
+    }
+
+    @Override
+    public void visit(incomplete_type_declaration n) {
+      reference = new IOReference(n.identifier);
+    }
+
+    @Override
+    public void visit(subtype_declaration n) {
+      reference = new IOReference(n.identifier);
+    }
+
+    @Override
+    public void visit(type_declaration n) {
+      n.nodeChoice.choice.accept(this);
+    }
+
+    @Override
     public void visit(entity_declarative_item n) {
       n.nodeChoice.choice.accept(this);
     }
@@ -149,17 +169,7 @@ public class DeclarationOrdering extends Ordering<Node> {
     }
 
     @Override
-    public void visit(type_declaration n) {
-      n.nodeChoice.choice.accept(this);
-    }
-
-    @Override
-    public void visit(variable_declaration n) {
-      reference = new IOReference(n.identifier_list.identifier);
-    }
-
-    @Override
-    public void visit(signal_declaration n) {
+    public void visit(constant_declaration n) {
       reference = new IOReference(n.identifier_list.identifier);
     }
 
@@ -169,23 +179,13 @@ public class DeclarationOrdering extends Ordering<Node> {
     }
 
     @Override
-    public void visit(constant_declaration n) {
+    public void visit(signal_declaration n) {
       reference = new IOReference(n.identifier_list.identifier);
     }
 
     @Override
-    public void visit(subtype_declaration n) {
-      reference = new IOReference(n.identifier);
-    }
-
-    @Override
-    public void visit(incomplete_type_declaration n) {
-      reference = new IOReference(n.identifier);
-    }
-
-    @Override
-    public void visit(full_type_declaration n) {
-      reference = new IOReference(n.identifier);
+    public void visit(variable_declaration n) {
+      reference = new IOReference(n.identifier_list.identifier);
     }
   }
 }
