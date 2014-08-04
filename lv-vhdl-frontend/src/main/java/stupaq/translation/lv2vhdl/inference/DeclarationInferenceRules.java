@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.inference;
 
 import com.google.common.base.Optional;
 import com.google.common.base.VerifyException;
@@ -15,6 +15,9 @@ import java.util.Set;
 import stupaq.labview.UID;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
+import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
 import stupaq.vhdl93.ParseException;
@@ -29,12 +32,12 @@ import stupaq.vhdl93.ast.subtype_indication;
 import stupaq.vhdl93.ast.variable_declaration;
 
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
 
-class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
+public class DeclarationInferenceRules extends VIContextualVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeclarationInferenceRules.class);
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();
@@ -105,14 +108,14 @@ class DeclarationInferenceRules extends FormulaInterpreter<Exception> {
   }
 
   @Override
-  protected void entityDeclarations(UID uid, String expression) throws Exception {
+  protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
     VHDL93ParserPartial parser = forString(expression);
     NodeListOptional declarations = parser.entity_declarative_part().nodeListOptional;
     addDeclarations(declarations);
   }
 
   @Override
-  protected void architectureDeclarations(UID uid, String expression) throws Exception {
+  protected void FormulaWithArchitectureDeclarations(UID uid, String expression) throws Exception {
     VHDL93ParserPartial parser = forString(expression);
     NodeListOptional declarations = parser.architecture_declarative_part().nodeListOptional;
     addDeclarations(declarations);

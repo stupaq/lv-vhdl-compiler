@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.wiring;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -19,7 +19,7 @@ import stupaq.vhdl93.ast.expression;
 
 import static stupaq.translation.SemanticException.semanticCheck;
 
-class Endpoint {
+public class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
   private final UID uid;
   private final boolean isSource;

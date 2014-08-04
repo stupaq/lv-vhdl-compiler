@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.miscellanea;
 
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
@@ -34,7 +34,7 @@ import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 import static stupaq.vhdl93.ast.Builders.optional;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
-class DeclarationOrdering extends Ordering<Node> {
+public class DeclarationOrdering extends Ordering<Node> {
   private static final int DECLARATIONS_SORTING_LOOKUP = 2;
   private final Ordering<Node> ordering;
 

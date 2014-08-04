@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.miscellanea;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -10,7 +10,7 @@ import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.NodeToken;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-class FirstFewTokensOrdering extends Ordering<Node> {
+public class FirstFewTokensOrdering extends Ordering<Node> {
   private final int lookupLimit;
 
   public FirstFewTokensOrdering(int lookupLimit) {

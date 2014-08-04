@@ -34,13 +34,23 @@ import stupaq.labview.hierarchy.Unbundler;
 import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.MultiplexerVisitor;
-import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.Configuration;
 import stupaq.translation.MissingFeatureException;
 import stupaq.translation.SemanticException;
+import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
+import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
+import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
+import stupaq.translation.lv2vhdl.miscellanea.FirstFewTokensOrdering;
+import stupaq.translation.lv2vhdl.miscellanea.InterfaceDeclarationCache;
+import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.wiring.Endpoint;
+import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
+import stupaq.translation.lv2vhdl.wiring.Multiplexer;
+import stupaq.translation.lv2vhdl.wiring.UniversalVI;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.Identifier;
@@ -49,21 +59,22 @@ import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.ast.*;
 
+import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
-import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 import static stupaq.vhdl93.ast.Builders.*;
 
-class ArchitectureDefinition extends NoOpVisitor<Exception> {
+public class ArchitectureDefinition extends VIContextualVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
   private static final int STATEMENTS_SORTING_LOOKUP = 6;
-  private final EndpointsMap terminals = new EndpointsMap();
-  private final UniversalVIReader universalVI = new UniversalVIReader(terminals);
+  private final EndpointsMap terminals;
+  private final UniversalVI universalVI;
   private final DeclarationInferenceRules declarationInference = new DeclarationInferenceRules();
   private final ValueInferenceRules valueInference = new ValueInferenceRules();
   private final LVProjectReader project;
@@ -77,6 +88,10 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
   public ArchitectureDefinition(LVProjectReader project, VIDump theVi) throws Exception {
     this.project = project;
     this.interfaceCache = new InterfaceDeclarationCache(project);
+    // Collect information about terminals and connections between them.
+    terminals = new EndpointsMap(theVi);
+    // Resolve universal VI conventions.
+    universalVI = new UniversalVI(terminals, theVi);
     // Prepare all visitors using common order and run them.
     MultiplexerVisitor multiplexer =
         new MultiplexerVisitor(Terminal.XML_NAME, Wire.XML_NAME, Tunnel.XML_NAME,
@@ -84,11 +99,7 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
             ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME, RingConstant.XML_NAME,
             SubVI.XML_NAME);
     multiplexer.addVisitor(TracingVisitor.create());
-    multiplexer.addVisitor(new EndpointWiringRules(terminals));
-    multiplexer.addVisitor(universalVI);
     multiplexer.addVisitor(declarationInference);
-    multiplexer.addVisitor(new ExtendingFormulaInterpreter());
-    multiplexer.addVisitor(new ExtendingWireInterpreter());
     multiplexer.addVisitor(this);
     VIParser.visitVI(theVi, multiplexer);
     architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
@@ -104,12 +115,8 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
     return new association_list(choice(new named_association_list(first, rest)));
   }
 
-  public Optional<context_clause> getContext() {
-    return Optional.fromNullable(context);
-  }
-
   public design_unit emitAsArchitecture(ArchitectureName name) throws Exception {
-    context_clause context = getContext().or(new context_clause(listOptional()));
+    context_clause context = fromNullable(this.context).or(new context_clause(listOptional()));
     architecture_identifier identifier =
         forString(name.architecture().toString()).architecture_identifier();
     entity_name entity = forString(name.entity().entity().toString()).entity_name();
@@ -120,9 +127,97 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         new library_unit(choice(new secondary_unit(choice(definition)))));
   }
 
+  private static void setNamesAsFallback(Iterable<Endpoint> parameters) {
+    for (Endpoint terminal : parameters) {
+      String param = terminal.name();
+      // Set parameter name as a fallback. This one should have very low priority.
+      for (Endpoint connected : terminal.connected()) {
+        connected.valueIfEmpty(param);
+      }
+    }
+  }
+
+  @Override
+  protected EndpointsMap endpointsMap() {
+    return terminals;
+  }
+
   @Override
   public Iterable<String> parsersOrder() {
     throw new VerifyException();
+  }
+
+  @Override
+  protected void WireWithSignalDeclaration(UID uid, String label, signal_declaration declaration) {
+    architectureDeclarations.addNode(new block_declarative_item(choice(declaration)));
+  }
+
+  @Override
+  protected void FormulaWithArchitectureContext(UID uid, String expression) throws ParseException {
+    VHDL93ParserPartial parser = forString(expression);
+    context = parser.context_clause();
+  }
+
+  @Override
+  protected void FormulaWithArchitectureDeclarations(UID uid, String expression)
+      throws ParseException {
+    VHDL93ParserPartial parser = forString(expression);
+    NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
+    architectureDeclarations.nodes.addAll(extra.nodes);
+  }
+
+  @Override
+  protected void FormulaWithConcurrentStatements(UID uid, String expression,
+      Iterable<Endpoint> parameters) throws ParseException {
+    for (Endpoint param : parameters) {
+      String valueString = param.name();
+      // Set parameter name as a fallback. This one should have very low priority.
+      for (Endpoint connected : param.connected()) {
+        connected.valueIfEmpty(valueString);
+      }
+    }
+    VHDL93ParserPartial parser = forString(expression);
+    concurrentStatements.nodes.addAll(parser.architecture_statement_part().nodeListOptional.nodes);
+  }
+
+  @Override
+  protected void FormulaWithProcessStatement(UID uid, String expression,
+      Iterable<Endpoint> parameters) throws ParseException {
+    VHDL93ParserPartial parser = forString(expression);
+    concurrent_statement process = parser.concurrent_statement();
+    semanticCheck(process.nodeChoice.choice instanceof process_statement, uid,
+        "Statement is not a process declaration contrary to what label claims.");
+    concurrentStatements.nodes.add(process);
+    setNamesAsFallback(parameters);
+  }
+
+  @Override
+  protected void FormulaWithLvalue(UID uid, String expression, Endpoint lvalue,
+      Iterable<Endpoint> otherParameters) {
+    semanticCheck(!lvalue.isSource(), uid, "L-value must be data sink.");
+    // This way we set the value in actual destination.
+    for (Endpoint connected : lvalue.connected()) {
+      connected.valueOverride(expression);
+    }
+    setNamesAsFallback(otherParameters);
+  }
+
+  @Override
+  protected void FormulaWithRvalue(UID uid, String expression, Endpoint rvalue,
+      Iterable<Endpoint> otherParameters) {
+    semanticCheck(rvalue.isSource(), uid, "R-value must be data source.");
+    // This way we set the value in actual destination.
+    for (Endpoint connected : rvalue.connected()) {
+      connected.valueOverride(expression);
+    }
+    setNamesAsFallback(otherParameters);
+  }
+
+  @Override
+  protected void FormulaWithDeclaredConstant(UID owner, constant_declaration constant,
+      Iterable<Endpoint> parameters) throws Exception {
+    architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
+    setNamesAsFallback(parameters);
   }
 
   @Override
@@ -273,107 +368,5 @@ class ArchitectureDefinition extends NoOpVisitor<Exception> {
         ports.isEmpty() ? optional() : optional(new port_map_aspect(emitAssociationList(ports)));
     concurrentStatements.addNode(
         new component_instantiation_statement(instantiationLabel, unit, genericAspect, portAspect));
-  }
-
-  private class ExtendingFormulaInterpreter extends FormulaInterpreter<Exception> {
-    public ExtendingFormulaInterpreter() {
-      super(terminals);
-    }
-
-    @Override
-    protected void entityContext(UID uid, String expression) {
-      // We are not interested in this.
-    }
-
-    @Override
-    protected void entityDeclarations(UID uid, String expression) {
-      // We are not interested in this.
-    }
-
-    @Override
-    protected void architectureContext(UID uid, String expression) throws ParseException {
-      VHDL93ParserPartial parser = forString(expression);
-      context = parser.context_clause();
-    }
-
-    @Override
-    protected void architectureDeclarations(UID uid, String expression) throws ParseException {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
-      architectureDeclarations.nodes.addAll(extra.nodes);
-    }
-
-    @Override
-    protected void concurrentStatements(UID uid, String expression, Iterable<Endpoint> parameters)
-        throws ParseException {
-      for (Endpoint param : parameters) {
-        String valueString = param.name();
-        // Set parameter name as a fallback. This one should have very low priority.
-        for (Endpoint connected : param.connected()) {
-          connected.valueIfEmpty(valueString);
-        }
-      }
-      VHDL93ParserPartial parser = forString(expression);
-      concurrentStatements.nodes.addAll(
-          parser.architecture_statement_part().nodeListOptional.nodes);
-    }
-
-    @Override
-    protected void processStatement(UID uid, String expression, Iterable<Endpoint> parameters)
-        throws ParseException {
-      VHDL93ParserPartial parser = forString(expression);
-      concurrent_statement process = parser.concurrent_statement();
-      semanticCheck(process.nodeChoice.choice instanceof process_statement, uid,
-          "Statement is not a process declaration contrary to what label claims.");
-      concurrentStatements.nodes.add(process);
-      setNamesAsFallback(parameters);
-    }
-
-    @Override
-    protected void lvalueExpression(UID uid, String expression, Endpoint lvalue,
-        Iterable<Endpoint> otherParameters) {
-      semanticCheck(!lvalue.isSource(), uid, "L-value must be data sink.");
-      // This way we set the value in actual destination.
-      for (Endpoint connected : lvalue.connected()) {
-        connected.valueOverride(expression);
-      }
-      setNamesAsFallback(otherParameters);
-    }
-
-    @Override
-    protected void rvalueExpression(UID uid, String expression, Endpoint rvalue,
-        Iterable<Endpoint> otherParameters) {
-      semanticCheck(rvalue.isSource(), uid, "R-value must be data source.");
-      // This way we set the value in actual destination.
-      for (Endpoint connected : rvalue.connected()) {
-        connected.valueOverride(expression);
-      }
-      setNamesAsFallback(otherParameters);
-    }
-
-    @Override
-    protected void declaredConstant(UID owner, constant_declaration constant,
-        Iterable<Endpoint> parameters) throws Exception {
-      architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
-      setNamesAsFallback(parameters);
-    }
-
-    private void setNamesAsFallback(Iterable<Endpoint> parameters) {
-      for (Endpoint terminal : parameters) {
-        String param = terminal.name();
-        // Set parameter name as a fallback. This one should have very low priority.
-        for (Endpoint connected : terminal.connected()) {
-          connected.valueIfEmpty(param);
-        }
-      }
-    }
-  }
-
-  private class ExtendingWireInterpreter extends WireInterpreter {
-    @Override
-    protected void wireWithSignalDeclaration(UID uid, String label,
-        signal_declaration declaration) {
-      architectureDeclarations.addNode(new block_declarative_item(choice(declaration)));
-    }
   }
 }

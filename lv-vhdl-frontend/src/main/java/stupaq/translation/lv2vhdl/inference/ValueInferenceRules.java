@@ -1,11 +1,13 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.inference;
 
 import com.google.common.collect.Iterables;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ValueInferenceRules {
+import stupaq.translation.lv2vhdl.wiring.Endpoint;
+
+public class ValueInferenceRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(ValueInferenceRules.class);
   private int nextInferredNum = 0;
 

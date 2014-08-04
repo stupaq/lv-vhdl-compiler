@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.miscellanea;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -7,9 +7,10 @@ import com.google.common.cache.LoadingCache;
 import java.util.concurrent.ExecutionException;
 
 import stupaq.labview.VIPath;
+import stupaq.translation.lv2vhdl.InterfaceDeclaration;
 import stupaq.translation.project.LVProjectReader;
 
-class InterfaceDeclarationCache {
+public class InterfaceDeclarationCache {
   private final LVProjectReader project;
   private final LoadingCache<VIPath, InterfaceDeclaration> cache = CacheBuilder.newBuilder()
       .concurrencyLevel(1)

@@ -3,7 +3,6 @@ package stupaq.translation.lv2vhdl;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
-import com.google.common.base.VerifyException;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedInteger;
 
@@ -24,23 +23,25 @@ import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Panel;
-import stupaq.labview.parsing.MultiplexerVisitor;
-import stupaq.labview.parsing.TracingVisitor;
 import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
+import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
+import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
+import static java.util.Arrays.asList;
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;
 
-class InterfaceDeclaration extends FormulaInterpreter<Exception> {
+public class InterfaceDeclaration extends VIContextualVisitor<Exception> {
   private static final Logger LOGGER = LoggerFactory.getLogger(InterfaceDeclaration.class);
   private final NodeListOptional entityDeclarations = new NodeListOptional();
   private final IntegerMap<interface_constant_declaration> generics = new IntegerMap<>();
@@ -58,13 +59,7 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
   }
 
   public InterfaceDeclaration(VIDump theVi) throws Exception {
-    MultiplexerVisitor<Exception> multiplexer =
-        new MultiplexerVisitor<>(Panel.XML_NAME, FormulaNode.XML_NAME, ConnectorPane.XML_NAME,
-            ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
-    multiplexer.addVisitor(TracingVisitor.create());
-    multiplexer.addVisitor(new ExtendingFormulaInterpreter());
-    multiplexer.addVisitor(this);
-    VIParser.visitVI(theVi, multiplexer);
+    VIParser.visitVI(theVi, this);
     Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
   }
 
@@ -124,7 +119,8 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
 
   @Override
   public Iterable<String> parsersOrder() {
-    throw new VerifyException();
+    return asList(Panel.XML_NAME, ConnectorPane.XML_NAME, FormulaNode.XML_NAME,
+        ControlCluster.XML_NAME, Control.NUMERIC_XML_NAME);
   }
 
   @Override
@@ -141,6 +137,19 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
     for (UID control : controls) {
       controlToPaneIndex.put(control, index++);
     }
+  }
+
+  @Override
+  protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
+    VHDL93ParserPartial parser = forString(expression);
+    NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
+    entityDeclarations.nodes.addAll(extra.nodes);
+  }
+
+  @Override
+  protected void FormulaWithEntityContext(UID uid, String expression) throws Exception {
+    VHDL93ParserPartial parser = forString(expression);
+    entityContext = parser.context_clause();
   }
 
   @Override
@@ -205,21 +214,6 @@ class InterfaceDeclaration extends FormulaInterpreter<Exception> {
       ports.put(connPaneIndex, port);
     } else {
       throw new SemanticException("Control style not recognised: %s", style);
-    }
-  }
-
-  private class ExtendingFormulaInterpreter extends FormulaInterpreter {
-    @Override
-    protected void entityDeclarations(UID uid, String expression) throws Exception {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
-      entityDeclarations.nodes.addAll(extra.nodes);
-    }
-
-    @Override
-    protected void entityContext(UID uid, String expression) throws Exception {
-      VHDL93ParserPartial parser = forString(expression);
-      entityContext = parser.context_clause();
     }
   }
 }

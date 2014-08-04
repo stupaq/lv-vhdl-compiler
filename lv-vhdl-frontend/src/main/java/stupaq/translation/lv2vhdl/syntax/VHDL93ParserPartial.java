@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl;
+package stupaq.translation.lv2vhdl.syntax;
 
 import com.google.common.reflect.Reflection;
 
@@ -16,7 +16,7 @@ import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.VHDL93ParserTotal;
 import stupaq.vhdl93.ast.Node;
 
-interface VHDL93ParserPartial extends VHDL93Parser {
+public interface VHDL93ParserPartial extends VHDL93Parser {
   public static final Logger LOGGER = LoggerFactory.getLogger(VHDL93ParserPartial.class);
 
   public static final class Parsers {
