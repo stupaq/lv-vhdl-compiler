@@ -46,7 +46,7 @@ public class DeclarationInferenceRules {
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();
 
-  public DeclarationInferenceRules(ParsedVI theVi) throws Exception {
+  public DeclarationInferenceRules(ParsedVI theVi) {
     theVi.accept(new BuilderVisitor());
   }
 

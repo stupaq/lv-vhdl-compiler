@@ -25,7 +25,7 @@ public class MultiplexersMap {
   private final EndpointsMap terminals;
   private final Map<UID, Endpoint> controlToClusterEndpoint = Maps.newHashMap();
 
-  public MultiplexersMap(EndpointsMap terminals, ParsedVI theVi) throws Exception {
+  public MultiplexersMap(EndpointsMap terminals, ParsedVI theVi) {
     this.terminals = terminals;
     theVi.accept(new BuilderVisitor());
   }

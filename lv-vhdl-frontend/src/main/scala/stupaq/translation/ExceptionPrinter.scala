@@ -2,17 +2,17 @@ package stupaq.translation
 
 import java.io.PrintStream
 
-import stupaq.translation.errors.{SemanticException, MissingFeatureException}
-import stupaq.vhdl93.ParseException
+import stupaq.translation.errors.TranslationException
+import stupaq.translation.lv2vhdl.errors.LocalisedException
 
 object ExceptionPrinter {
 
   def print(ex: Exception, stream: PrintStream) {
-    stream println "Translation error encountered:"
     ex match {
-      case _: SemanticException =>
-        stream println ex.getMessage
-      case _: MissingFeatureException =>
+      case _: LocalisedException =>
+        throw new VerifyError("Localised exception found in exception reporter.")
+      case _: TranslationException =>
+        stream println "Translation error encountered:"
         stream println ex.getMessage
       case _ =>
         ex printStackTrace stream

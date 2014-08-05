@@ -75,7 +75,7 @@ public class ArchitectureDefinition {
   private context_clause context;
 
   public ArchitectureDefinition(InterfaceDeclarationCache interfaceCache, LVProjectReader project,
-      ParsedVI theVi) throws Exception {
+      ParsedVI theVi) {
     this.project = project;
     this.interfaceCache = interfaceCache;
     // Collect information about endpoints and connections between them.

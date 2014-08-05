@@ -43,4 +43,8 @@ public class InterfaceDeclarationCache {
       }
     }
   }
+
+  public void fill(VIPath path, InterfaceDeclaration entity) {
+    cache.put(path, entity);
+  }
 }

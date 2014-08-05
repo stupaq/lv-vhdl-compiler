@@ -2,12 +2,13 @@ package stupaq.translation.lv2vhdl.errors;
 
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
+import stupaq.translation.errors.TranslationException;
 
-public class LocalisedException extends Exception {
+public class LocalisedException extends TranslationException {
   private UID uid;
   private VIPath vi;
 
-  public LocalisedException(Exception cause) {
+  public LocalisedException(TranslationException cause) {
     super(cause);
   }
 
@@ -15,7 +16,7 @@ public class LocalisedException extends Exception {
     this.uid = uid;
   }
 
-  public UID getUid() {
+  public UID getUID() {
     return uid;
   }
 
@@ -25,5 +26,14 @@ public class LocalisedException extends Exception {
 
   public void setVI(VIPath vi) {
     this.vi = vi;
+  }
+
+  public boolean isLocalised() {
+    return uid != null && vi != null;
+  }
+
+  @Override
+  public TranslationException getCause() {
+    return (TranslationException) super.getCause();
   }
 }

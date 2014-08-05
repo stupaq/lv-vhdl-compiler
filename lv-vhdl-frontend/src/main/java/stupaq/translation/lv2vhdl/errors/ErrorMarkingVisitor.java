@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import stupaq.labview.UID;
 import stupaq.labview.VIPath;
 import stupaq.labview.parsing.VIElementsVisitor;
+import stupaq.translation.errors.TranslationException;
 
 public final class ErrorMarkingVisitor {
   private static final int UID_ARG_INDEX = 1;
@@ -22,20 +23,21 @@ public final class ErrorMarkingVisitor {
     return (VIElementsVisitor<E>) Reflection.newProxy(VIElementsVisitor.class,
         new InvocationHandler() {
           @Override
-          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          public Object invoke(Object proxy, Method method, Object[] args)
+              throws IllegalAccessException, InvocationTargetException {
             try {
               return method.invoke(delegate, args);
             } catch (InvocationTargetException e) {
-              if (e.getTargetException() instanceof LocalisedException) {
-                throw e;
-              } else if (e.getTargetException() instanceof Exception) {
-                LocalisedException localised =
-                    new LocalisedException((Exception) e.getTargetException());
+              Throwable t = e.getTargetException();
+              if (t instanceof LocalisedException) {
+                throw (LocalisedException) t;
+              } else if (t instanceof TranslationException) {
+                LocalisedException localised = new LocalisedException((TranslationException) t);
                 localised.setVI(vi);
                 if (args.length > UID_ARG_INDEX && args[UID_ARG_INDEX] instanceof UID) {
                   localised.setUID((UID) args[UID_ARG_INDEX]);
                 }
-                throw new InvocationTargetException(localised);
+                throw localised;
               } else {
                 throw e;
               }

@@ -910,14 +910,19 @@ public interface VHDL93ParserPartial extends VHDL93Parser {
       }
 
       @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      public Object invoke(Object proxy, Method method, Object[] args)
+          throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         try {
+          method = VHDL93ParserTotal.class.getDeclaredMethod(method.getName(),
+              method.getParameterTypes());
           Object result = method.invoke(parser, args);
           parser.eof();
           if (result instanceof Node) {
             ((Node) result).accept(new FlattenNestedListsVisitor());
           }
           return result;
+        } catch (ParseException e) {
+          throw new SyntaxException(e);
         } catch (InvocationTargetException e) {
           Throwable t = e.getTargetException();
           if (t instanceof ParseException) {
