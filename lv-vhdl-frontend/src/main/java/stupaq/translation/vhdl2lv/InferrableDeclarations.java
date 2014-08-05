@@ -31,7 +31,7 @@ import stupaq.vhdl93.ast.positional_association_element;
 import stupaq.vhdl93.ast.positional_association_list;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
-import static stupaq.translation.SemanticException.semanticNotNull;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
 class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {

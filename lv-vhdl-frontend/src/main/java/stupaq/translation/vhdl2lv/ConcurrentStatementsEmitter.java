@@ -13,7 +13,7 @@ import stupaq.labview.hierarchy.Loop;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.VI;
 import stupaq.labview.hierarchy.WhileLoop;
-import stupaq.translation.MissingFeatureException;
+import stupaq.translation.errors.MissingFeatureException;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
@@ -24,7 +24,7 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
-import static stupaq.translation.SemanticException.semanticNotNull;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
 class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {

@@ -19,14 +19,14 @@ import stupaq.labview.UID;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Wire;
-import stupaq.labview.parsing.NeverThrownException;
+import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
 
 import static java.util.Arrays.asList;
-import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 
 public class EndpointsMap {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointsMap.class);
@@ -48,7 +48,7 @@ public class EndpointsMap {
     delegate.put(uid, endpoint);
   }
 
-  private class BuilderVisitor extends VIElementsVisitor<NeverThrownException> {
+  private class BuilderVisitor extends VIElementsVisitor<TranslationException> {
     private final Multimap<UID, Endpoint> wiresToEndpoints =
         Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
             new Supplier<List<Endpoint>>() {
@@ -72,7 +72,7 @@ public class EndpointsMap {
 
     @Override
     public void Tunnel(UID ownerUID, UID uid, List<UID> insideTermUIDs, UID outsideTermUID) {
-      semanticCheck(insideTermUIDs.size() == 1, uid, "Tunnel has multiple internal frames.");
+      semanticCheck(insideTermUIDs.size() == 1, "Tunnel has multiple internal frames.");
       Endpoint inside = EndpointsMap.this.get(insideTermUIDs.get(0));
       Endpoint outside = EndpointsMap.this.get(outsideTermUID);
       LOGGER.debug("Tunnel with endpoints: inside: {} outside: {}", inside, outside);

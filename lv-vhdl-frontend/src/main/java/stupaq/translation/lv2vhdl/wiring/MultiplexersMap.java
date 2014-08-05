@@ -13,11 +13,12 @@ import stupaq.labview.UID;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.Unbundler;
+import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 
 import static java.util.Arrays.asList;
-import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 
 public class MultiplexersMap {
   private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
@@ -44,7 +45,7 @@ public class MultiplexersMap {
     return multiplexers.get(single);
   }
 
-  private class BuilderVisitor extends VIElementsVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<TranslationException> {
     @Override
     public Iterable<String> parsersOrder() {
       return asList(Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME);
@@ -71,7 +72,7 @@ public class MultiplexersMap {
       for (Endpoint other : terminal.connected()) {
         Multiplexer multiplexer = multiplexers.get(other);
         if (multiplexer != null) {
-          semanticCheck(multiplexer.size() == controlUIDs.size(), uid,
+          semanticCheck(multiplexer.size() == controlUIDs.size(),
               "Different size of (un)bundler and clustered control.");
           for (int i = 0, n = controlUIDs.size(); i < n; ++i) {
             UID control = controlUIDs.get(i);

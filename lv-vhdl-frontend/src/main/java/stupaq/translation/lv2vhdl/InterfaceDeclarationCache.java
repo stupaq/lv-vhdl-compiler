@@ -4,10 +4,15 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import org.xml.sax.SAXException;
+
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+import javax.xml.bind.JAXBException;
+
 import stupaq.labview.VIPath;
-import stupaq.translation.lv2vhdl.InterfaceDeclaration;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.project.LVProjectReader;
 
 public class InterfaceDeclarationCache {
@@ -16,8 +21,10 @@ public class InterfaceDeclarationCache {
       .concurrencyLevel(1)
       .build(new CacheLoader<VIPath, InterfaceDeclaration>() {
         @Override
-        public InterfaceDeclaration load(VIPath viPath) throws Exception {
-          return new InterfaceDeclaration(project, viPath);
+        public InterfaceDeclaration load(VIPath viPath)
+            throws JAXBException, SAXException, IOException {
+          ParsedVI theVi = new ParsedVI(project.tools(), viPath);
+          return new InterfaceDeclaration(theVi);
         }
       });
 
@@ -25,14 +32,14 @@ public class InterfaceDeclarationCache {
     this.project = project;
   }
 
-  public InterfaceDeclaration get(VIPath viPath) throws Exception {
+  public InterfaceDeclaration get(VIPath viPath) {
     try {
       return cache.get(viPath);
     } catch (ExecutionException e) {
-      if (e.getCause() != null && e.getCause() instanceof Exception) {
-        throw (Exception) e.getCause();
+      if (e.getCause() instanceof RuntimeException) {
+        throw (RuntimeException) e.getCause();
       } else {
-        throw e;
+        throw new RuntimeException(e);
       }
     }
   }

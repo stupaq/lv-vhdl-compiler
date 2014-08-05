@@ -30,8 +30,9 @@ import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.Configuration;
-import stupaq.translation.MissingFeatureException;
-import stupaq.translation.SemanticException;
+import stupaq.translation.errors.MissingFeatureException;
+import stupaq.translation.errors.SemanticException;
+import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
 import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
 import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
@@ -48,14 +49,13 @@ import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProjectReader;
-import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.ast.*;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.FluentIterable.from;
-import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
@@ -121,7 +121,7 @@ public class ArchitectureDefinition {
         new library_unit(choice(new secondary_unit(choice(definition)))));
   }
 
-  private class BuilderVisitor extends VIElementsVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<TranslationException> {
     private final ValueInferenceRules valueInference = new ValueInferenceRules();
     private final Set<ComponentName> emittedComponents = Sets.newHashSet();
     private int nextLabelNum = 0;
@@ -143,15 +143,13 @@ public class ArchitectureDefinition {
     }
 
     @Override
-    protected void FormulaWithArchitectureContext(UID uid, String expression)
-        throws ParseException {
+    protected void FormulaWithArchitectureContext(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       context = parser.context_clause();
     }
 
     @Override
-    protected void FormulaWithArchitectureDeclarations(UID uid, String expression)
-        throws ParseException {
+    protected void FormulaWithArchitectureDeclarations(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
       architectureDeclarations.nodes.addAll(extra.nodes);
@@ -159,7 +157,7 @@ public class ArchitectureDefinition {
 
     @Override
     protected void FormulaWithConcurrentStatements(UID uid, String expression,
-        Iterable<Endpoint> parameters) throws ParseException {
+        Iterable<Endpoint> parameters) {
       for (Endpoint param : parameters) {
         String valueString = param.name();
         // Set parameter name as a fallback. This one should have very low priority.
@@ -174,10 +172,10 @@ public class ArchitectureDefinition {
 
     @Override
     protected void FormulaWithProcessStatement(UID uid, String expression,
-        Iterable<Endpoint> parameters) throws ParseException {
+        Iterable<Endpoint> parameters) {
       VHDL93ParserPartial parser = forString(expression);
       concurrent_statement process = parser.concurrent_statement();
-      semanticCheck(process.nodeChoice.choice instanceof process_statement, uid,
+      semanticCheck(process.nodeChoice.choice instanceof process_statement,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
       setNamesAsFallback(parameters);
@@ -186,7 +184,7 @@ public class ArchitectureDefinition {
     @Override
     protected void FormulaWithLvalue(UID uid, String expression, Endpoint lvalue,
         Iterable<Endpoint> otherParameters) {
-      semanticCheck(!lvalue.isSource(), uid, "L-value must be data sink.");
+      semanticCheck(!lvalue.isSource(), "L-value must be data sink.");
       // This way we set the value in actual destination.
       for (Endpoint connected : lvalue.connected()) {
         connected.valueOverride(expression);
@@ -197,7 +195,7 @@ public class ArchitectureDefinition {
     @Override
     protected void FormulaWithRvalue(UID uid, String expression, Endpoint rvalue,
         Iterable<Endpoint> otherParameters) {
-      semanticCheck(rvalue.isSource(), uid, "R-value must be data source.");
+      semanticCheck(rvalue.isSource(), "R-value must be data source.");
       // This way we set the value in actual destination.
       for (Endpoint connected : rvalue.connected()) {
         connected.valueOverride(expression);
@@ -207,16 +205,15 @@ public class ArchitectureDefinition {
 
     @Override
     protected void FormulaWithDeclaredConstant(UID owner, constant_declaration constant,
-        Iterable<Endpoint> parameters) throws Exception {
+        Iterable<Endpoint> parameters) {
       architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
       setNamesAsFallback(parameters);
     }
 
     @Override
     public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-        boolean isIndicator, ControlStyle style, String description) throws Exception {
-      semanticCheck(label.isPresent(), uid,
-          "Missing control label (should contain port declaration).");
+        boolean isIndicator, ControlStyle style, String description) {
+      semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
       String declaration = label.get().trim();
       VHDL93ParserPartial labelParser = forString(declaration);
       identifier signal;
@@ -244,7 +241,7 @@ public class ArchitectureDefinition {
 
     @Override
     public void RingConstant(UID owner, UID uid, Optional<String> label, UID terminalUID,
-        Map<String, Object> stringsAndValues) throws Exception {
+        Map<String, Object> stringsAndValues) {
       Verify.verify(!stringsAndValues.isEmpty());
       String constantString = stringsAndValues.keySet().iterator().next();
       String valueString;
@@ -267,8 +264,7 @@ public class ArchitectureDefinition {
     }
 
     @Override
-    public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description)
-        throws Exception {
+    public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description) {
       InterfaceDeclaration declaration = interfaceCache.get(viPath);
       InstantiableName element = Identifier.parse(viPath.getBaseName());
       instantiated_unit unit;
@@ -333,15 +329,14 @@ public class ArchitectureDefinition {
           // Assigning "open" makes no sense.
           if (terminal.hasValue()) {
             interface_constant_declaration generic = (interface_constant_declaration) node;
-            semanticCheck(generic.nodeOptional.present(), uid,
-                "Missing signal/constant specifier.");
+            semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
             formal_part formal = new formal_part(generic.identifier_list.identifier);
             actual_part actual = new actual_part(choice(terminal.value()));
             generics.add(new named_association_element(formal, actual));
           }
         } else if (node instanceof interface_signal_declaration) {
           interface_signal_declaration port = (interface_signal_declaration) node;
-          semanticCheck(port.nodeOptional.present(), uid, "Missing signal/constant specifier.");
+          semanticCheck(port.nodeOptional.present(), "Missing signal/constant specifier.");
           formal_part formal = new formal_part(port.identifier_list.identifier);
           // Apply signal inference rules to instance endpoints.
           valueInference.inferValue(terminal);

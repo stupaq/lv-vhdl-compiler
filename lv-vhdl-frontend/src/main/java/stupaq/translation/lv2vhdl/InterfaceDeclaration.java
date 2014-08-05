@@ -15,25 +15,23 @@ import java.util.Map;
 
 import stupaq.commons.IntegerMap;
 import stupaq.labview.UID;
-import stupaq.labview.VIPath;
 import stupaq.labview.hierarchy.ConnectorPane;
 import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Panel;
 import stupaq.labview.scripting.tools.ControlStyle;
-import stupaq.translation.SemanticException;
+import stupaq.translation.errors.SemanticException;
+import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
-import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
-import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
@@ -48,11 +46,7 @@ public class InterfaceDeclaration {
   private boolean clustered = false;
   private context_clause entityContext;
 
-  public InterfaceDeclaration(LVProjectReader project, VIPath viPath) throws Exception {
-    this(new ParsedVI(project.tools(), viPath));
-  }
-
-  public InterfaceDeclaration(stupaq.labview.parsing.ParsedVI theVi) throws Exception {
+  public InterfaceDeclaration(stupaq.labview.parsing.ParsedVI theVi) {
     theVi.accept(new BuilderVisitor());
     Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
   }
@@ -66,7 +60,7 @@ public class InterfaceDeclaration {
     return paneIndexToNames.getPresent(connPaneIndex);
   }
 
-  public design_unit emitAsEntity(EntityName name) throws Exception {
+  public design_unit emitAsEntity(EntityName name) {
     context_clause context =
         entityContext != null ? entityContext : new context_clause(listOptional());
     entity_identifier identifier = forString(name.entity().toString()).entity_identifier();
@@ -78,13 +72,13 @@ public class InterfaceDeclaration {
         new library_unit(choice(new primary_unit(choice(declaration)))));
   }
 
-  public component_declaration emitAsComponent(ComponentName name) throws Exception {
+  public component_declaration emitAsComponent(ComponentName name) {
     component_identifier identifier = forString(name.component().toString()).component_identifier();
     component_header header = new component_header(createGenerics(), createPorts());
     return new component_declaration(identifier, optional(token(IS)), header, optional());
   }
 
-  private NodeOptional createGenerics() throws Exception {
+  private NodeOptional createGenerics() {
     if (generics.isEmpty()) {
       return optional();
     } else {
@@ -96,7 +90,7 @@ public class InterfaceDeclaration {
     }
   }
 
-  private NodeOptional createPorts() throws Exception {
+  private NodeOptional createPorts() {
     if (ports.isEmpty()) {
       return optional();
     } else {
@@ -107,7 +101,7 @@ public class InterfaceDeclaration {
     }
   }
 
-  private class BuilderVisitor extends VIElementsVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<TranslationException> {
     private final Map<UID, Integer> controlToPaneIndex = Maps.newHashMap();
     private final Map<UID, Integer> controlToClusterIndex = Maps.newHashMap();
     private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
@@ -148,7 +142,7 @@ public class InterfaceDeclaration {
       }
       int index = 0;
       Optional<Integer> connPaneIndex = connPaneIndex(uid);
-      semanticCheck(connPaneIndex.isPresent(), uid, "Control is not connected to the ConnPane.");
+      semanticCheck(connPaneIndex.isPresent(), "Control is not connected to the ConnPane.");
       IntegerMap<String> names = new IntegerMap<>();
       paneIndexToNames.put(connPaneIndex.get(), names);
       controlOwnerToNames.put(uid, names);
@@ -160,13 +154,12 @@ public class InterfaceDeclaration {
 
     @Override
     public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-        boolean isIndicator, ControlStyle style, String description) throws Exception {
+        boolean isIndicator, ControlStyle style, String description) {
       Verify.verifyNotNull(rootPanel);
-      semanticCheck(label.isPresent(), uid,
-          "Missing control label (should contain port declaration).");
+      semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
       int connPaneIndex;
       if (clustered) {
-        semanticCheck(!rootPanel.equals(ownerUID), uid,
+        semanticCheck(!rootPanel.equals(ownerUID),
             "VI is clustered, but some control has front panel as an owner.");
         // Fill information about clustered control.
         IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
@@ -179,10 +172,10 @@ public class InterfaceDeclaration {
               "Control description: %s does not contain port or generic index.", description);
         }
       } else {
-        semanticCheck(rootPanel.equals(ownerUID), uid,
+        semanticCheck(rootPanel.equals(ownerUID),
             "VI is not clustered, but some control has owner other than front panel.");
         Optional<Integer> index = connPaneIndex(uid);
-        semanticCheck(index.isPresent(), uid, "Control is not connected to the ConnPane.");
+        semanticCheck(index.isPresent(), "Control is not connected to the ConnPane.");
         connPaneIndex = index.get();
       }
       String declaration = label.get().trim();
@@ -205,13 +198,13 @@ public class InterfaceDeclaration {
     }
 
     @Override
-    protected void FormulaWithEntityContext(UID uid, String expression) throws Exception {
+    protected void FormulaWithEntityContext(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       entityContext = parser.context_clause();
     }
 
     @Override
-    protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
+    protected void FormulaWithEntityDeclarations(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
       entityDeclarations.nodes.addAll(extra.nodes);

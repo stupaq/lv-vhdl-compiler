@@ -2,6 +2,7 @@ package stupaq.translation
 
 import java.io.PrintStream
 
+import stupaq.translation.errors.{SemanticException, MissingFeatureException}
 import stupaq.vhdl93.ParseException
 
 object ExceptionPrinter {

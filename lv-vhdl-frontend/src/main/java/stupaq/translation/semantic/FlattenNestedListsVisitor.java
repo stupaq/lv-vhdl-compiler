@@ -3,7 +3,7 @@ package stupaq.translation.semantic;
 import stupaq.vhdl93.ast.identifier_list;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-import static stupaq.translation.MissingFeatureException.missingIf;
+import static stupaq.translation.errors.MissingFeatureException.missingIf;
 
 public class FlattenNestedListsVisitor extends DepthFirstVisitor {
   @Override

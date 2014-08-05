@@ -13,9 +13,9 @@ import java.util.Set;
 
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NoOpVisitor;
+import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
-import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
@@ -23,8 +23,8 @@ import stupaq.vhdl93.ast.signal_declaration;
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
-import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.*;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
@@ -54,13 +54,13 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
         signal_declaration declaration = forString(declString).signal_declaration();
         WireWithSignalDeclaration(uid, label.get(), declaration);
         return;
-      } catch (ParseException ignored) {
+      } catch (SyntaxException ignored) {
       }
       try {
         expression expression = forString(label.get()).expression();
         WireWithExpression(uid, label.get(), expression);
         return;
-      } catch (ParseException ignored) {
+      } catch (SyntaxException ignored) {
       }
     }
     semanticCheck(!label.isPresent(), "Cannot recognize label of the wire.");
@@ -112,21 +112,20 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
         constant_declaration constant = parser.constant_declaration();
         FormulaWithDeclaredConstant(uid, constant, parameters);
         return;
-      } catch (ParseException ignored) {
+      } catch (SyntaxException ignored) {
       }
     }
     Endpoint lvalue = null, rvalue = null;
     for (Endpoint param : parameters) {
       if (param.name().equals(LVALUE_PARAMETER)) {
-        semanticCheck(!param.isSource(), uid, "L-value must be data sink.");
+        semanticCheck(!param.isSource(), "L-value must be data sink.");
         lvalue = param;
       } else if (param.name().equals(RVALUE_PARAMETER)) {
-        semanticCheck(param.isSource(), uid, "R-value must be data source.");
+        semanticCheck(param.isSource(), "R-value must be data source.");
         rvalue = param;
       }
     }
-    semanticCheck(lvalue == null || rvalue == null, uid,
-        "Expression cannot be both l- and r-value.");
+    semanticCheck(lvalue == null || rvalue == null, "Expression cannot be both l- and r-value.");
     if (lvalue != null) {
       FormulaWithLvalue(uid, expression, lvalue, parameters.filter(not(equalTo(lvalue))));
     } else if (rvalue != null) {

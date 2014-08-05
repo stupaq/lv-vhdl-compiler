@@ -1,17 +1,14 @@
-package stupaq.translation;
+package stupaq.translation.errors;
 
-import com.google.common.base.Optional;
-
-import stupaq.vhdl93.ast.Position;
 import stupaq.vhdl93.ast.SimpleNode;
 
-public class MissingFeatureException extends AbstractLocalisedException {
+public class MissingFeatureException extends TranslationException {
   public MissingFeatureException(SimpleNode near, String message, Object... args) {
-    super(String.format(message, args), near);
+    super(String.format(message, args));
   }
 
   public MissingFeatureException(String message, Object... args) {
-    super(String.format(message, args), Optional.<Position>absent());
+    super(String.format(message, args));
   }
 
   public static void missingIf(boolean b, SimpleNode n, String message, Object... args) {

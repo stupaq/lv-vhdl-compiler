@@ -7,17 +7,14 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.Set;
 
 import stupaq.labview.UID;
-import stupaq.vhdl93.ParseException;
-import stupaq.vhdl93.VHDL93Parser;
-import stupaq.vhdl93.VHDL93ParserTotal;
 import stupaq.vhdl93.ast.expression;
 
-import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 
 public class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
@@ -45,11 +42,8 @@ public class Endpoint {
     return isSource;
   }
 
-  public expression value() throws ParseException {
-    VHDL93Parser parser = new VHDL93ParserTotal(new StringReader(valueString()));
-    expression value = parser.expression();
-    parser.eof();
-    return value;
+  public expression value() {
+    return forString(valueString()).expression();
   }
 
   private void valueInternal(String valueString) {
@@ -74,7 +68,7 @@ public class Endpoint {
   }
 
   public void value(String valueString) {
-    semanticCheck(!hasValue(), uid, "Multiple value specifications for terminal.");
+    semanticCheck(!hasValue(), "Multiple value specifications for terminal.");
     valueInternal(valueString);
   }
 
@@ -96,7 +90,7 @@ public class Endpoint {
   }
 
   public Endpoint onlyConnected() {
-    semanticCheck(connected.size() == 1, uid,
+    semanticCheck(connected.size() == 1,
         "Terminal is expected to be connected with only one other terminal.");
     return connected.iterator().next();
   }

@@ -33,8 +33,8 @@ import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.of;
-import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.SemanticException.semanticNotNull;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticNotNull;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
 class DesignFileEmitter extends DepthFirstVisitor {

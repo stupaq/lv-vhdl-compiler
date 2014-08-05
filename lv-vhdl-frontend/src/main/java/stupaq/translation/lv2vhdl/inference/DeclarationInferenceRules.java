@@ -15,14 +15,15 @@ import stupaq.labview.UID;
 import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.scripting.tools.ControlStyle;
-import stupaq.translation.SemanticException;
+import stupaq.translation.errors.SemanticException;
+import stupaq.translation.errors.SyntaxException;
+import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
-import stupaq.vhdl93.ParseException;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.NodeListOptional;
 import stupaq.vhdl93.ast.block_declarative_item;
@@ -34,7 +35,7 @@ import stupaq.vhdl93.ast.subtype_indication;
 import stupaq.vhdl93.ast.variable_declaration;
 
 import static java.util.Arrays.asList;
-import static stupaq.translation.SemanticException.semanticCheck;
+import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
@@ -58,7 +59,7 @@ public class DeclarationInferenceRules {
     IOReference ref;
     try {
       ref = new IOReference(forString(valueString).identifier());
-    } catch (ParseException e) {
+    } catch (SyntaxException e) {
       LOGGER.debug("Skipping declaration inference (not an identifier) for: {}.", terminal);
       return;
     }
@@ -66,7 +67,7 @@ public class DeclarationInferenceRules {
       subtype_indication type;
       try {
         type = forString(terminal.name()).interface_signal_declaration().subtype_indication;
-      } catch (ParseException e) {
+      } catch (SyntaxException e) {
         LOGGER.debug("Skipping declaration inference (not a declaration) for: {}.", terminal);
         return;
       }
@@ -89,7 +90,7 @@ public class DeclarationInferenceRules {
     return inferred;
   }
 
-  private class BuilderVisitor extends VIElementsVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<TranslationException> {
     @Override
     public Iterable<String> parsersOrder() {
       return asList(Control.NUMERIC_XML_NAME, FormulaNode.XML_NAME);
@@ -97,9 +98,8 @@ public class DeclarationInferenceRules {
 
     @Override
     public void Control(UID ownerUID, UID uid, Optional<String> label, UID terminalUID,
-        boolean isIndicator, ControlStyle style, String description) throws Exception {
-      semanticCheck(label.isPresent(), uid,
-          "Missing control label (should contain port declaration).");
+        boolean isIndicator, ControlStyle style, String description) {
+      semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
       String declaration = label.get().trim();
       VHDL93ParserPartial labelParser = forString(declaration);
       if (style == ControlStyle.NUMERIC_I32) {
@@ -116,15 +116,14 @@ public class DeclarationInferenceRules {
     }
 
     @Override
-    protected void FormulaWithEntityDeclarations(UID uid, String expression) throws Exception {
+    protected void FormulaWithEntityDeclarations(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       NodeListOptional declarations = parser.entity_declarative_part().nodeListOptional;
       addDeclarations(declarations);
     }
 
     @Override
-    protected void FormulaWithArchitectureDeclarations(UID uid, String expression)
-        throws Exception {
+    protected void FormulaWithArchitectureDeclarations(UID uid, String expression) {
       VHDL93ParserPartial parser = forString(expression);
       NodeListOptional declarations = parser.architecture_declarative_part().nodeListOptional;
       addDeclarations(declarations);
