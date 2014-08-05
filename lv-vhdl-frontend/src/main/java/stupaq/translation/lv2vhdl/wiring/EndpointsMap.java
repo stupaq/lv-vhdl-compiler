@@ -8,8 +8,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-import com.ni.labview.VIDump;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +20,8 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.labview.parsing.NeverThrownException;
-import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
+import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
 
@@ -34,8 +32,8 @@ public class EndpointsMap {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointsMap.class);
   private final Map<UID, Endpoint> delegate = Maps.newHashMap();
 
-  public EndpointsMap(VIDump theVi) {
-    VIContextualParser.visitVI(theVi, new BuilderVisitor());
+  public EndpointsMap(ParsedVI theVi) {
+    theVi.accept(new BuilderVisitor());
   }
 
   public Endpoint get(UID uid) {
@@ -50,7 +48,7 @@ public class EndpointsMap {
     delegate.put(uid, endpoint);
   }
 
-  private class BuilderVisitor extends VIContextualVisitor<NeverThrownException> {
+  private class BuilderVisitor extends VIElementsVisitor<NeverThrownException> {
     private final Multimap<UID, Endpoint> wiresToEndpoints =
         Multimaps.newListMultimap(Maps.<UID, Collection<Endpoint>>newHashMap(),
             new Supplier<List<Endpoint>>() {

@@ -9,8 +9,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.ni.labview.VIDump;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +28,6 @@ import stupaq.labview.hierarchy.RingConstant;
 import stupaq.labview.hierarchy.SubVI;
 import stupaq.labview.hierarchy.WhileLoop;
 import stupaq.labview.hierarchy.Wire;
-import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.Configuration;
 import stupaq.translation.MissingFeatureException;
@@ -39,10 +36,9 @@ import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
 import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
 import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
 import stupaq.translation.lv2vhdl.miscellanea.FirstFewTokensOrdering;
-import stupaq.translation.lv2vhdl.miscellanea.InterfaceDeclarationCache;
-import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
-import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
+import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
 import stupaq.translation.lv2vhdl.wiring.Multiplexer;
@@ -60,7 +56,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
-import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 import static stupaq.vhdl93.ast.Builders.*;
@@ -78,9 +74,10 @@ public class ArchitectureDefinition {
   private final NodeListOptional concurrentStatements = new NodeListOptional();
   private context_clause context;
 
-  public ArchitectureDefinition(LVProjectReader project, VIDump theVi) throws Exception {
+  public ArchitectureDefinition(InterfaceDeclarationCache interfaceCache, LVProjectReader project,
+      ParsedVI theVi) throws Exception {
     this.project = project;
-    this.interfaceCache = new InterfaceDeclarationCache(project);
+    this.interfaceCache = interfaceCache;
     // Collect information about endpoints and connections between them.
     endpoints = new EndpointsMap(theVi);
     // Resolve universal VI conventions.
@@ -88,7 +85,7 @@ public class ArchitectureDefinition {
     // Prepare inference rules.
     declarationInference = new DeclarationInferenceRules(theVi);
     // Prepare all visitors using common order and run them.
-    VIContextualParser.visitVI(theVi, new BuilderVisitor());
+    theVi.accept(new BuilderVisitor());
     architectureDeclarations.nodes.addAll(declarationInference.inferredDeclarations());
     Collections.sort(architectureDeclarations.nodes,
         new DeclarationOrdering(architectureDeclarations));
@@ -124,7 +121,7 @@ public class ArchitectureDefinition {
         new library_unit(choice(new secondary_unit(choice(definition)))));
   }
 
-  private class BuilderVisitor extends VIContextualVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<Exception> {
     private final ValueInferenceRules valueInference = new ValueInferenceRules();
     private final Set<ComponentName> emittedComponents = Sets.newHashSet();
     private int nextLabelNum = 0;

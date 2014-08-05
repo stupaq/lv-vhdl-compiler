@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.syntax;
+package stupaq.translation.lv2vhdl.parsing;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -25,21 +25,21 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.SemanticException.semanticCheck;
 import static stupaq.translation.TranslationConventions.*;
-import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 
-public abstract class VIContextualVisitor<E extends Exception> extends NoOpVisitor<E> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(VIContextualVisitor.class);
+public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor<E> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(VIElementsVisitor.class);
   private final Set<UID> whileLoops = Sets.newHashSet();
   private final EndpointsMap endpoints;
 
-  protected VIContextualVisitor() {
+  protected VIElementsVisitor() {
     endpoints = null;
   }
 
-  protected VIContextualVisitor(EndpointsMap endpoints) {
+  protected VIElementsVisitor(EndpointsMap endpoints) {
     this.endpoints = endpoints;
   }
 

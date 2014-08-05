@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.miscellanea;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -35,9 +35,5 @@ public class InterfaceDeclarationCache {
         throw e;
       }
     }
-  }
-
-  public void fill(VIPath path, InterfaceDeclaration declaration) {
-    cache.put(path, declaration);
   }
 }

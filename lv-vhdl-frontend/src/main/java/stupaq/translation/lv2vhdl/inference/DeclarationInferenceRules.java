@@ -4,8 +4,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import com.ni.labview.VIDump;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +16,9 @@ import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
-import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
-import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
+import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.semantic.ExpressionClassifier;
@@ -37,7 +35,7 @@ import stupaq.vhdl93.ast.variable_declaration;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
@@ -47,8 +45,8 @@ public class DeclarationInferenceRules {
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();
 
-  public DeclarationInferenceRules(VIDump theVi) throws Exception {
-    VIContextualParser.visitVI(theVi, new BuilderVisitor());
+  public DeclarationInferenceRules(ParsedVI theVi) throws Exception {
+    theVi.accept(new BuilderVisitor());
   }
 
   public void inferDeclaration(Endpoint terminal) {
@@ -91,7 +89,7 @@ public class DeclarationInferenceRules {
     return inferred;
   }
 
-  private class BuilderVisitor extends VIContextualVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<Exception> {
     @Override
     public Iterable<String> parsersOrder() {
       return asList(Control.NUMERIC_XML_NAME, FormulaNode.XML_NAME);

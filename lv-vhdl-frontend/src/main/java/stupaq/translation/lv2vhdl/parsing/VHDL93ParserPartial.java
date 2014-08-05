@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.syntax;
+package stupaq.translation.lv2vhdl.parsing;
 
 import com.google.common.reflect.Reflection;
 

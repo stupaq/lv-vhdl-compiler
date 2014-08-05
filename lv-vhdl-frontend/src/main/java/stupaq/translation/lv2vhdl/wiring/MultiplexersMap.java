@@ -6,8 +6,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
 
-import com.ni.labview.VIDump;
-
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +13,8 @@ import stupaq.labview.UID;
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.Unbundler;
-import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
+import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.SemanticException.semanticCheck;
@@ -26,9 +24,9 @@ public class MultiplexersMap {
   private final EndpointsMap terminals;
   private final Map<UID, Endpoint> controlToClusterEndpoint = Maps.newHashMap();
 
-  public MultiplexersMap(EndpointsMap terminals, VIDump theVi) throws Exception {
+  public MultiplexersMap(EndpointsMap terminals, ParsedVI theVi) throws Exception {
     this.terminals = terminals;
-    VIContextualParser.visitVI(theVi, new BuilderVisitor());
+    theVi.accept(new BuilderVisitor());
   }
 
   public Iterable<Endpoint> findMultiplexedConnections(UID controlUID) {
@@ -46,7 +44,7 @@ public class MultiplexersMap {
     return multiplexers.get(single);
   }
 
-  private class BuilderVisitor extends VIContextualVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<Exception> {
     @Override
     public Iterable<String> parsersOrder() {
       return asList(Bundler.XML_NAME, Unbundler.XML_NAME, ControlCluster.XML_NAME);

@@ -6,8 +6,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedInteger;
 
-import com.ni.labview.VIDump;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +21,12 @@ import stupaq.labview.hierarchy.Control;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Panel;
-import stupaq.labview.parsing.VIParser;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.SemanticException;
 import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
-import stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial;
-import stupaq.translation.lv2vhdl.syntax.VIContextualParser;
-import stupaq.translation.lv2vhdl.syntax.VIContextualVisitor;
+import stupaq.translation.lv2vhdl.parsing.ParsedVI;
+import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
+import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.project.LVProjectReader;
@@ -37,7 +34,7 @@ import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.SemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.syntax.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;
@@ -52,11 +49,11 @@ public class InterfaceDeclaration {
   private context_clause entityContext;
 
   public InterfaceDeclaration(LVProjectReader project, VIPath viPath) throws Exception {
-    this(VIParser.parseVI(project.tools(), viPath));
+    this(new ParsedVI(project.tools(), viPath));
   }
 
-  public InterfaceDeclaration(VIDump theVi) throws Exception {
-    VIContextualParser.visitVI(theVi, new BuilderVisitor());
+  public InterfaceDeclaration(stupaq.labview.parsing.ParsedVI theVi) throws Exception {
+    theVi.accept(new BuilderVisitor());
     Collections.sort(entityDeclarations.nodes, new DeclarationOrdering(entityDeclarations));
   }
 
@@ -110,7 +107,7 @@ public class InterfaceDeclaration {
     }
   }
 
-  private class BuilderVisitor extends VIContextualVisitor<Exception> {
+  private class BuilderVisitor extends VIElementsVisitor<Exception> {
     private final Map<UID, Integer> controlToPaneIndex = Maps.newHashMap();
     private final Map<UID, Integer> controlToClusterIndex = Maps.newHashMap();
     private final Map<UID, IntegerMap<String>> controlOwnerToNames = Maps.newHashMap();
