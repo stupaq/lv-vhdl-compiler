@@ -16,6 +16,7 @@ import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
+import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
@@ -25,7 +26,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.TranslationConventions.*;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
@@ -92,7 +93,7 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
       return;
     }
     if (endpoints == null) {
-      LOGGER.warn("Skipping classification for formula: {}.", uid);
+      LOGGER.debug("Skipping classification for formula: {}.", uid);
       return;
     }
     FluentIterable<Endpoint> parameters = from(termUIDs).transform(new Function<UID, Endpoint>() {

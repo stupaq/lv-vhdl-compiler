@@ -15,6 +15,7 @@ import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.semantic.ExpressionClassifier;
+import stupaq.translation.semantic.SubtypeInstantiator;
 import stupaq.vhdl93.ast.actual_part;
 import stupaq.vhdl93.ast.actual_part_open;
 import stupaq.vhdl93.ast.architecture_statement_part;
@@ -67,6 +68,7 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
     semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
     sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor() {
+      final SubtypeInstantiator instantiator = new SubtypeInstantiator();
       /** Context of {@link #visit(positional_association_list)}. */
       int elementIndex;
       /** Context of {@link #visit(actual_part)}. */
@@ -134,13 +136,13 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
               }
             });
         if (ref.isPresent()) {
-          if (ExpressionClassifier.isParametrisedType(portDeclaration.type().indication())) {
-            LOGGER.info("Signal: {} connected to parametrised type: <{}>", ref.get(),
-                portDeclaration.type().indication().representation());
-          } else {
+          if (instantiator.apply(portDeclaration.type().indication()).isPresent()) {
             LOGGER.debug("Definition of signal: {} is inferrable from instantiation of: {}",
                 ref.get(), entity.name());
             inferrable.add(ref.get());
+          } else {
+            LOGGER.info("Signal: {} connected to parametrised type: <{}>", ref.get(),
+                portDeclaration.type().indication().representation());
           }
         }
       }

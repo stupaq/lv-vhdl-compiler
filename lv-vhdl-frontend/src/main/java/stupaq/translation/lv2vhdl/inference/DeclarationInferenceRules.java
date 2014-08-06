@@ -19,11 +19,12 @@ import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
-import stupaq.translation.semantic.ExpressionClassifier;
+import stupaq.translation.parsing.VHDL93ParserPartial;
+import stupaq.translation.semantic.InferenceContext;
+import stupaq.translation.semantic.SubtypeInstantiator;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.NodeListOptional;
 import stupaq.vhdl93.ast.block_declarative_item;
@@ -36,7 +37,7 @@ import stupaq.vhdl93.ast.variable_declaration;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
@@ -50,7 +51,7 @@ public class DeclarationInferenceRules {
     theVi.accept(new BuilderVisitor());
   }
 
-  public void inferDeclaration(Endpoint terminal) {
+  public void inferDeclaration(Endpoint terminal, InferenceContext context) {
     // Infer declaration if necessary and possible.
     if (!terminal.hasValue()) {
       return;
@@ -71,10 +72,12 @@ public class DeclarationInferenceRules {
         LOGGER.debug("Skipping declaration inference (not a declaration) for: {}.", terminal);
         return;
       }
-      if (ExpressionClassifier.isParametrisedType(type)) {
+      Optional<subtype_indication> instantiated = new SubtypeInstantiator(context).apply(type);
+      if (!instantiated.isPresent()) {
         LOGGER.debug("Skipping declaration inference (parameters) for: {}.", terminal);
         return;
       }
+      type = instantiated.get();
       declared.add(ref);
       block_declarative_item item = new block_declarative_item(choice(
           new signal_declaration(new identifier_list(ref.asIdentifier(), listOptional()), type,

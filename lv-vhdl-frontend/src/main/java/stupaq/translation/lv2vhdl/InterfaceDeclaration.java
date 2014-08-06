@@ -23,8 +23,7 @@ import stupaq.labview.hierarchy.Panel;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
-import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
+import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
@@ -32,7 +31,7 @@ import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.ast.Builders.*;

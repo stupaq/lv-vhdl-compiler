@@ -14,7 +14,7 @@ import stupaq.labview.UID;
 import stupaq.vhdl93.ast.expression;
 
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 
 public class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);

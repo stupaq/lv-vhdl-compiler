@@ -460,12 +460,12 @@ void constant_factor() :
 void primary() :
 {}
 {
-    LOOKAHEAD( qualified_expression() )
+    LOOKAHEAD( name_expression() )
+      name_expression()
+  | LOOKAHEAD( qualified_expression() )
       qualified_expression()
   | LOOKAHEAD( function_call() )
       function_call()
-  | LOOKAHEAD( name_expression() )
-      name_expression()
   | LOOKAHEAD( literal() )
       literal()
   | LOOKAHEAD( aggregate() )

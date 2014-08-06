@@ -6,8 +6,7 @@ import java.util
 import com.google.common.base.Optional
 import stupaq.translation.naming.IOReference
 import stupaq.vhdl93.ast.Builders.sequence
-import stupaq.vhdl93.ast.{SimpleNode, identifier, subtype_indication}
-import stupaq.vhdl93.visitor.DepthFirstVisitor
+import stupaq.vhdl93.ast.{SimpleNode, identifier}
 import stupaq.vhdl93.{ParseException, VHDL93ParserTotal}
 
 import scala.annotation.tailrec
@@ -47,29 +46,5 @@ object ExpressionClassifier {
       case ignored: ParseException => Optional absent()
     }
   }
-
-  def isParametrisedType(indication: subtype_indication): Boolean = {
-    try {
-      indication.accept(new DepthFirstVisitor() {
-
-        override def visit(n: subtype_indication) {
-          if ((n.nodeOptional present()) || (n.nodeOptional1 present())) {
-            throw new VisitorBreakingException()
-          }
-          n.type_name.nodeOptional accept this
-        }
-
-        override def visit(n: identifier) {
-          throw new VisitorBreakingException()
-        }
-      })
-      false
-    } catch {
-      case ignored: VisitorBreakingException => true
-    }
-  }
-
-  private class VisitorBreakingException extends RuntimeException
-
 }
 

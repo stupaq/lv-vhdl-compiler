@@ -34,11 +34,10 @@ import stupaq.translation.errors.MissingFeatureException;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
+import stupaq.translation.semantic.InferenceContext;
 import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
-import stupaq.translation.lv2vhdl.miscellanea.DeclarationOrdering;
-import stupaq.translation.lv2vhdl.miscellanea.FirstFewTokensOrdering;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial;
+import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
@@ -46,17 +45,19 @@ import stupaq.translation.lv2vhdl.wiring.Multiplexer;
 import stupaq.translation.lv2vhdl.wiring.MultiplexersMap;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.ComponentName;
+import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProjectReader;
 import stupaq.vhdl93.ast.*;
+import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.lv2vhdl.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 import static stupaq.vhdl93.ast.Builders.*;
@@ -321,18 +322,35 @@ public class ArchitectureDefinition {
       }
       // Split them into generic and port lists and assign values.
       List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
+      final List<Endpoint> inferrableTerminals = Lists.newArrayList();
+      final InferenceContext inferenceContext = new InferenceContext();
       for (Endpoint terminal : endpoints) {
         VHDL93ParserPartial parser = forString(terminal.name());
         Node node = parser.interface_declaration().nodeChoice.choice;
         if (node instanceof interface_constant_declaration) {
+          interface_constant_declaration generic = (interface_constant_declaration) node;
+          semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
           // Generics without assigned value should be left alone.
           // Assigning "open" makes no sense.
+          final IOReference ref = new IOReference(generic.identifier_list.identifier);
           if (terminal.hasValue()) {
-            interface_constant_declaration generic = (interface_constant_declaration) node;
-            semanticCheck(generic.nodeOptional.present(), "Missing signal/constant specifier.");
             formal_part formal = new formal_part(generic.identifier_list.identifier);
             actual_part actual = new actual_part(choice(terminal.value()));
             generics.add(new named_association_element(formal, actual));
+            inferenceContext.put(ref, terminal.value());
+          } else {
+            // Add this generic to the context if and only if it has a default value.
+            generic.nodeOptional2.accept(new NonTerminalsNoOpVisitor<Void>() {
+              @Override
+              public void visit(expression n) {
+                inferenceContext.put(ref, n);
+              }
+
+              @Override
+              public void visit(static_expression n) {
+                n.expression.accept(this);
+              }
+            });
           }
         } else if (node instanceof interface_signal_declaration) {
           interface_signal_declaration port = (interface_signal_declaration) node;
@@ -340,15 +358,20 @@ public class ArchitectureDefinition {
           formal_part formal = new formal_part(port.identifier_list.identifier);
           // Apply signal inference rules to instance endpoints.
           valueInference.inferValue(terminal);
-          declarationInference.inferDeclaration(terminal);
           actual_part actual = new actual_part(
               choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
           ports.add(new named_association_element(formal, actual));
+          inferrableTerminals.add(terminal);
         } else {
           throw new MissingFeatureException(
               "Interface element of specified type is not supported.");
         }
       }
+      // We are ready to conduct an inference for collected references.
+      for (Endpoint terminal : inferrableTerminals) {
+        declarationInference.inferDeclaration(terminal, inferenceContext);
+      }
+      // Put together component instantiation.
       VHDL93ParserPartial parser =
           forString(description.isEmpty() ? "label" + ++nextLabelNum : description);
       instantiation_label instantiationLabel = parser.instantiation_label();
