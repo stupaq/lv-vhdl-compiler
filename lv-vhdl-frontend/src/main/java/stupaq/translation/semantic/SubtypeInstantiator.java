@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import stupaq.translation.errors.SemanticException;
+import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.naming.IOReference;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.identifier;
@@ -68,12 +69,12 @@ public class SubtypeInstantiator {
           try {
             n.nodeChoice = choice(forNode(val).name_expression());
             return;
-          } catch (SemanticException ignored) {
+          } catch (SyntaxException ignored) {
           }
           try {
             n.nodeChoice = choice(forNode(val).literal());
             return;
-          } catch (SemanticException ignored) {
+          } catch (SyntaxException ignored) {
           }
           n.nodeChoice = choice(sequence(token(LPAREN), forNode(val).expression(), token(RPAREN)));
           return;

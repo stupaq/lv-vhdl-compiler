@@ -14,8 +14,8 @@ architecture behavioral of main is
     signal active : std_logic;
     signal dclk : std_logic;
     signal disp : std_logic_vector(19 downto 0);
-    signal input : std_logic_vector(15 downto 0);
-    signal output : std_logic_vector(15 downto 0);
+    signal input : std_logic_vector(16 - 1 downto 0);
+    signal output : std_logic_vector(16 - 1 downto 0);
     signal sclk : std_logic;
     signal toggle : std_logic;
 begin
