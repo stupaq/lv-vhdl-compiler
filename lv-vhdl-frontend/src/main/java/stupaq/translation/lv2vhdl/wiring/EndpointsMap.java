@@ -22,11 +22,13 @@ import stupaq.labview.hierarchy.Wire;
 import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
+import stupaq.translation.parsing.NodeRepr;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.parsing.NodeRepr.repr;
 
 public class EndpointsMap {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointsMap.class);
@@ -93,7 +95,7 @@ public class EndpointsMap {
     }
 
     @Override
-    protected void WireWithExpression(UID uid, String label, expression expression) {
+    protected void WireWithExpression(UID uid, NodeRepr label, expression expression) {
       Collection<Endpoint> terms = connectWithWire(uid);
       for (Endpoint term : terms) {
         term.value(label);
@@ -101,12 +103,12 @@ public class EndpointsMap {
     }
 
     @Override
-    protected void WireWithSignalDeclaration(UID uid, String label,
+    protected void WireWithSignalDeclaration(UID uid, NodeRepr label,
         signal_declaration declaration) {
       Collection<Endpoint> terms = connectWithWire(uid);
-      String valueString = declaration.identifier_list.identifier.representation();
+      NodeRepr value = repr(declaration.identifier_list.identifier.representation());
       for (Endpoint term : terms) {
-        term.value(valueString);
+        term.value(value);
       }
     }
 

@@ -34,10 +34,8 @@ import stupaq.translation.errors.MissingFeatureException;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
 import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
-import stupaq.translation.semantic.InferenceContext;
 import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
 import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
@@ -48,7 +46,10 @@ import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
+import stupaq.translation.parsing.NodeRepr;
+import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.project.LVProjectReader;
+import stupaq.translation.semantic.InferenceContext;
 import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
@@ -57,6 +58,7 @@ import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.parsing.NodeRepr.repr;
 import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
@@ -102,7 +104,7 @@ public class ArchitectureDefinition {
 
   private static void setNamesAsFallback(Iterable<Endpoint> parameters) {
     for (Endpoint terminal : parameters) {
-      String param = terminal.name();
+      NodeRepr param = terminal.nameRepr();
       // Set parameter name as a fallback. This one should have very low priority.
       for (Endpoint connected : terminal.connected()) {
         connected.valueIfEmpty(param);
@@ -138,44 +140,40 @@ public class ArchitectureDefinition {
     }
 
     @Override
-    protected void WireWithSignalDeclaration(UID uid, String label,
+    protected void WireWithSignalDeclaration(UID uid, NodeRepr label,
         signal_declaration declaration) {
       architectureDeclarations.addNode(new block_declarative_item(choice(declaration)));
     }
 
     @Override
-    protected void FormulaWithArchitectureContext(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      context = parser.context_clause();
+    protected void FormulaWithArchitectureContext(UID uid, NodeRepr expression) {
+      context = expression.as().context_clause();
     }
 
     @Override
-    protected void FormulaWithArchitectureDeclarations(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional extra = parser.architecture_declarative_part().nodeListOptional;
+    protected void FormulaWithArchitectureDeclarations(UID uid, NodeRepr expression) {
+      NodeListOptional extra = expression.as().architecture_declarative_part().nodeListOptional;
       architectureDeclarations.nodes.addAll(extra.nodes);
     }
 
     @Override
-    protected void FormulaWithConcurrentStatements(UID uid, String expression,
+    protected void FormulaWithConcurrentStatements(UID uid, NodeRepr expression,
         Iterable<Endpoint> parameters) {
       for (Endpoint param : parameters) {
-        String valueString = param.name();
+        NodeRepr value = param.nameRepr();
         // Set parameter name as a fallback. This one should have very low priority.
         for (Endpoint connected : param.connected()) {
-          connected.valueIfEmpty(valueString);
+          connected.valueIfEmpty(value);
         }
       }
-      VHDL93ParserPartial parser = forString(expression);
       concurrentStatements.nodes.addAll(
-          parser.architecture_statement_part().nodeListOptional.nodes);
+          expression.as().architecture_statement_part().nodeListOptional.nodes);
     }
 
     @Override
-    protected void FormulaWithProcessStatement(UID uid, String expression,
+    protected void FormulaWithProcessStatement(UID uid, NodeRepr expression,
         Iterable<Endpoint> parameters) {
-      VHDL93ParserPartial parser = forString(expression);
-      concurrent_statement process = parser.concurrent_statement();
+      concurrent_statement process = expression.as().concurrent_statement();
       semanticCheck(process.nodeChoice.choice instanceof process_statement,
           "Statement is not a process declaration contrary to what label claims.");
       concurrentStatements.nodes.add(process);
@@ -183,7 +181,7 @@ public class ArchitectureDefinition {
     }
 
     @Override
-    protected void FormulaWithLvalue(UID uid, String expression, Endpoint lvalue,
+    protected void FormulaWithLvalue(UID uid, NodeRepr expression, Endpoint lvalue,
         Iterable<Endpoint> otherParameters) {
       semanticCheck(!lvalue.isSource(), "L-value must be data sink.");
       // This way we set the value in actual destination.
@@ -194,7 +192,7 @@ public class ArchitectureDefinition {
     }
 
     @Override
-    protected void FormulaWithRvalue(UID uid, String expression, Endpoint rvalue,
+    protected void FormulaWithRvalue(UID uid, NodeRepr expression, Endpoint rvalue,
         Iterable<Endpoint> otherParameters) {
       semanticCheck(rvalue.isSource(), "R-value must be data source.");
       // This way we set the value in actual destination.
@@ -236,7 +234,7 @@ public class ArchitectureDefinition {
       // Populate value through all connected wires.
       // If conflict found, fallback to existing one.
       for (Endpoint term : connected) {
-        term.valueIfEmpty(signal.representation());
+        term.valueIfEmpty(repr(signal));
       }
     }
 
@@ -245,22 +243,22 @@ public class ArchitectureDefinition {
         Map<String, Object> stringsAndValues) {
       Verify.verify(!stringsAndValues.isEmpty());
       String constantString = stringsAndValues.keySet().iterator().next();
-      String valueString;
+      NodeRepr value;
       if (label.isPresent()) {
         VHDL93ParserPartial parser =
             forString(label.get() + tokenString(ASSIGN) + constantString + tokenString(SEMICOLON));
         constant_declaration constant = parser.constant_declaration();
         architectureDeclarations.addNode(new block_declarative_item(choice(constant)));
-        valueString = constant.identifier_list.identifier.representation();
+        value = repr(constant.identifier_list.identifier);
       } else {
-        valueString = constantString;
+        value = repr(constantString);
       }
       Endpoint terminal = endpoints.get(terminalUID);
       Verify.verify(terminal.isSource());
       // Set the value of all connected sinks.
       for (Endpoint connected : terminal.connected()) {
         Verify.verify(!connected.isSource());
-        connected.valueIfEmpty(valueString);
+        connected.valueIfEmpty(value);
       }
     }
 
@@ -335,7 +333,7 @@ public class ArchitectureDefinition {
           final IOReference ref = new IOReference(generic.identifier_list.identifier);
           if (terminal.hasValue()) {
             formal_part formal = new formal_part(generic.identifier_list.identifier);
-            actual_part actual = new actual_part(choice(terminal.value()));
+            actual_part actual = new actual_part(choice(terminal.value().as().expression()));
             generics.add(new named_association_element(formal, actual));
             inferenceContext.put(ref, terminal.value());
           } else {
@@ -343,7 +341,7 @@ public class ArchitectureDefinition {
             generic.nodeOptional2.accept(new NonTerminalsNoOpVisitor<Void>() {
               @Override
               public void visit(expression n) {
-                inferenceContext.put(ref, n);
+                inferenceContext.put(ref, repr(n));
               }
 
               @Override
@@ -358,8 +356,8 @@ public class ArchitectureDefinition {
           formal_part formal = new formal_part(port.identifier_list.identifier);
           // Apply signal inference rules to instance endpoints.
           valueInference.inferValue(terminal);
-          actual_part actual = new actual_part(
-              choice(terminal.hasValue() ? terminal.value() : new actual_part_open()));
+          actual_part actual = new actual_part(choice(
+              terminal.hasValue() ? terminal.value().as().expression() : new actual_part_open()));
           ports.add(new named_association_element(formal, actual));
           inferrableTerminals.add(terminal);
         } else {

@@ -5,16 +5,15 @@ import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.naming.IOReference;
-import stupaq.vhdl93.ast.expression;
+import stupaq.translation.parsing.NodeRepr;
 import stupaq.vhdl93.ast.identifier;
 import stupaq.vhdl93.ast.primary;
 import stupaq.vhdl93.ast.subtype_indication;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 
-import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forNode;
+import static stupaq.translation.parsing.NodeRepr.duplicate;
 import static stupaq.vhdl93.VHDL93ParserConstants.LPAREN;
 import static stupaq.vhdl93.VHDL93ParserConstants.RPAREN;
 import static stupaq.vhdl93.ast.Builders.choice;
@@ -35,7 +34,7 @@ public class SubtypeInstantiator {
   }
 
   public Optional<subtype_indication> apply(subtype_indication orig) {
-    subtype_indication type = forNode(orig).subtype_indication();
+    subtype_indication type = duplicate(orig);
     type.accept(new BuilderVisitor());
     if (result == null) {
       result = Optional.of(type);
@@ -63,20 +62,20 @@ public class SubtypeInstantiator {
       Optional<identifier> formal = ExpressionClassifier.asIdentifier(n);
       if (formal.isPresent()) {
         IOReference ref = new IOReference(formal.get());
-        expression val = context.get(ref);
+        NodeRepr val = context.get(ref);
         if (val != null) {
-          LOGGER.debug("Replacing: {} with: {}", ref, val.representation());
+          LOGGER.debug("Replacing: {} with: {}", ref, val);
           try {
-            n.nodeChoice = choice(forNode(val).name_expression());
+            n.nodeChoice = choice(val.as().name_expression());
             return;
           } catch (SyntaxException ignored) {
           }
           try {
-            n.nodeChoice = choice(forNode(val).literal());
+            n.nodeChoice = choice(val.as().literal());
             return;
           } catch (SyntaxException ignored) {
           }
-          n.nodeChoice = choice(sequence(token(LPAREN), forNode(val).expression(), token(RPAREN)));
+          n.nodeChoice = choice(sequence(token(LPAREN), val.as().expression(), token(RPAREN)));
           return;
         }
       }

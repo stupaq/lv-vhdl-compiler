@@ -2,39 +2,16 @@ package stupaq.vhdl93.ast;
 
 import com.google.common.base.Optional;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import stupaq.vhdl93.formatting.VHDLTreeFormatter;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
-import stupaq.vhdl93.visitor.TreeDumper;
 
 import static com.google.common.base.Optional.of;
+import static stupaq.translation.parsing.NodeRepr.repr;
 
 public abstract class SimpleNode implements Node {
-  private static String representation(identifier n) {
-    String rep = ((NodeToken) n.nodeChoice.choice).tokenImage;
-    return rep == null ? null : rep.toLowerCase().trim();
-  }
 
-  private static String representation(label n) {
-    return representation(n.identifier);
-  }
-
+  // FIXME remove this along with dependency on NodeRepr
   public String representation() {
-    if (this instanceof identifier) {
-      return representation((identifier) this);
-    } else if (this instanceof label) {
-      return representation((label) this);
-    } else {
-      this.accept(new VHDLTreeFormatter());
-      try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-        this.accept(new TreeDumper(baos));
-        return baos.toString().trim();
-      } catch (IOException ignored) {
-        return null;
-      }
-    }
+    return repr(this).toString();
   }
 
   public Optional<Position> position() {

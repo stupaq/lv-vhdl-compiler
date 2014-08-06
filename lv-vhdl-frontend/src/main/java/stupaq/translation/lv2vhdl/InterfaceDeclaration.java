@@ -23,10 +23,11 @@ import stupaq.labview.hierarchy.Panel;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
+import stupaq.translation.parsing.NodeRepr;
+import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
@@ -197,15 +198,13 @@ public class InterfaceDeclaration {
     }
 
     @Override
-    protected void FormulaWithEntityContext(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      entityContext = parser.context_clause();
+    protected void FormulaWithEntityContext(UID uid, NodeRepr expression) {
+      entityContext = expression.as().context_clause();
     }
 
     @Override
-    protected void FormulaWithEntityDeclarations(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional extra = parser.entity_declarative_part().nodeListOptional;
+    protected void FormulaWithEntityDeclarations(UID uid, NodeRepr expression) {
+      NodeListOptional extra = expression.as().entity_declarative_part().nodeListOptional;
       entityDeclarations.nodes.addAll(extra.nodes);
     }
   }

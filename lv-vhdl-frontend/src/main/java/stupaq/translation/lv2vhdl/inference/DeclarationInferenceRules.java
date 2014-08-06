@@ -22,6 +22,7 @@ import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
+import stupaq.translation.parsing.NodeRepr;
 import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.translation.semantic.InferenceContext;
 import stupaq.translation.semantic.SubtypeInstantiator;
@@ -56,10 +57,10 @@ public class DeclarationInferenceRules {
     if (!terminal.hasValue()) {
       return;
     }
-    String valueString = terminal.valueString();
+    NodeRepr value = terminal.value();
     IOReference ref;
     try {
-      ref = new IOReference(forString(valueString).identifier());
+      ref = new IOReference(value.as().identifier());
     } catch (SyntaxException e) {
       LOGGER.debug("Skipping declaration inference (not an identifier) for: {}.", terminal);
       return;
@@ -119,16 +120,15 @@ public class DeclarationInferenceRules {
     }
 
     @Override
-    protected void FormulaWithEntityDeclarations(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional declarations = parser.entity_declarative_part().nodeListOptional;
+    protected void FormulaWithEntityDeclarations(UID uid, NodeRepr expression) {
+      NodeListOptional declarations = expression.as().entity_declarative_part().nodeListOptional;
       addDeclarations(declarations);
     }
 
     @Override
-    protected void FormulaWithArchitectureDeclarations(UID uid, String expression) {
-      VHDL93ParserPartial parser = forString(expression);
-      NodeListOptional declarations = parser.architecture_declarative_part().nodeListOptional;
+    protected void FormulaWithArchitectureDeclarations(UID uid, NodeRepr expression) {
+      NodeListOptional declarations =
+          expression.as().architecture_declarative_part().nodeListOptional;
       addDeclarations(declarations);
     }
 

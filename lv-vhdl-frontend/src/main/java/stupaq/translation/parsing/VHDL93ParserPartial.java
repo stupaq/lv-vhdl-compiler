@@ -901,10 +901,6 @@ public interface VHDL93ParserPartial extends VHDL93Parser {
     private Parsers() {
     }
 
-    public static VHDL93ParserPartial forNode(SimpleNode node) {
-      return forString(node.representation());
-    }
-
     public static VHDL93ParserPartial forString(String string) {
       LOGGER.trace("Parsing: {}", string);
       return Reflection.newProxy(VHDL93ParserPartial.class, new ParserHandler(string));

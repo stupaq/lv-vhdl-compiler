@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
+import stupaq.translation.parsing.NodeRepr;
+
+import static stupaq.translation.parsing.NodeRepr.repr;
 
 public class ValueInferenceRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(ValueInferenceRules.class);
@@ -16,17 +19,17 @@ public class ValueInferenceRules {
       LOGGER.debug("Skipping value inference (no connections) for: {}.", terminal);
       return;
     }
-    String valueString = null;
+    NodeRepr value = null;
     for (Endpoint connected : terminal.connected()) {
       if (connected.hasValue()) {
-        valueString = connected.valueString();
+        value = connected.value();
       }
     }
-    if (valueString == null) {
-      valueString = nextInferredName();
+    if (value == null) {
+      value = repr(nextInferredName());
     }
-    LOGGER.debug("Inferred value: <{}> for: {}", valueString, terminal);
-    terminal.value(valueString);
+    LOGGER.debug("Inferred value: <{}> for: {}", value, terminal);
+    terminal.value(value);
   }
 
   private String nextInferredName() {

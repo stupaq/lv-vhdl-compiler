@@ -11,10 +11,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import stupaq.labview.UID;
-import stupaq.vhdl93.ast.expression;
+import stupaq.translation.parsing.NodeRepr;
 
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
-import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
+import static stupaq.translation.parsing.NodeRepr.repr;
 
 public class Endpoint {
   private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
@@ -22,7 +22,7 @@ public class Endpoint {
   private final boolean isSource;
   private final Set<Endpoint> connected = Sets.newHashSet();
   private String name;
-  private Optional<String> value = Optional.absent();
+  private Optional<NodeRepr> value = Optional.absent();
 
   public Endpoint(UID uid, boolean isSource, String name) {
     this.uid = uid;
@@ -34,6 +34,10 @@ public class Endpoint {
     return name;
   }
 
+  public NodeRepr nameRepr() {
+    return repr(name());
+  }
+
   public void rename(String name) {
     this.name = name;
   }
@@ -42,37 +46,33 @@ public class Endpoint {
     return isSource;
   }
 
-  public expression value() {
-    return forString(valueString()).expression();
-  }
-
-  private void valueInternal(String valueString) {
+  private void valueInternal(NodeRepr value) {
     if (LOGGER.isDebugEnabled()) {
       if (hasValue()) {
-        LOGGER.debug("Overriding <{}> from <{}> to <{}>", name, this.value.get(), valueString);
+        LOGGER.debug("Overriding <{}> from <{}> to <{}>", name, this.value.get(), value);
       } else {
-        LOGGER.debug("Setting <{}> to <{}>", name, valueString);
+        LOGGER.debug("Setting <{}> to <{}>", name, value);
       }
     }
-    this.value = Optional.of(valueString);
+    this.value = Optional.of(value);
   }
 
-  public void valueOverride(String valueString) {
-    valueInternal(valueString);
+  public void valueOverride(NodeRepr value) {
+    valueInternal(value);
   }
 
-  public void valueIfEmpty(String valueString) {
+  public void valueIfEmpty(NodeRepr value) {
     if (!hasValue()) {
-      valueInternal(valueString);
+      valueInternal(value);
     }
   }
 
-  public void value(String valueString) {
+  public void value(NodeRepr value) {
     semanticCheck(!hasValue(), "Multiple value specifications for terminal.");
-    valueInternal(valueString);
+    valueInternal(value);
   }
 
-  public String valueString() {
+  public NodeRepr value() {
     return value.get();
   }
 

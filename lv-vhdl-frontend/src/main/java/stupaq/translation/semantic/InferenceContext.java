@@ -6,13 +6,13 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 
 import stupaq.translation.naming.IOReference;
-import stupaq.vhdl93.ast.expression;
+import stupaq.translation.parsing.NodeRepr;
 
-public class InferenceContext extends ForwardingMap<IOReference, expression> {
-  private final Map<IOReference, expression> delegate = Maps.newHashMap();
+public class InferenceContext extends ForwardingMap<IOReference, NodeRepr> {
+  private final Map<IOReference, NodeRepr> delegate = Maps.newHashMap();
 
   @Override
-  protected Map<IOReference, expression> delegate() {
+  protected Map<IOReference, NodeRepr> delegate() {
     return delegate;
   }
 }

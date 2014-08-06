@@ -16,6 +16,7 @@ import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
+import stupaq.translation.parsing.NodeRepr;
 import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.vhdl93.ast.constant_declaration;
 import stupaq.vhdl93.ast.expression;
@@ -26,6 +27,7 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
 import static stupaq.translation.TranslationConventions.*;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.parsing.NodeRepr.repr;
 import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
@@ -52,14 +54,16 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
         if (!declString.endsWith(tokenString(SEMICOLON))) {
           declString += tokenString(SEMICOLON);
         }
-        signal_declaration declaration = forString(declString).signal_declaration();
-        WireWithSignalDeclaration(uid, label.get(), declaration);
+        NodeRepr repr = repr(declString);
+        signal_declaration declaration = repr.as().signal_declaration();
+        WireWithSignalDeclaration(uid, repr, declaration);
         return;
       } catch (SyntaxException ignored) {
       }
       try {
-        expression expression = forString(label.get()).expression();
-        WireWithExpression(uid, label.get(), expression);
+        NodeRepr repr = repr(label.get());
+        expression expression = repr.as().expression();
+        WireWithExpression(uid, repr, expression);
         return;
       } catch (SyntaxException ignored) {
       }
@@ -76,20 +80,21 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
   @Override
   public final void FormulaNode(UID ownerUID, UID uid, String expression, Optional<String> label,
       List<UID> termUIDs) throws E {
+    NodeRepr content = repr(expression);
     if (label.equals(ENTITY_CONTEXT)) {
-      FormulaWithEntityContext(uid, expression);
+      FormulaWithEntityContext(uid, content);
       return;
     }
     if (label.equals(ENTITY_EXTRA_DECLARATIONS)) {
-      FormulaWithEntityDeclarations(uid, expression);
+      FormulaWithEntityDeclarations(uid, content);
       return;
     }
     if (label.equals(ARCHITECTURE_CONTEXT)) {
-      FormulaWithArchitectureContext(uid, expression);
+      FormulaWithArchitectureContext(uid, content);
       return;
     }
     if (label.equals(ARCHITECTURE_EXTRA_DECLARATIONS)) {
-      FormulaWithArchitectureDeclarations(uid, expression);
+      FormulaWithArchitectureDeclarations(uid, content);
       return;
     }
     if (endpoints == null) {
@@ -103,13 +108,13 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
       }
     });
     if (whileLoops.contains(ownerUID)) {
-      FormulaWithProcessStatement(uid, expression, parameters);
+      FormulaWithProcessStatement(uid, content, parameters);
       return;
     }
     if (label.isPresent()) {
       try {
         VHDL93ParserPartial parser =
-            forString(label.get() + tokenString(ASSIGN) + expression + tokenString(SEMICOLON));
+            forString(label.get() + tokenString(ASSIGN) + content + tokenString(SEMICOLON));
         constant_declaration constant = parser.constant_declaration();
         FormulaWithDeclaredConstant(uid, constant, parameters);
         return;
@@ -128,48 +133,49 @@ public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor
     }
     semanticCheck(lvalue == null || rvalue == null, "Expression cannot be both l- and r-value.");
     if (lvalue != null) {
-      FormulaWithLvalue(uid, expression, lvalue, parameters.filter(not(equalTo(lvalue))));
+      FormulaWithLvalue(uid, content, lvalue, parameters.filter(not(equalTo(lvalue))));
     } else if (rvalue != null) {
-      FormulaWithRvalue(uid, expression, rvalue, parameters.filter(not(equalTo(rvalue))));
+      FormulaWithRvalue(uid, content, rvalue, parameters.filter(not(equalTo(rvalue))));
     } else {
-      FormulaWithConcurrentStatements(uid, expression, parameters);
+      FormulaWithConcurrentStatements(uid, content, parameters);
     }
   }
 
   protected void WirePlain(UID uid) {
   }
 
-  protected void WireWithExpression(UID uid, String label, expression expression) {
+  protected void WireWithExpression(UID uid, NodeRepr label, expression expression) {
   }
 
-  protected void WireWithSignalDeclaration(UID uid, String label, signal_declaration declaration) {
+  protected void WireWithSignalDeclaration(UID uid, NodeRepr label,
+      signal_declaration declaration) {
   }
 
-  protected void FormulaWithEntityContext(UID uid, String expression) throws E {
+  protected void FormulaWithEntityContext(UID uid, NodeRepr expression) throws E {
   }
 
-  protected void FormulaWithEntityDeclarations(UID uid, String expression) throws E {
+  protected void FormulaWithEntityDeclarations(UID uid, NodeRepr expression) throws E {
   }
 
-  protected void FormulaWithArchitectureContext(UID uid, String expression) throws E {
+  protected void FormulaWithArchitectureContext(UID uid, NodeRepr expression) throws E {
   }
 
-  protected void FormulaWithArchitectureDeclarations(UID uid, String expression) throws E {
+  protected void FormulaWithArchitectureDeclarations(UID uid, NodeRepr expression) throws E {
   }
 
-  protected void FormulaWithConcurrentStatements(UID uid, String expression,
+  protected void FormulaWithConcurrentStatements(UID uid, NodeRepr expression,
       Iterable<Endpoint> parameters) throws E {
   }
 
-  protected void FormulaWithProcessStatement(UID uid, String expression,
+  protected void FormulaWithProcessStatement(UID uid, NodeRepr expression,
       Iterable<Endpoint> parameters) throws E {
   }
 
-  protected void FormulaWithLvalue(UID uid, String expression, Endpoint lvalue,
+  protected void FormulaWithLvalue(UID uid, NodeRepr expression, Endpoint lvalue,
       Iterable<Endpoint> otherParameters) throws E {
   }
 
-  protected void FormulaWithRvalue(UID uid, String expression, Endpoint rvalue,
+  protected void FormulaWithRvalue(UID uid, NodeRepr expression, Endpoint rvalue,
       Iterable<Endpoint> otherParameters) throws E {
   }
 
