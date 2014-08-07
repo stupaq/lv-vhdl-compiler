@@ -63,7 +63,7 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
   @Override
   public void visit(component_instantiation_statement n) {
     InstantiableName instance =
-        Identifier.instantiation(resolver, architecture, n.instantiated_unit);
+        Identifier.instantiation(resolver.architectures(), architecture, n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
     semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());

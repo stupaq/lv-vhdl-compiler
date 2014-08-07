@@ -84,7 +84,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
   public void visit(component_instantiation_statement n) {
     applyFallback = false;
     InstantiableName instance =
-        Identifier.instantiation(resolver, architecture, n.instantiated_unit);
+        Identifier.instantiation(resolver.architectures(), architecture, n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
     semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());

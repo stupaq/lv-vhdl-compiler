@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import stupaq.translation.errors.MissingFeatureException;
-import stupaq.translation.vhdl2lv.ComponentBindingResolver;
 import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.architecture_declaration;
 import stupaq.vhdl93.ast.component_declaration;
@@ -63,7 +62,7 @@ public class Identifier {
     return new ArchitectureName(entity, new Identifier(n.architecture_identifier.identifier));
   }
 
-  public static InstantiableName instantiation(final ComponentBindingResolver resolver,
+  public static InstantiableName instantiation(final ArchitectureBindingResolver resolver,
       final ArchitectureName architecture, instantiated_unit n) {
     return (new NonTerminalsNoOpVisitor<InstantiableName>() {
       InstantiableName name;
@@ -93,7 +92,7 @@ public class Identifier {
         if (architecture != null) {
           name = new ArchitectureName(entityName, new Identifier(architecture));
         } else {
-          name = resolver.defaultArchitecture(entityName);
+          name = resolver.getDefault(entityName);
           semanticNotNull(name, n, "Missing default architecture for: %s", entity);
         }
       }

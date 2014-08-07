@@ -79,7 +79,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     namedSources = new IOSources();
     EntityDeclaration entity = resolver.getGlobal(Identifier.entity(n.entity_name));
     final ArchitectureName arch = Identifier.architecture(entity.name(), n);
-    resolver.defaultArchitecture(arch);
+    resolver.architectures().add(arch);
     LOGGER.debug("Architecture: {}", arch);
     // Create all generics, ports and eventually the VI itself.
     currentVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);

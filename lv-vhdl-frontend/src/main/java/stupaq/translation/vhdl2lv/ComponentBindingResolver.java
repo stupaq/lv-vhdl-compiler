@@ -5,8 +5,8 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
+import stupaq.translation.naming.ArchitectureBindingResolver;
 import stupaq.translation.naming.ArchitectureName;
-import stupaq.translation.naming.EntityName;
 import stupaq.translation.naming.InterfaceName;
 import stupaq.vhdl93.ast.architecture_declarative_part;
 import stupaq.vhdl93.ast.block_declarative_item;
@@ -14,21 +14,17 @@ import stupaq.vhdl93.ast.component_declaration;
 import stupaq.vhdl93.ast.package_declarative_item;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
-public class ComponentBindingResolver {
-  private final Map<EntityName, ArchitectureName> architectures = Maps.newHashMap();
+class ComponentBindingResolver {
+  private final ArchitectureBindingResolver architectures = new ArchitectureBindingResolver();
   private final Map<InterfaceName, EntityDeclaration> global = Maps.newHashMap();
   private Map<InterfaceName, ComponentDeclaration> local;
 
-  public void defaultArchitecture(ArchitectureName name) {
-    architectures.put(name.entity(), name);
-  }
-
-  public ArchitectureName defaultArchitecture(EntityName name) {
-    return architectures.get(name);
-  }
-
   public EntityDeclaration getGlobal(InterfaceName name) {
     return global.get(name);
+  }
+
+  public ArchitectureBindingResolver architectures() {
+    return architectures;
   }
 
   public void addGlobal(EntityDeclaration entity) {
