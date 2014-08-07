@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.wiring;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -14,13 +14,11 @@ import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.ControlCluster;
 import stupaq.labview.hierarchy.Unbundler;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 
-public class MultiplexersMap {
+class MultiplexersMap {
   private final Map<Endpoint, Multiplexer> multiplexers = Maps.newHashMap();
   private final EndpointsMap terminals;
   private final Map<UID, Endpoint> controlToClusterEndpoint = Maps.newHashMap();

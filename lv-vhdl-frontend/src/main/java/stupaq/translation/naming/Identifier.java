@@ -21,9 +21,9 @@ import stupaq.vhdl93.ast.instantiated_unit;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static java.util.regex.Pattern.compile;
-import static stupaq.translation.errors.MissingFeatureException.missingIf;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticNotNull;
+import static stupaq.translation.errors.MissingFeatureException.missingIf;
 import static stupaq.translation.naming.LibraryName.DEFAULT_LIBRARY;
 import static stupaq.translation.naming.LibraryName.LIBRARY_SEPARATOR;
 

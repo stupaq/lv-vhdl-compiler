@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.parsing;
+package stupaq.translation.lv2vhdl;
 
 import org.xml.sax.SAXException;
 
@@ -9,9 +9,8 @@ import javax.xml.bind.JAXBException;
 import stupaq.labview.VIPath;
 import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.labview.scripting.ScriptingTools;
-import stupaq.translation.lv2vhdl.errors.ErrorMarkingVisitor;
 
-public class ParsedVI extends stupaq.labview.parsing.ParsedVI {
+class ParsedVI extends stupaq.labview.parsing.ParsedVI {
   private final VIPath viPath;
 
   public ParsedVI(ScriptingTools tools, VIPath viPath)
@@ -22,6 +21,6 @@ public class ParsedVI extends stupaq.labview.parsing.ParsedVI {
 
   @Override
   public <E extends Exception> void accept(VIElementsVisitor<E> visitor) throws E {
-    super.accept(ErrorMarkingVisitor.wrapVisitor(viPath, visitor));
+    super.accept(LocalisedException.markingVisitor(viPath, visitor));
   }
 }

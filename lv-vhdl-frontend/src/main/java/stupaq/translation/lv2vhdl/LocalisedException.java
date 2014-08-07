@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.errors;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.reflect.Reflection;
 
@@ -11,14 +11,17 @@ import stupaq.labview.VIPath;
 import stupaq.labview.parsing.VIElementsVisitor;
 import stupaq.translation.errors.TranslationException;
 
-public final class ErrorMarkingVisitor {
+class LocalisedException extends TranslationException {
   private static final int UID_ARG_INDEX = 1;
+  private UID uid;
+  private VIPath vi;
 
-  private ErrorMarkingVisitor() {
+  public LocalisedException(TranslationException cause) {
+    super(cause);
   }
 
   @SuppressWarnings("unchecked")
-  public static <E extends Exception> VIElementsVisitor<E> wrapVisitor(final VIPath vi,
+  public static <E extends Exception> VIElementsVisitor<E> markingVisitor(final VIPath vi,
       final VIElementsVisitor<E> delegate) {
     return (VIElementsVisitor<E>) Reflection.newProxy(VIElementsVisitor.class,
         new InvocationHandler() {
@@ -44,5 +47,30 @@ public final class ErrorMarkingVisitor {
             }
           }
         });
+  }
+
+  public UID getUID() {
+    return uid;
+  }
+
+  public void setUID(UID uid) {
+    this.uid = uid;
+  }
+
+  public VIPath getVI() {
+    return vi;
+  }
+
+  public void setVI(VIPath vi) {
+    this.vi = vi;
+  }
+
+  public boolean isLocalised() {
+    return uid != null && vi != null;
+  }
+
+  @Override
+  public TranslationException getCause() {
+    return (TranslationException) super.getCause();
   }
 }

@@ -33,14 +33,6 @@ import stupaq.translation.Configuration;
 import stupaq.translation.errors.MissingFeatureException;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.lv2vhdl.inference.DeclarationInferenceRules;
-import stupaq.translation.lv2vhdl.inference.ValueInferenceRules;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
-import stupaq.translation.lv2vhdl.wiring.Endpoint;
-import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
-import stupaq.translation.lv2vhdl.wiring.Multiplexer;
-import stupaq.translation.lv2vhdl.wiring.MultiplexersMap;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.IOReference;
@@ -64,7 +56,7 @@ import static stupaq.vhdl93.VHDL93ParserConstants.*;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 import static stupaq.vhdl93.ast.Builders.*;
 
-public class ArchitectureDefinition {
+class ArchitectureDefinition {
   private static final Logger LOGGER = LoggerFactory.getLogger(ArchitectureDefinition.class);
   private static final boolean FOLLOW_DEPENDENCIES = Configuration.getDependenciesFollow();
   private static final int STATEMENTS_SORTING_LOOKUP = 6;

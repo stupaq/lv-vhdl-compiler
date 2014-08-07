@@ -15,8 +15,8 @@ import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProject;
 
 import static stupaq.translation.TranslationConventions.INPUTS_CONN_INDEX;
-import static stupaq.translation.vhdl2lv.TranslationConventions.INPUTS_CONTROL;
 import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
+import static stupaq.translation.vhdl2lv.TranslationConventions.INPUTS_CONTROL;
 import static stupaq.translation.vhdl2lv.TranslationConventions.OUTPUTS_CONTROL;
 import static stupaq.translation.vhdl2lv.UniversalVI.isClusteredVI;
 

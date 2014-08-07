@@ -16,6 +16,10 @@ import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 public class NodeRepr {
   private final String representation;
 
+  private NodeRepr(String representation) {
+    this.representation = representation;
+  }
+
   public static NodeRepr repr(identifier n) {
     String rep = ((NodeToken) n.nodeChoice.choice).tokenImage;
     return rep == null ? null : repr(rep.toLowerCase().trim());
@@ -55,12 +59,13 @@ public class NodeRepr {
     }
   }
 
-  private NodeRepr(String representation) {
-    this.representation = representation;
-  }
-
   public VHDL93ParserPartial as() {
     return forString(representation);
+  }
+
+  @Override
+  public int hashCode() {
+    return representation.hashCode();
   }
 
   @Override
@@ -72,11 +77,6 @@ public class NodeRepr {
       return false;
     }
     return representation.equals(((NodeRepr) o).representation);
-  }
-
-  @Override
-  public int hashCode() {
-    return representation.hashCode();
   }
 
   @Override

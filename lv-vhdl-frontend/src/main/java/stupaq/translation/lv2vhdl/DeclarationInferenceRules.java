@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.inference;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -18,9 +18,6 @@ import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.SyntaxException;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
-import stupaq.translation.lv2vhdl.wiring.Endpoint;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.parsing.NodeRepr;
 import stupaq.translation.parsing.VHDL93ParserPartial;
@@ -43,7 +40,7 @@ import static stupaq.vhdl93.ast.Builders.choice;
 import static stupaq.vhdl93.ast.Builders.listOptional;
 import static stupaq.vhdl93.ast.Builders.optional;
 
-public class DeclarationInferenceRules {
+class DeclarationInferenceRules {
   private static final Logger LOGGER = LoggerFactory.getLogger(DeclarationInferenceRules.class);
   private final Set<IOReference> declared = Sets.newHashSet();
   private final List<block_declarative_item> inferred = Lists.newArrayList();

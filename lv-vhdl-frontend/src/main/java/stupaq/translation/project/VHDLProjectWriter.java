@@ -39,6 +39,15 @@ public class VHDLProjectWriter {
     this.root = root;
   }
 
+  private static void writeVHDL(File file, design_unit unit, boolean append) throws IOException {
+    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, append)))) {
+      unit.accept(new VHDLTreeFormatter());
+      unit.accept(new TreeDumper(writer));
+      writer.println();
+      writer.println();
+    }
+  }
+
   private Path resolvePath(EntityName name) {
     String filename = name.toString();
     if (filename.contains(FILE_REPLACEMENT)) {
@@ -47,15 +56,6 @@ public class VHDLProjectWriter {
     filename = FILE_REPLACE_CHARS.replaceFrom(filename, FILE_REPLACEMENT);
     filename = FILE_REMOVE_CHARS.removeFrom(filename);
     return root.resolve(filename + FILE_EXTENSION);
-  }
-
-  private static void writeVHDL(File file, design_unit unit, boolean append) throws IOException {
-    try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, append)))) {
-      unit.accept(new VHDLTreeFormatter());
-      unit.accept(new TreeDumper(writer));
-      writer.println();
-      writer.println();
-    }
   }
 
   public void writeEntity(EntityName name, design_unit unit) throws IOException {

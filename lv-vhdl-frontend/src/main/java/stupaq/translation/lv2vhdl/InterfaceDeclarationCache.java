@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import javax.xml.bind.JAXBException;
 
 import stupaq.labview.VIPath;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.project.LVProjectReader;
 
 class InterfaceDeclarationCache {

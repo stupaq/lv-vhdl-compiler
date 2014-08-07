@@ -44,15 +44,6 @@ public class SubtypeInstantiator {
 
   private class BuilderVisitor extends DepthFirstVisitor {
     @Override
-    public void visit(subtype_indication n) {
-      if (n.nodeOptional.present() || n.nodeOptional1.present()) {
-        result = Optional.absent();
-      } else {
-        n.type_name.nodeOptional.accept(this);
-      }
-    }
-
-    @Override
     public void visit(identifier n) {
       result = Optional.absent();
     }
@@ -81,6 +72,15 @@ public class SubtypeInstantiator {
       }
       // Otherwise just proceed as usual.
       n.nodeChoice.choice.accept(this);
+    }
+
+    @Override
+    public void visit(subtype_indication n) {
+      if (n.nodeOptional.present() || n.nodeOptional1.present()) {
+        result = Optional.absent();
+      } else {
+        n.type_name.nodeOptional.accept(this);
+      }
     }
   }
 }

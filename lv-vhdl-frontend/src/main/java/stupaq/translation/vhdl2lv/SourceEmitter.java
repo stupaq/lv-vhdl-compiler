@@ -46,6 +46,10 @@ class SourceEmitter {
     return new CompoundArithmetic(owner, ArithmeticMode.ADD, 1, Optional.<String>absent());
   }
 
+  private static boolean asRingConstant(String rep) {
+    return rep.length() < RingConstant.NAME_LENGTH_LIMIT;
+  }
+
   public Terminal emitAsConstant(SimpleNode n, Optional<String> label, String name) {
     String rep = n.representation();
     if (asRingConstant(rep)) {
@@ -56,10 +60,6 @@ class SourceEmitter {
       FormulaNode formula = new FormulaNode(owner, rep, label);
       return formula.addOutput(name);
     }
-  }
-
-  private static boolean asRingConstant(String rep) {
-    return rep.length() < RingConstant.NAME_LENGTH_LIMIT;
   }
 
   private void emitAsIdentifier(IOReference ref, Terminal sink) {

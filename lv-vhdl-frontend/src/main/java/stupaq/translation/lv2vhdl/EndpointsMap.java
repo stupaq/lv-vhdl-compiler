@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.wiring;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -20,8 +20,6 @@ import stupaq.labview.hierarchy.Terminal;
 import stupaq.labview.hierarchy.Tunnel;
 import stupaq.labview.hierarchy.Wire;
 import stupaq.translation.errors.TranslationException;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
-import stupaq.translation.lv2vhdl.parsing.VIElementsVisitor;
 import stupaq.translation.parsing.NodeRepr;
 import stupaq.vhdl93.ast.expression;
 import stupaq.vhdl93.ast.signal_declaration;
@@ -30,7 +28,7 @@ import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
 import static stupaq.translation.parsing.NodeRepr.repr;
 
-public class EndpointsMap {
+class EndpointsMap {
   private static final Logger LOGGER = LoggerFactory.getLogger(EndpointsMap.class);
   private final Map<UID, Endpoint> delegate = Maps.newHashMap();
 

@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.wiring;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ForwardingList;
@@ -10,7 +10,7 @@ import stupaq.labview.UID;
 
 import static com.google.common.collect.FluentIterable.from;
 
-public class Multiplexer extends ForwardingList<Endpoint> {
+class Multiplexer extends ForwardingList<Endpoint> {
   private List<Endpoint> delegate = Lists.newArrayList();
 
   public Multiplexer(List<Endpoint> endpoints) {

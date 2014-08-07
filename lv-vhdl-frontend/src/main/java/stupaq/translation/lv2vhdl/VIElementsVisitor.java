@@ -1,4 +1,4 @@
-package stupaq.translation.lv2vhdl.parsing;
+package stupaq.translation.lv2vhdl;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -14,8 +14,6 @@ import java.util.Set;
 import stupaq.labview.UID;
 import stupaq.labview.parsing.NoOpVisitor;
 import stupaq.translation.errors.SyntaxException;
-import stupaq.translation.lv2vhdl.wiring.Endpoint;
-import stupaq.translation.lv2vhdl.wiring.EndpointsMap;
 import stupaq.translation.parsing.NodeRepr;
 import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.vhdl93.ast.constant_declaration;
@@ -33,7 +31,7 @@ import static stupaq.vhdl93.VHDL93ParserConstants.ASSIGN;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
 import static stupaq.vhdl93.VHDL93ParserTotal.tokenString;
 
-public abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor<E> {
+abstract class VIElementsVisitor<E extends Exception> extends NoOpVisitor<E> {
   private static final Logger LOGGER = LoggerFactory.getLogger(VIElementsVisitor.class);
   private final Set<UID> whileLoops = Sets.newHashSet();
   private final EndpointsMap endpoints;

@@ -14,10 +14,10 @@ import stupaq.labview.hierarchy.Loop;
 import stupaq.labview.hierarchy.RightShiftRegister;
 import stupaq.labview.hierarchy.Terminal;
 import stupaq.translation.naming.IOReference;
-import stupaq.vhdl93.VHDL93ParserConstants;
-import stupaq.vhdl93.ast.*;
 import stupaq.translation.semantic.LValueVisitor;
 import stupaq.translation.semantic.RValueVisitor;
+import stupaq.vhdl93.VHDL93ParserConstants;
+import stupaq.vhdl93.ast.*;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 

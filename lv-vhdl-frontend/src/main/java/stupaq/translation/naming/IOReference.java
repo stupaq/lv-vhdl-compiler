@@ -5,7 +5,6 @@ import com.google.common.base.VerifyException;
 import java.io.StringReader;
 
 import stupaq.vhdl93.ParseException;
-import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.VHDL93ParserTotal;
 import stupaq.vhdl93.ast.identifier;
 

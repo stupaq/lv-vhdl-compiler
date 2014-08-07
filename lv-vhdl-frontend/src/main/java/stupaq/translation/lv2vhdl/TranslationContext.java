@@ -5,15 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import stupaq.labview.VIPath;
 import stupaq.labview.scripting.tools.HighlightByUID;
-import stupaq.translation.lv2vhdl.errors.LocalisedException;
-import stupaq.translation.lv2vhdl.parsing.ParsedVI;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProjectReader;
 import stupaq.translation.project.VHDLProjectWriter;
 
-public class TranslationContext {
+class TranslationContext {
   private static final Logger LOGGER = LoggerFactory.getLogger(TranslationContext.class);
   private final LVProjectReader projectFrom;
   private final VHDLProjectWriter projectTo;
