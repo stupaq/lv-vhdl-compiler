@@ -6,25 +6,17 @@ class ConnPaneAllocator {
   private static final int CLUSTERED_VI_THRESHOLD = 26;
   private final ConnectorPanePattern pattern;
   private final boolean clustered;
+  private final int connectorsCount;
 
   public ConnPaneAllocator(InterfaceDeclaration entity) {
-    pattern = choosePattern(entity.inputs(), entity.outputs());
-    clustered = isClusteredVI(entity.inputs(), entity.outputs());
-  }
-
-  public int paneIndex(ConnectorPaneTerminal terminal) {
-    return terminal.connectorIndex();
-  }
-
-  private static ConnectorPanePattern choosePattern(int inputs, int outputs) {
-    final int connectorsCount = inputs + outputs;
-    return isClusteredVI(inputs, outputs) ? ConnectorPanePattern.P4801
+    connectorsCount = entity.inputs() + entity.outputs();
+    clustered = connectorsCount > CLUSTERED_VI_THRESHOLD;
+    pattern = clustered ? ConnectorPanePattern.P4801
         : ConnectorPanePattern.choosePattern(connectorsCount);
   }
 
-  public static boolean isClusteredVI(int inputs, int outputs) {
-    final int connectorsCount = inputs + outputs;
-    return connectorsCount > CLUSTERED_VI_THRESHOLD;
+  public int paneIndex(ConnectorPaneTerminal terminal) {
+    return connectorsCount - 1 - terminal.connectorIndex();
   }
 
   public boolean isClustered() {
