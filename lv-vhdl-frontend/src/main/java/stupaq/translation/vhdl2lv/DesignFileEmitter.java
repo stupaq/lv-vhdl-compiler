@@ -84,7 +84,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
     LOGGER.debug("Architecture: {}", arch);
     // Create all generics, ports and eventually the VI itself.
     UniversalVI universalVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);
-    currentVi = universalVi.theVi();
+    currentVi = universalVi.createdVI();
     // Fill local scope with component declarations.
     resolver.enterLocal(arch, n.architecture_declarative_part);
     // Emit all locally declared components.

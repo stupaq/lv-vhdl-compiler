@@ -25,20 +25,15 @@ import static stupaq.translation.vhdl2lv.TranslationConventions.INPUTS_CONTROL;
 import static stupaq.translation.vhdl2lv.TranslationConventions.OUTPUTS_CONTROL;
 
 class UniversalVI {
-  private final ConnPaneAllocator allocator;
   private final VI theVi;
 
-  public VI theVi() {
+  public VI createdVI() {
     return theVi;
-  }
-
-  public ConnPaneAllocator allocator() {
-    return allocator;
   }
 
   public UniversalVI(LVProject project, InstantiableName lvName, InterfaceDeclaration entity,
       IOSources namedSources, IOSinks danglingSinks) {
-    allocator = new ConnPaneAllocator(entity);
+    ConnPaneAllocator allocator = new ConnPaneAllocator(entity);
     theVi = new VI(project.tools(), project.allocate(lvName, true), allocator.pattern());
     if (allocator.isClustered()) {
       ControlCluster controlOwner = new ControlCluster(theVi, INPUTS_CONTROL, INPUTS_CONN_INDEX);

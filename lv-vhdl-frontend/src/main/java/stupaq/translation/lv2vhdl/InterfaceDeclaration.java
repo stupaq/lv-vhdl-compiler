@@ -25,11 +25,13 @@ import stupaq.translation.errors.SemanticException;
 import stupaq.translation.errors.TranslationException;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
+import stupaq.translation.naming.IOReference;
 import stupaq.translation.parsing.NodeRepr;
 import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.errors.SemanticException.semanticNotNull;
 import static stupaq.translation.parsing.NodeRepr.repr;
 import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
@@ -42,6 +44,7 @@ class InterfaceDeclaration {
   private final IntegerMap<interface_constant_declaration> generics = new IntegerMap<>();
   private final IntegerMap<interface_signal_declaration> ports = new IntegerMap<>();
   private final IntegerMap<IntegerMap<String>> paneIndexToNames = new IntegerMap<>();
+  private final Map<IOReference, Integer> refToListIndex = Maps.newHashMap();
   private boolean clustered = false;
   private context_clause entityContext;
 
@@ -57,6 +60,12 @@ class InterfaceDeclaration {
   public IntegerMap<String> clusteredNames(int connPaneIndex) {
     Preconditions.checkState(clustered);
     return paneIndexToNames.getPresent(connPaneIndex);
+  }
+
+  public int getListIndex(IOReference ref) {
+    Integer index = refToListIndex.get(ref);
+    semanticNotNull(index, "Missing port or generic for name: %s", ref);
+    return index;
   }
 
   public design_unit emitAsEntity(EntityName name) {
@@ -156,7 +165,7 @@ class InterfaceDeclaration {
         boolean isIndicator, ControlStyle style, String description) {
       Verify.verifyNotNull(rootPanel);
       semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
-      int ifaceIndex;
+      int listIndex;
       if (clustered) {
         semanticCheck(!rootPanel.equals(ownerUID),
             "VI is clustered, but some control has front panel as an owner.");
@@ -173,7 +182,7 @@ class InterfaceDeclaration {
       try {
         // Note that we do not really care if these numbers are consecutive as long as they are
         // different and in the right order.
-        ifaceIndex = UnsignedInteger.valueOf(description.trim()).intValue();
+        listIndex = UnsignedInteger.valueOf(description.trim()).intValue();
       } catch (NumberFormatException e) {
         throw new SemanticException(
             "Control description: %s does not contain port or generic index.", description);
@@ -185,12 +194,16 @@ class InterfaceDeclaration {
         // Make the output less verbose.
         generic.nodeOptional = optional();
         generic.nodeOptional1 = optional();
-        generics.put(ifaceIndex, generic);
+        generics.put(listIndex, generic);
+        // Save the mapping from port/generic name to the index in appropriate list.
+        refToListIndex.put(new IOReference(generic.identifier_list.identifier), listIndex);
       } else if (style == ControlStyle.NUMERIC_DBL) {
         // This is a port.
         interface_signal_declaration port = declaration.as().interface_signal_declaration();
         port.nodeOptional = optional();
-        ports.put(ifaceIndex, port);
+        ports.put(listIndex, port);
+        // Save the mapping from port/generic name to the index in appropriate list.
+        refToListIndex.put(new IOReference(port.identifier_list.identifier), listIndex);
       } else {
         throw new SemanticException("Control style not recognised: %s", style);
       }

@@ -88,7 +88,8 @@ class ArchitectureDefinition {
         new FirstFewTokensOrdering(STATEMENTS_SORTING_LOOKUP));
   }
 
-  private static association_list emitAssociationList(List<named_association_element> elements) {
+  private static association_list emitAssociationList(
+      Iterable<named_association_element> elements) {
     NodeListOptional rest = listOptional();
     named_association_element first = split(elements, tokenSupplier(COMMA), rest);
     return new association_list(choice(new named_association_list(first, rest)));
@@ -256,7 +257,7 @@ class ArchitectureDefinition {
 
     @Override
     public void SubVI(UID owner, UID uid, List<UID> termUIDs, VIPath viPath, String description) {
-      InterfaceDeclaration declaration = interfaceCache.get(viPath);
+      final InterfaceDeclaration declaration = interfaceCache.get(viPath);
       InstantiableName element = Identifier.parse(viPath.getBaseName());
       instantiated_unit unit;
       if (element instanceof ComponentName) {
@@ -311,7 +312,8 @@ class ArchitectureDefinition {
         });
       }
       // Split them into generic and port lists and assign values.
-      List<named_association_element> generics = Lists.newArrayList(), ports = Lists.newArrayList();
+      IntegerMap<named_association_element> generics = new IntegerMap<>(),
+          ports = new IntegerMap<>();
       final List<Endpoint> inferrableTerminals = Lists.newArrayList();
       final InferenceContext inferenceContext = new InferenceContext();
       for (Endpoint terminal : endpoints) {
@@ -326,7 +328,8 @@ class ArchitectureDefinition {
           if (terminal.hasValue()) {
             formal_part formal = new formal_part(generic.identifier_list.identifier);
             actual_part actual = new actual_part(choice(terminal.value().as().expression()));
-            generics.add(new named_association_element(formal, actual));
+            generics.put(declaration.getListIndex(ref),
+                new named_association_element(formal, actual));
             inferenceContext.put(ref, terminal.value());
           } else {
             // Add this generic to the context if and only if it has a default value.
@@ -350,7 +353,8 @@ class ArchitectureDefinition {
           valueInference.inferValue(terminal);
           actual_part actual = new actual_part(choice(
               terminal.hasValue() ? terminal.value().as().expression() : new actual_part_open()));
-          ports.add(new named_association_element(formal, actual));
+          IOReference ref = new IOReference(port.identifier_list.identifier);
+          ports.put(declaration.getListIndex(ref), new named_association_element(formal, actual));
           inferrableTerminals.add(terminal);
         } else {
           throw new MissingFeatureException(
@@ -366,9 +370,9 @@ class ArchitectureDefinition {
           forString(description.isEmpty() ? "label" + ++nextLabelNum : description);
       instantiation_label instantiationLabel = parser.instantiation_label();
       NodeOptional genericAspect = generics.isEmpty() ? optional()
-          : optional(new generic_map_aspect(emitAssociationList(generics)));
-      NodeOptional portAspect =
-          ports.isEmpty() ? optional() : optional(new port_map_aspect(emitAssociationList(ports)));
+          : optional(new generic_map_aspect(emitAssociationList(generics.values())));
+      NodeOptional portAspect = ports.isEmpty() ? optional()
+          : optional(new port_map_aspect(emitAssociationList(ports.values())));
       concurrentStatements.addNode(
           new component_instantiation_statement(instantiationLabel, unit, genericAspect,
               portAspect));
