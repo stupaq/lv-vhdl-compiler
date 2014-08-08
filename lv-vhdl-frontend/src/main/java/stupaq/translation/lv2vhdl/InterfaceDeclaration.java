@@ -26,11 +26,11 @@ import stupaq.translation.errors.TranslationException;
 import stupaq.translation.naming.ComponentName;
 import stupaq.translation.naming.EntityName;
 import stupaq.translation.parsing.NodeRepr;
-import stupaq.translation.parsing.VHDL93ParserPartial;
 import stupaq.vhdl93.ast.*;
 
 import static java.util.Arrays.asList;
 import static stupaq.translation.errors.LocalisedSemanticException.semanticCheck;
+import static stupaq.translation.parsing.NodeRepr.repr;
 import static stupaq.translation.parsing.VHDL93ParserPartial.Parsers.forString;
 import static stupaq.vhdl93.VHDL93ParserConstants.IS;
 import static stupaq.vhdl93.VHDL93ParserConstants.SEMICOLON;
@@ -156,41 +156,41 @@ class InterfaceDeclaration {
         boolean isIndicator, ControlStyle style, String description) {
       Verify.verifyNotNull(rootPanel);
       semanticCheck(label.isPresent(), "Missing control label (should contain port declaration).");
-      int connPaneIndex;
+      int ifaceIndex;
       if (clustered) {
         semanticCheck(!rootPanel.equals(ownerUID),
             "VI is clustered, but some control has front panel as an owner.");
         // Fill information about clustered control.
         IntegerMap<String> names = controlOwnerToNames.get(ownerUID);
         names.put(controlToClusterIndex.get(uid), label.get());
-        // Read virtual controlIndex.
-        try {
-          connPaneIndex = UnsignedInteger.valueOf(description.trim()).intValue();
-        } catch (NumberFormatException e) {
-          throw new SemanticException(
-              "Control description: %s does not contain port or generic index.", description);
-        }
       } else {
         semanticCheck(rootPanel.equals(ownerUID),
             "VI is not clustered, but some control has owner other than front panel.");
         Optional<Integer> index = connPaneIndex(uid);
         semanticCheck(index.isPresent(), "Control is not connected to the ConnPane.");
-        connPaneIndex = index.get();
       }
-      String declaration = label.get().trim();
-      VHDL93ParserPartial labelParser = forString(declaration);
+      // Read the actual interface index.
+      try {
+        // Note that we do not really care if these numbers are consecutive as long as they are
+        // different and in the right order.
+        ifaceIndex = UnsignedInteger.valueOf(description.trim()).intValue();
+      } catch (NumberFormatException e) {
+        throw new SemanticException(
+            "Control description: %s does not contain port or generic index.", description);
+      }
+      NodeRepr declaration = repr(label.get());
       if (style == ControlStyle.NUMERIC_I32) {
         // This is a generic.
-        interface_constant_declaration generic = labelParser.interface_constant_declaration();
+        interface_constant_declaration generic = declaration.as().interface_constant_declaration();
         // Make the output less verbose.
         generic.nodeOptional = optional();
         generic.nodeOptional1 = optional();
-        generics.put(connPaneIndex, generic);
+        generics.put(ifaceIndex, generic);
       } else if (style == ControlStyle.NUMERIC_DBL) {
         // This is a port.
-        interface_signal_declaration port = labelParser.interface_signal_declaration();
+        interface_signal_declaration port = declaration.as().interface_signal_declaration();
         port.nodeOptional = optional();
-        ports.put(connPaneIndex, port);
+        ports.put(ifaceIndex, port);
       } else {
         throw new SemanticException("Control style not recognised: %s", style);
       }

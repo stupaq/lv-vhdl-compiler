@@ -29,23 +29,26 @@ abstract class InterfaceDeclaration {
   protected InterfaceDeclaration(InterfaceName name, SimpleNode header) {
     this.name = name;
     header.accept(new DepthFirstVisitor() {
+      int genericsIndex = 0;
+      int portsIndex = 0;
+
       @Override
       public void visit(interface_constant_declaration n) {
-        GenericDeclaration generic = new GenericDeclaration(n);
+        GenericDeclaration generic = new GenericDeclaration(n, genericsIndex++);
         generics.add(generic);
         genericsMap.put(generic.reference(), generic);
       }
 
       @Override
       public void visit(interface_signal_declaration n) {
-        PortDeclaration port = new PortDeclaration(n);
+        PortDeclaration port = new PortDeclaration(n, portsIndex++);
         ports.add(port);
         portsMap.put(port.reference(), port);
       }
     });
     // Now, that we are aware of all inputs/outputs...
     int index = 0;
-    for (ConnectorPaneTerminal terminal : allTerminals()) {
+    for (ConnectorPaneTerminal terminal : orderedTerminals()) {
       terminal.connectorIndex(index++);
       if (terminal.isInput()) {
         ++inputs;
@@ -71,7 +74,7 @@ abstract class InterfaceDeclaration {
     return FluentIterable.from(ports).filter(new DirectionPredicate(PortDirection.OUT));
   }
 
-  public Iterable<ConnectorPaneTerminal> allTerminals() {
+  public Iterable<ConnectorPaneTerminal> orderedTerminals() {
     return Iterables.<ConnectorPaneTerminal>concat(generics(), portsIn(), portsOut());
   }
 

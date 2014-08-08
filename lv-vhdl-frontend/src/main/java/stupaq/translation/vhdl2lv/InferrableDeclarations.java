@@ -68,6 +68,8 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
     semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
     sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor() {
+      // FIXME add context here
+      /** Context of {@link #visit(port_map_aspect)}. */
       final SubtypeInstantiator instantiator = new SubtypeInstantiator();
       /** Context of {@link #visit(positional_association_list)}. */
       int elementIndex;

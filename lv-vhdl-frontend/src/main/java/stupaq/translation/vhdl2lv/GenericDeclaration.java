@@ -8,11 +8,13 @@ import static stupaq.vhdl93.ast.Builders.token;
 
 class GenericDeclaration extends ConstantDeclaration implements ConnectorPaneTerminal {
   private final interface_constant_declaration node;
+  private final int listIndex;
   private int connectorIndex;
 
-  public GenericDeclaration(interface_constant_declaration node) {
+  public GenericDeclaration(interface_constant_declaration node, int listIndex) {
     super(node);
     this.node = node;
+    this.listIndex = listIndex;
     node.nodeOptional = optional(token(CONSTANT));
   }
 
@@ -24,6 +26,11 @@ class GenericDeclaration extends ConstantDeclaration implements ConnectorPaneTer
   @Override
   public boolean isConstant() {
     return true;
+  }
+
+  @Override
+  public int listIndex() {
+    return listIndex;
   }
 
   @Override

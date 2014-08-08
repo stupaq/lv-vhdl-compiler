@@ -17,12 +17,14 @@ import static stupaq.vhdl93.ast.Builders.token;
 
 class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal {
   private final interface_signal_declaration node;
+  private final int listIndex;
   private PortDirection direction;
   private int connectorIndex;
 
-  public PortDeclaration(interface_signal_declaration node) {
+  public PortDeclaration(interface_signal_declaration node, int listIndex) {
     super(node);
     this.node = node;
+    this.listIndex = listIndex;
     node.nodeOptional = optional(token(SIGNAL));
     direction = PortDirection.IN;
     node.nodeOptional1.accept(new NonTerminalsNoOpVisitor() {
@@ -55,6 +57,11 @@ class PortDeclaration extends SignalDeclaration implements ConnectorPaneTerminal
   @Override
   public boolean isConstant() {
     return false;
+  }
+
+  @Override
+  public int listIndex() {
+    return listIndex;
   }
 
   @Override

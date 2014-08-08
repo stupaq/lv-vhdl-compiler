@@ -1,7 +1,6 @@
 package stupaq.translation.vhdl2lv;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Verify;
 
 import stupaq.labview.hierarchy.Bundler;
 import stupaq.labview.hierarchy.Control;
@@ -17,6 +16,7 @@ import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProject;
 
 import static com.google.common.base.Optional.of;
+import static java.lang.String.valueOf;
 import static stupaq.labview.scripting.tools.ConnectorPanePattern.DO_NOT_CONNECT;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_DBL;
 import static stupaq.labview.scripting.tools.ControlStyle.NUMERIC_I32;
@@ -37,42 +37,43 @@ class UniversalVI extends VI {
       ControlCluster controlOwner = new ControlCluster(this, INPUTS_CONTROL, INPUTS_CONN_INDEX);
       IndicatorCluster indicatorOwner =
           new IndicatorCluster(this, OUTPUTS_CONTROL, OUTPUTS_CONN_INDEX);
-      for (ConnectorPaneTerminal connector : entity.allTerminals()) {
+      for (ConnectorPaneTerminal connector : entity.orderedTerminals()) {
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
-        int index = connector.connectorIndex();
+        int ifaceIndex = connector.listIndex();
         if (connector.isInput()) {
-          new Control(controlOwner, style, label, DO_NOT_CONNECT, String.valueOf(index));
+          new Control(controlOwner, style, label, DO_NOT_CONNECT, valueOf(ifaceIndex));
         } else {
-          new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT, String.valueOf(index));
+          new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT, valueOf(ifaceIndex));
         }
       }
       Unbundler unbundler = new Unbundler(this, entity.inputs(), INPUTS_CONTROL);
       controlOwner.terminal().connectTo(unbundler.input(), Optional.<String>absent());
       Bundler bundler = new Bundler(this, entity.outputs(), OUTPUTS_CONTROL);
       bundler.output().connectTo(indicatorOwner.terminal(), Optional.<String>absent());
-      int index = 0;
       int inputIndex = 0;
       int outputIndex = 0;
-      for (ConnectorPaneTerminal connector : entity.allTerminals()) {
+      for (ConnectorPaneTerminal connector : entity.orderedTerminals()) {
         IOReference ref = connector.reference();
         if (connector.isInput()) {
           namedSources.put(ref, unbundler.outputs().get(inputIndex++));
         } else {
           danglingSinks.put(ref, bundler.inputs().get(outputIndex++));
         }
-        Verify.verify(index++ == connector.connectorIndex(), "All terminals given out of order.");
       }
     } else {
-      for (ConnectorPaneTerminal connector : entity.allTerminals()) {
+      for (ConnectorPaneTerminal connector : entity.orderedTerminals()) {
         IOReference ref = connector.reference();
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
-        int index = connector.connectorIndex();
+        String desc = valueOf(connector.listIndex());
+        int connIndex = connector.connectorIndex();
         if (connector.isInput()) {
-          namedSources.put(ref, new Control(this, style, label, index).terminal());
+          Control control = new Control(this, style, label, connIndex, desc);
+          namedSources.put(ref, control.terminal());
         } else {
-          danglingSinks.put(ref, new Indicator(this, style, label, index).terminal());
+          Indicator indicator = new Indicator(this, style, label, connIndex, desc);
+          danglingSinks.put(ref, indicator.terminal());
         }
       }
     }

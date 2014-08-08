@@ -7,6 +7,8 @@ interface ConnectorPaneTerminal {
 
   public boolean isConstant();
 
+  public int listIndex();
+
   public int connectorIndex();
 
   public void connectorIndex(int index);
