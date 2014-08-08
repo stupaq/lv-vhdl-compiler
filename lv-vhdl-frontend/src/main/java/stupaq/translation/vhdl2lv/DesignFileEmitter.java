@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import stupaq.labview.hierarchy.FormulaNode;
 import stupaq.labview.hierarchy.Terminal;
+import stupaq.labview.hierarchy.VI;
 import stupaq.translation.TranslationConventions;
 import stupaq.translation.naming.ArchitectureName;
 import stupaq.translation.naming.IOReference;
@@ -46,7 +47,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
   /** Context of {@link #visit(design_unit)}. */
   private context_clause lastContext;
   /** Context of {@link #visit(architecture_declaration)}. */
-  private UniversalVI currentVi;
+  private VI currentVi;
   /** Context of {@link #visit(architecture_declaration)}. */
   private IOSources namedSources;
   /** Context of {@link #visit(architecture_declaration)}. */
@@ -82,7 +83,8 @@ class DesignFileEmitter extends DepthFirstVisitor {
     resolver.architectures().add(arch);
     LOGGER.debug("Architecture: {}", arch);
     // Create all generics, ports and eventually the VI itself.
-    currentVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);
+    UniversalVI universalVi = new UniversalVI(project, arch, entity, namedSources, danglingSinks);
+    currentVi = universalVi.theVi();
     // Fill local scope with component declarations.
     resolver.enterLocal(arch, n.architecture_declarative_part);
     // Emit all locally declared components.
@@ -214,6 +216,7 @@ class DesignFileEmitter extends DepthFirstVisitor {
       LOGGER.error("Dangling sink: {}", entry.getKey());
     }
     currentVi.cleanUpDiagram();
+    universalVi = null;
     currentVi = null;
     namedSources = null;
     danglingSinks = null;

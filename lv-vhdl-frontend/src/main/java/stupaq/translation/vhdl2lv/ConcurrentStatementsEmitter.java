@@ -132,7 +132,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
             isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
         semanticNotNull(terminal, n, "Missing terminal for name: {}.", ref);
         portIsSink = terminal.isInput();
-        portTerminal = subVI.terminal(terminal.connectorIndex());
+        portTerminal = subVI.terminal(terminal);
         n.actual_part.accept(this);
         Verify.verify(portTerminal == null, "Omitted port association.");
       }
@@ -145,7 +145,7 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
             : entity.resolvePort(elementIndex);
         semanticNotNull(terminal, n, "Missing terminal for index: {}.", elementIndex);
         portIsSink = terminal.isInput();
-        portTerminal = subVI.terminal(terminal.connectorIndex());
+        portTerminal = subVI.terminal(terminal);
         n.actual_part.accept(this);
         Verify.verify(portTerminal == null, "Omitted port association.");
         ++elementIndex;

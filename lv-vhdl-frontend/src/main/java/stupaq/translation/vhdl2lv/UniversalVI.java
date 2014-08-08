@@ -9,7 +9,6 @@ import stupaq.labview.hierarchy.Indicator;
 import stupaq.labview.hierarchy.IndicatorCluster;
 import stupaq.labview.hierarchy.Unbundler;
 import stupaq.labview.hierarchy.VI;
-import stupaq.labview.scripting.tools.ConnectorPanePattern;
 import stupaq.labview.scripting.tools.ControlStyle;
 import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.InstantiableName;
@@ -25,18 +24,26 @@ import static stupaq.translation.TranslationConventions.OUTPUTS_CONN_INDEX;
 import static stupaq.translation.vhdl2lv.TranslationConventions.INPUTS_CONTROL;
 import static stupaq.translation.vhdl2lv.TranslationConventions.OUTPUTS_CONTROL;
 
-class UniversalVI extends VI {
-  private static final int CLUSTERED_VI_THRESHOLD = 26;
+class UniversalVI {
+  private final ConnPaneAllocator allocator;
+  private final VI theVi;
+
+  public VI theVi() {
+    return theVi;
+  }
+
+  public ConnPaneAllocator allocator() {
+    return allocator;
+  }
 
   public UniversalVI(LVProject project, InstantiableName lvName, InterfaceDeclaration entity,
       IOSources namedSources, IOSinks danglingSinks) {
-    super(project.tools(), project.allocate(lvName, true),
-        choosePattern(entity.inputs(), entity.outputs()));
-    boolean clustered = isClusteredVI(entity.inputs(), entity.outputs());
-    if (clustered) {
-      ControlCluster controlOwner = new ControlCluster(this, INPUTS_CONTROL, INPUTS_CONN_INDEX);
+    allocator = new ConnPaneAllocator(entity);
+    theVi = new VI(project.tools(), project.allocate(lvName, true), allocator.pattern());
+    if (allocator.isClustered()) {
+      ControlCluster controlOwner = new ControlCluster(theVi, INPUTS_CONTROL, INPUTS_CONN_INDEX);
       IndicatorCluster indicatorOwner =
-          new IndicatorCluster(this, OUTPUTS_CONTROL, OUTPUTS_CONN_INDEX);
+          new IndicatorCluster(theVi, OUTPUTS_CONTROL, OUTPUTS_CONN_INDEX);
       for (ConnectorPaneTerminal connector : entity.orderedTerminals()) {
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
@@ -47,9 +54,9 @@ class UniversalVI extends VI {
           new Indicator(indicatorOwner, style, label, DO_NOT_CONNECT, valueOf(ifaceIndex));
         }
       }
-      Unbundler unbundler = new Unbundler(this, entity.inputs(), INPUTS_CONTROL);
+      Unbundler unbundler = new Unbundler(theVi, entity.inputs(), INPUTS_CONTROL);
       controlOwner.terminal().connectTo(unbundler.input(), Optional.<String>absent());
-      Bundler bundler = new Bundler(this, entity.outputs(), OUTPUTS_CONTROL);
+      Bundler bundler = new Bundler(theVi, entity.outputs(), OUTPUTS_CONTROL);
       bundler.output().connectTo(indicatorOwner.terminal(), Optional.<String>absent());
       int inputIndex = 0;
       int outputIndex = 0;
@@ -67,26 +74,15 @@ class UniversalVI extends VI {
         Optional<String> label = of(connector.representation());
         ControlStyle style = connector.isConstant() ? NUMERIC_I32 : NUMERIC_DBL;
         String desc = valueOf(connector.listIndex());
-        int connIndex = connector.connectorIndex();
+        int connIndex = allocator.paneIndex(connector);
         if (connector.isInput()) {
-          Control control = new Control(this, style, label, connIndex, desc);
+          Control control = new Control(theVi, style, label, connIndex, desc);
           namedSources.put(ref, control.terminal());
         } else {
-          Indicator indicator = new Indicator(this, style, label, connIndex, desc);
+          Indicator indicator = new Indicator(theVi, style, label, connIndex, desc);
           danglingSinks.put(ref, indicator.terminal());
         }
       }
     }
-  }
-
-  private static ConnectorPanePattern choosePattern(int inputs, int outputs) {
-    final int connectorsCount = inputs + outputs;
-    return isClusteredVI(inputs, outputs) ? ConnectorPanePattern.P4801
-        : ConnectorPanePattern.choosePattern(connectorsCount);
-  }
-
-  public static boolean isClusteredVI(int inputs, int outputs) {
-    final int connectorsCount = inputs + outputs;
-    return connectorsCount > CLUSTERED_VI_THRESHOLD;
   }
 }
