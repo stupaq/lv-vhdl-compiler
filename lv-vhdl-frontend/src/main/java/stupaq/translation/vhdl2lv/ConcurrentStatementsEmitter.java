@@ -1,8 +1,6 @@
 package stupaq.translation.vhdl2lv;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +17,23 @@ import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.project.LVProject;
-import stupaq.vhdl93.ast.*;
+import stupaq.vhdl93.ast.architecture_statement_part;
+import stupaq.vhdl93.ast.association_list;
+import stupaq.vhdl93.ast.block_statement;
+import stupaq.vhdl93.ast.component_instantiation_statement;
+import stupaq.vhdl93.ast.concurrent_assertion_statement;
+import stupaq.vhdl93.ast.concurrent_procedure_call_statement;
+import stupaq.vhdl93.ast.concurrent_signal_assignment_statement;
+import stupaq.vhdl93.ast.concurrent_statement;
+import stupaq.vhdl93.ast.conditional_signal_assignment;
+import stupaq.vhdl93.ast.expression;
+import stupaq.vhdl93.ast.generate_statement;
+import stupaq.vhdl93.ast.generic_map_aspect;
+import stupaq.vhdl93.ast.name;
+import stupaq.vhdl93.ast.port_map_aspect;
+import stupaq.vhdl93.ast.process_statement;
+import stupaq.vhdl93.ast.selected_signal_assignment;
+import stupaq.vhdl93.ast.target;
 import stupaq.vhdl93.visitor.DepthFirstVisitor;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
@@ -91,89 +105,9 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
     String label = n.instantiation_label.label.representation();
     LOGGER.debug("Instantiating: {} with label: {}", entity.name(), label);
     final UniversalSubVI subVI = new UniversalSubVI(theVi, project, instance, entity, of(label));
-    sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor() {
-      /**
-       * Context of {@link #visit(generic_map_aspect)} and {@link
-       * #visit(port_map_aspect)}.
-       */
+    sequence(n.nodeOptional, n.nodeOptional1).accept(new AssociationListVisitor<Void>() {
+      /** Context of {@link #visit(association_list)}. */
       boolean isGenericAspect;
-      /** Context of {@link #visit(positional_association_list)}. */
-      int elementIndex;
-      /** Context of {@link #visit(actual_part)}. */
-      boolean portIsSink;
-      /** Context of {@link #visit(actual_part)}. */
-      Terminal portTerminal;
-
-      @Override
-      public void visit(association_list n) {
-        n.nodeChoice.accept(this);
-      }
-
-      @Override
-      public void visit(named_association_list n) {
-        elementIndex = Integer.MIN_VALUE;
-        n.named_association_element.accept(this);
-        n.nodeListOptional.accept(this);
-      }
-
-      @Override
-      public void visit(positional_association_list n) {
-        elementIndex = 0;
-        n.positional_association_element.accept(this);
-        n.nodeListOptional.accept(this);
-      }
-
-      @Override
-      public void visit(named_association_element n) {
-        Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
-        LOGGER.debug("Port assignment: {}", n.representation());
-        IOReference ref = new IOReference(n.formal_part.identifier);
-        ConnectorPaneTerminal terminal =
-            isGenericAspect ? entity.resolveGeneric(ref) : entity.resolvePort(ref);
-        semanticNotNull(terminal, n, "Missing terminal for name: {}.", ref);
-        portIsSink = terminal.isInput();
-        portTerminal = subVI.terminal(terminal);
-        n.actual_part.accept(this);
-        Verify.verify(portTerminal == null, "Omitted port association.");
-      }
-
-      @Override
-      public void visit(positional_association_element n) {
-        Preconditions.checkState(elementIndex >= 0);
-        LOGGER.debug("Port assignment: {}", n.representation());
-        ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
-            : entity.resolvePort(elementIndex);
-        semanticNotNull(terminal, n, "Missing terminal for index: {}.", elementIndex);
-        portIsSink = terminal.isInput();
-        portTerminal = subVI.terminal(terminal);
-        n.actual_part.accept(this);
-        Verify.verify(portTerminal == null, "Omitted port association.");
-        ++elementIndex;
-      }
-
-      @Override
-      public void visit(actual_part n) {
-        n.nodeChoice.choice.accept(this);
-      }
-
-      @Override
-      public void visit(actual_part_open n) {
-        // This way we do nothing for <OPEN> ports which is very appropriate.
-        portTerminal = null;
-      }
-
-      @Override
-      public void visit(expression n) {
-        Preconditions.checkState(portTerminal != null);
-        if (portIsSink) {
-          new SourceEmitter(theVi, danglingSinks, namedSources).emitWithSink(n, portTerminal);
-        } else {
-          new SinkEmitter(theVi, danglingSinks, namedSources).emitWithSource(portTerminal, n);
-        }
-        portTerminal = null;
-        // Note that we do not visit recursively in current setting, so we are sure,
-        // that this is the top-level expression context.
-      }
 
       @Override
       public void visit(generic_map_aspect n) {
@@ -185,6 +119,40 @@ class ConcurrentStatementsEmitter extends NonTerminalsNoOpVisitor<Void> {
       public void visit(port_map_aspect n) {
         isGenericAspect = false;
         n.association_list.accept(this);
+      }
+
+      @Override
+      protected void actualPartOpen(int elementIndex) {
+        // Do not connect.
+      }
+
+      @Override
+      protected void actualPartOpen(IOReference name) {
+        // Do not connect.
+      }
+
+      @Override
+      protected void actualPartExpression(int elementIndex, expression n) {
+        ConnectorPaneTerminal terminal = isGenericAspect ? entity.resolveGeneric(elementIndex)
+            : entity.resolvePort(elementIndex);
+        semanticNotNull(terminal, n, "Missing terminal for index: {}.", elementIndex);
+        assignExpression(subVI.terminal(terminal), terminal.isInput(), n);
+      }
+
+      @Override
+      protected void actualPartExpression(IOReference name, expression n) {
+        ConnectorPaneTerminal terminal =
+            isGenericAspect ? entity.resolveGeneric(name) : entity.resolvePort(name);
+        semanticNotNull(terminal, n, "Missing terminal for name: {}.", name);
+        assignExpression(subVI.terminal(terminal), terminal.isInput(), n);
+      }
+
+      private void assignExpression(Terminal terminal, boolean isSink, expression n) {
+        if (isSink) {
+          new SourceEmitter(theVi, danglingSinks, namedSources).emitWithSink(n, terminal);
+        } else {
+          new SinkEmitter(theVi, danglingSinks, namedSources).emitWithSource(terminal, n);
+        }
       }
     });
   }
