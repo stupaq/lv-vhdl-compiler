@@ -15,7 +15,9 @@ import stupaq.translation.naming.IOReference;
 import stupaq.translation.naming.Identifier;
 import stupaq.translation.naming.InstantiableName;
 import stupaq.translation.semantic.ExpressionClassifier;
+import stupaq.translation.semantic.InferenceContext;
 import stupaq.translation.semantic.SubtypeInstantiator;
+import stupaq.vhdl93.ast.Node;
 import stupaq.vhdl93.ast.actual_part;
 import stupaq.vhdl93.ast.actual_part_open;
 import stupaq.vhdl93.ast.architecture_statement_part;
@@ -33,6 +35,7 @@ import stupaq.vhdl93.ast.positional_association_list;
 import stupaq.vhdl93.visitor.NonTerminalsNoOpVisitor;
 
 import static stupaq.translation.errors.LocalisedSemanticException.semanticNotNull;
+import static stupaq.translation.parsing.NodeRepr.repr;
 import static stupaq.vhdl93.ast.Builders.sequence;
 
 class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
@@ -62,102 +65,199 @@ class InferrableDeclarations extends NonTerminalsNoOpVisitor<Void> {
 
   @Override
   public void visit(component_instantiation_statement n) {
-    InstantiableName instance =
+    final InstantiableName instance =
         Identifier.instantiation(resolver.architectures(), architecture, n.instantiated_unit);
     final InterfaceDeclaration entity = resolver.get(instance.interfaceName());
     semanticNotNull(entity, n, "Missing component or entity declaration: %s.",
         instance.interfaceName());
-    sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor() {
-      // FIXME add context here
+    // Note that we must visit generic map aspect first.
+    sequence(n.nodeOptional, n.nodeOptional1).accept(new NonTerminalsNoOpVisitor<Void>() {
       /** Context of {@link #visit(port_map_aspect)}. */
-      final SubtypeInstantiator instantiator = new SubtypeInstantiator();
-      /** Context of {@link #visit(positional_association_list)}. */
-      int elementIndex;
-      /** Context of {@link #visit(actual_part)}. */
-      PortDeclaration portDeclaration;
-
-      @Override
-      public void visit(association_list n) {
-        n.nodeChoice.accept(this);
-      }
-
-      @Override
-      public void visit(named_association_list n) {
-        elementIndex = Integer.MIN_VALUE;
-        n.named_association_element.accept(this);
-        n.nodeListOptional.accept(this);
-      }
-
-      @Override
-      public void visit(positional_association_list n) {
-        elementIndex = 0;
-        n.positional_association_element.accept(this);
-        n.nodeListOptional.accept(this);
-      }
-
-      @Override
-      public void visit(named_association_element n) {
-        Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
-        IOReference ref = new IOReference(n.formal_part.identifier);
-        // We do not infer anything for generics, therefore we know we are dealing with port.
-        portDeclaration = entity.resolvePort(ref);
-        n.actual_part.accept(this);
-        portDeclaration = null;
-      }
-
-      @Override
-      public void visit(positional_association_element n) {
-        Preconditions.checkState(elementIndex >= 0);
-        // We do not infer anything for generics, therefore we know we are dealing with port.
-        portDeclaration = entity.resolvePort(elementIndex);
-        n.actual_part.accept(this);
-        ++elementIndex;
-        portDeclaration = null;
-      }
-
-      @Override
-      public void visit(actual_part n) {
-        n.nodeChoice.choice.accept(this);
-      }
-
-      @Override
-      public void visit(actual_part_open n) {
-        // Nothing new when it comes to types inference.
-      }
-
-      @Override
-      public void visit(expression n) {
-        Preconditions.checkState(portDeclaration != null);
-        // Note that we do not visit recursively in current setting, so we are sure,
-        // that this is the top-level expression context.
-        Optional<IOReference> ref =
-            ExpressionClassifier.asIdentifier(n).transform(new Function<identifier, IOReference>() {
-              @Override
-              public IOReference apply(identifier identifier) {
-                return new IOReference(identifier);
-              }
-            });
-        if (ref.isPresent()) {
-          if (instantiator.apply(portDeclaration.type().indication()).isPresent()) {
-            LOGGER.debug("Definition of signal: {} is inferrable from instantiation of: {}",
-                ref.get(), entity.name());
-            inferrable.add(ref.get());
-          } else {
-            LOGGER.info("Signal: {} connected to parametrised type: <{}>", ref.get(),
-                portDeclaration.type().indication().representation());
-          }
-        }
-      }
+      SubtypeInstantiator instantiator;
 
       @Override
       public void visit(generic_map_aspect n) {
-        // We do not apply any inference to constants.
+        // We do not apply any inference to constants, but we do want to collect inference context.
+        InferenceContext context = new ContextHarvestingVisitor(entity).apply(n.association_list);
+        instantiator = new SubtypeInstantiator(context);
       }
 
       @Override
       public void visit(port_map_aspect n) {
-        n.association_list.accept(this);
+        if (instantiator == null) {
+          instantiator = new SubtypeInstantiator();
+        }
+        n.association_list.accept(new DeclarationHarvestingVisitor(entity, instantiator));
       }
     });
+  }
+
+  // TODO too much repetetive code, this schema occurs somewhere else too
+  private static class ContextHarvestingVisitor extends NonTerminalsNoOpVisitor<InferenceContext> {
+    /** Context of {@link ContextHarvestingVisitor}. */
+    private final InterfaceDeclaration entity;
+    /** Result of {@link #visit(generic_map_aspect)}. */
+    private final InferenceContext context = new InferenceContext();
+    /** Context of {@link #visit(positional_association_list)}. */
+    private int elementIndex;
+    /** Context of {@link #visit(actual_part)}. */
+    private GenericDeclaration genericDeclaration;
+
+    private ContextHarvestingVisitor(InterfaceDeclaration entity) {
+      this.entity = entity;
+    }
+
+    @Override
+    public InferenceContext apply(Node n) {
+      super.apply(n);
+      return context;
+    }
+
+    @Override
+    public void visit(association_list n) {
+      n.nodeChoice.accept(this);
+    }
+
+    @Override
+    public void visit(named_association_list n) {
+      elementIndex = Integer.MIN_VALUE;
+      n.named_association_element.accept(this);
+      n.nodeListOptional.accept(this);
+    }
+
+    @Override
+    public void visit(positional_association_list n) {
+      elementIndex = 0;
+      n.positional_association_element.accept(this);
+      n.nodeListOptional.accept(this);
+    }
+
+    @Override
+    public void visit(named_association_element n) {
+      Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
+      IOReference ref = new IOReference(n.formal_part.identifier);
+      // We do not harvest context on ports, therefore we know we are dealing with generic.
+      genericDeclaration = entity.resolveGeneric(ref);
+      n.actual_part.accept(this);
+      genericDeclaration = null;
+    }
+
+    @Override
+    public void visit(positional_association_element n) {
+      Preconditions.checkState(elementIndex >= 0);
+      // We do not harvest context on ports, therefore we know we are dealing with generic.
+      genericDeclaration = entity.resolveGeneric(elementIndex);
+      n.actual_part.accept(this);
+      ++elementIndex;
+      genericDeclaration = null;
+    }
+
+    @Override
+    public void visit(actual_part n) {
+      n.nodeChoice.choice.accept(this);
+    }
+
+    @Override
+    public void visit(actual_part_open n) {
+      // Nothing new when it comes to types inference.
+    }
+
+    @Override
+    public void visit(expression n) {
+      Preconditions.checkState(genericDeclaration != null);
+      // Note that we do not visit recursively in current setting, so we are sure,
+      // that this is the top-level expression context.
+      context.put(genericDeclaration.reference(), repr(n));
+    }
+  }
+
+  private class DeclarationHarvestingVisitor extends NonTerminalsNoOpVisitor<Void> {
+    /** Context of {@link DeclarationHarvestingVisitor}. */
+    private final InterfaceDeclaration entity;
+    /** Context of {@link DeclarationHarvestingVisitor}. */
+    private final SubtypeInstantiator instantiator;
+    /** Context of {@link #visit(positional_association_list)}. */
+    private int elementIndex;
+    /** Context of {@link #visit(actual_part)}. */
+    private PortDeclaration portDeclaration;
+
+    public DeclarationHarvestingVisitor(InterfaceDeclaration entity,
+        SubtypeInstantiator instantiator) {
+      this.entity = entity;
+      this.instantiator = instantiator;
+    }
+
+    @Override
+    public void visit(association_list n) {
+      n.nodeChoice.accept(this);
+    }
+
+    @Override
+    public void visit(named_association_list n) {
+      elementIndex = Integer.MIN_VALUE;
+      n.named_association_element.accept(this);
+      n.nodeListOptional.accept(this);
+    }
+
+    @Override
+    public void visit(positional_association_list n) {
+      elementIndex = 0;
+      n.positional_association_element.accept(this);
+      n.nodeListOptional.accept(this);
+    }
+
+    @Override
+    public void visit(named_association_element n) {
+      Preconditions.checkState(elementIndex == Integer.MIN_VALUE);
+      IOReference ref = new IOReference(n.formal_part.identifier);
+      // We do not infer anything for generics, therefore we know we are dealing with port.
+      portDeclaration = entity.resolvePort(ref);
+      n.actual_part.accept(this);
+      portDeclaration = null;
+    }
+
+    @Override
+    public void visit(positional_association_element n) {
+      Preconditions.checkState(elementIndex >= 0);
+      // We do not infer anything for generics, therefore we know we are dealing with port.
+      portDeclaration = entity.resolvePort(elementIndex);
+      n.actual_part.accept(this);
+      ++elementIndex;
+      portDeclaration = null;
+    }
+
+    @Override
+    public void visit(actual_part n) {
+      n.nodeChoice.choice.accept(this);
+    }
+
+    @Override
+    public void visit(actual_part_open n) {
+      // Nothing new when it comes to types inference.
+    }
+
+    @Override
+    public void visit(expression n) {
+      Preconditions.checkState(portDeclaration != null);
+      // Note that we do not visit recursively in current setting, so we are sure,
+      // that this is the top-level expression context.
+      Optional<IOReference> ref =
+          ExpressionClassifier.asIdentifier(n).transform(new Function<identifier, IOReference>() {
+            @Override
+            public IOReference apply(identifier identifier) {
+              return new IOReference(identifier);
+            }
+          });
+      if (ref.isPresent()) {
+        if (instantiator.apply(portDeclaration.type().indication()).isPresent()) {
+          LOGGER.debug("Definition of signal: {} is inferrable from instantiation of: {}",
+              ref.get(), entity.name());
+          inferrable.add(ref.get());
+        } else {
+          LOGGER.info("Signal: {} connected to parametrised type: <{}>", ref.get(),
+              portDeclaration.type().indication().representation());
+        }
+      }
+    }
   }
 }

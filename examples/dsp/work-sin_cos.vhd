@@ -7,7 +7,7 @@ entity sin_cos is
         width_out : integer := 8);
     port (rst : in std_logic;
         clk : in std_logic;
-        phase_in : in unsigned(width_out - 1 downto 0);
+        phase_in : in unsigned(width_in - 1 downto 0);
         sine : out signed(width_out - 1 downto 0);
         cosine : out signed(width_out - 1 downto 0);
         phase_out : out unsigned(width_in - 1 downto 0));
@@ -23,7 +23,7 @@ architecture behavioral of sin_cos is
             phase_out : out std_logic_vector(width_out - 1 downto 0));
     end component;
     signal v_cosine : std_logic_vector(width_out - 1 downto 0);
-    signal v_phase_in : std_logic_vector(width_out - 1 downto 0);
+    signal v_phase_in : std_logic_vector(width_in - 1 downto 0);
     signal v_phase_out : std_logic_vector(width_in - 1 downto 0);
     signal v_sine : std_logic_vector(width_out - 1 downto 0);
 begin
