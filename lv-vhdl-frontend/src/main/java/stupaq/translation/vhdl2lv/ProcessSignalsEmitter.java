@@ -131,7 +131,7 @@ class ProcessSignalsEmitter extends NonTerminalsNoOpVisitor<Void> {
     this.latched.addAll(partiallyWritten);
   }
 
-  private Set<IOReference> intersection(List<Set<IOReference>> sets) {
+  private static Set<IOReference> intersection(List<Set<IOReference>> sets) {
     if (sets.isEmpty()) {
       return Collections.emptySet();
     }

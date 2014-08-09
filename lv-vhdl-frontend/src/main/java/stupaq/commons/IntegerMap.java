@@ -6,6 +6,9 @@ import com.google.common.collect.Maps;
 
 import java.util.Map;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public class IntegerMap<T> extends ForwardingMap<Integer, T> {
   private final Map<Integer, T> delegate = Maps.newTreeMap();
 

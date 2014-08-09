@@ -16,10 +16,10 @@ import stupaq.vhdl93.ast.NodeToken;
  * print" your tree.
  */
 public class TreeFormatter extends DepthFirstVisitor {
-  protected Vector<FormatCommand> cmdQueue = new Vector<FormatCommand>();
-  private boolean lineWrap;
-  private int wrapWidth;
-  private int indentAmt;
+  protected Vector<FormatCommand> cmdQueue = new Vector<>();
+  private final boolean lineWrap;
+  private final int wrapWidth;
+  private final int indentAmt;
   private int curLine = 1;
   private int curColumn = 1;
   private int curIndent = 0;
@@ -43,12 +43,7 @@ public class TreeFormatter extends DepthFirstVisitor {
   public TreeFormatter(int indentAmt, int wrapWidth) {
     this.indentAmt = indentAmt;
     this.wrapWidth = wrapWidth;
-
-    if (wrapWidth > 0) {
-      lineWrap = true;
-    } else {
-      lineWrap = false;
-    }
+    lineWrap = wrapWidth > 0;
   }
 
   /**

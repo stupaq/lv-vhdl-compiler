@@ -216,7 +216,6 @@ class DesignFileEmitter extends DepthFirstVisitor {
       LOGGER.error("Dangling sink: {}", entry.getKey());
     }
     currentVi.cleanUpDiagram();
-    universalVi = null;
     currentVi = null;
     namedSources = null;
     danglingSinks = null;

@@ -30,7 +30,7 @@ public class ArchitectureName implements InstantiableName {
 
   @Override
   public String toString() {
-    return entity + "(" + arch + ")";
+    return entity + "(" + arch + ')';
   }
 
   @Override

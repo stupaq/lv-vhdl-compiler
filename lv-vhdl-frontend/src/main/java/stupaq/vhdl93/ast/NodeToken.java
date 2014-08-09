@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.VHDL93ParserConstants;
 import stupaq.vhdl93.VHDL93ParserTotal;
 
@@ -47,7 +46,7 @@ public class NodeToken extends SimpleNode implements Node {
 
   public void addSpecial(NodeToken s) {
     if (specialTokens == null) {
-      specialTokens = new Vector<NodeToken>();
+      specialTokens = new Vector<>();
     }
     specialTokens.addElement(s);
   }
@@ -68,7 +67,7 @@ public class NodeToken extends SimpleNode implements Node {
       return tokenImage;
     }
 
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
 
     for (Enumeration<NodeToken> e = specialTokens.elements(); e.hasMoreElements(); ) {
       buf.append(e.nextElement().toString());

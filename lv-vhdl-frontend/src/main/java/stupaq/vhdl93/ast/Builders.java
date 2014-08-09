@@ -6,7 +6,6 @@ import com.google.common.collect.Iterables;
 
 import java.util.Arrays;
 
-import stupaq.vhdl93.VHDL93Parser;
 import stupaq.vhdl93.VHDL93ParserTotal;
 
 public final class Builders {
